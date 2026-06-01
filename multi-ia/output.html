@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>MultiTela Output</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+#mt-img { width: 1920px; height: 1080px; object-fit: fill; display: none; position: absolute; top: 0; left: 0; }
+#dbg { position: absolute; bottom: 6px; right: 10px; font-family: monospace; font-size: 11px; color: rgba(255,255,255,0.4); pointer-events: none; }
+</style>
+</head>
+<body>
+<img id="mt-img" src="" alt=""/>
+<div id="dbg">aguardando...</div>
+<script>
+const CHANNEL = new URLSearchParams(window.location.search).get("ch") || "mtc-default";
+const img = document.getElementById("mt-img");
+const dbg = document.getElementById("dbg");
+let lastId = null;
+
+function log(t) { dbg.textContent = t; }
+
+function limpar() {
+  img.style.display = "none";
+  img.src = "";
+  log("transparente " + new Date().toLocaleTimeString());
+}
+
+function mostrarImagem(src) {
+  img.onload  = function() { log("ok " + new Date().toLocaleTimeString()); };
+  img.onerror = function() { log("erro ao carregar"); };
+  img.src = src;
+  img.style.display = "block";
+}
+
+function processarMensagem(data) {
+  if (!data || !data.id || data.event === "open") return;
+  if (data.id === lastId) return;
+  lastId = data.id;
+
+  // Tag "clear" = limpar output
+  const tags = data.tags || [];
+  if (tags.includes("clear")) {
+    limpar();
+    return;
+  }
+
+  log("msg: " + data.id.slice(0,8));
+  if (data.attachment && data.attachment.url) {
+    mostrarImagem(data.attachment.url);
+  } else if (data.message && data.message.startsWith("data:image")) {
+    mostrarImagem(data.message);
+  }
+}
+
+async function buscarUltima() {
+  try {
+    const r = await fetch("https://ntfy.sh/" + CHANNEL + "/json?poll=1&since=all");
+    const txt = await r.text();
+    const linhas = txt.trim().split("\n").filter(Boolean);
+    if (linhas.length) processarMensagem(JSON.parse(linhas[linhas.length - 1]));
+  } catch(e) { log("erro poll"); }
+}
+
+function conectarSSE() {
+  log("conectando...");
+  const es = new EventSource("https://ntfy.sh/" + CHANNEL + "/sse");
+  es.onopen = function() { log("conectado"); buscarUltima(); };
+  es.onmessage = function(e) {
+    try { processarMensagem(JSON.parse(e.data)); } catch(err) {}
+  };
+  es.onerror = function() {
+    log("reconectando...");
+    es.close();
+    setTimeout(conectarSSE, 2000);
+  };
+}
+
+conectarSSE();
+</script>
+</body>
+</html>

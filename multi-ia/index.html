@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>MultiTela Controller — CazeTV</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+:root {
+  --bg:#080809;--s1:#0f0f12;--s2:#161619;--s3:#1e1e23;
+  --border:#2a2a32;--border2:#38383f;
+  --pgm:#d63031;--pgm-dim:rgba(214,48,49,.15);--pgm-glow:rgba(214,48,49,.4);
+  --pvw:#00b894;--pvw-dim:rgba(0,184,148,.12);--pvw-glow:rgba(0,184,148,.35);
+  --accent:#fdcb6e;--acc-dim:rgba(253,203,110,.12);
+  --blue:#0984e3;--text:#e8e8ed;--text2:#8e8e9e;--text3:#4a4a5a;
+  --r:5px;--r2:8px;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* HEADER */
+#hdr{display:flex;align-items:center;gap:10px;padding:0 14px;height:46px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+.logo span{color:var(--text3)}
+.hsep{width:1px;height:18px;background:var(--border);flex-shrink:0}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .3s}
+.dot.on{background:var(--pvw);box-shadow:0 0 6px var(--pvw-glow)}
+.dot.err{background:var(--pgm);box-shadow:0 0 6px var(--pgm-glow)}
+.clbl{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
+#output-pill{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--s3);border:1px solid var(--border2);border-radius:20px;padding:5px 10px 5px 12px;cursor:pointer;transition:all .2s;flex-shrink:0}
+#output-pill:hover{border-color:var(--pvw);background:var(--pvw-dim)}
+#output-pill .pill-ic{font-size:13px}
+#output-pill .pill-lbl{font-family:var(--mono);font-size:10px;color:var(--text2)}
+#output-pill .pill-url{font-family:var(--mono);font-size:10px;color:var(--pvw);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#output-pill .pill-btn{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--pvw);color:#111;border:none;border-radius:12px;padding:3px 9px;cursor:pointer;white-space:nowrap}
+
+input[type=text],input[type=password],select{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;outline:none;transition:border-color .15s}
+input[type=text]:focus,input[type=password]:focus,select:focus{border-color:var(--accent)}
+select{cursor:pointer}
+
+/* BUTTONS */
+.btn{font-family:var(--sans);font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--s3);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.acc{background:var(--accent);color:#111;border-color:var(--accent)}
+.btn.acc:hover:not(:disabled){background:#e6b85c}
+.btn.pgmb{background:var(--pgm);color:#fff;border-color:var(--pgm);font-size:15px;font-weight:700;padding:8px 28px;letter-spacing:.04em}
+.btn.pgmb:hover:not(:disabled){background:#bf2729}
+.btn.pvwb{background:var(--pvw);color:#111;border-color:var(--pvw)}
+.btn.pvwb:hover:not(:disabled){background:#00a381}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover:not(:disabled){background:var(--s3);border-color:var(--border);color:var(--text)}
+.btn.sm{font-size:11px;padding:3px 7px}
+.btn.xs{font-size:10px;padding:2px 6px}
+
+/* TABS */
+#tabs{display:flex;align-items:flex-end;gap:1px;padding:0 14px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
+.tab{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;cursor:pointer;color:var(--text3);border:1px solid transparent;border-bottom:none;border-radius:var(--r) var(--r) 0 0;transition:all .15s;position:relative;bottom:-1px}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--accent);background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg)}
+
+/* MAIN */
+#main{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}
+.page.active{display:flex}
+.scroll{overflow-y:auto;flex:1;padding:14px}
+
+/* SECTIONS */
+.sec{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:10px;overflow:hidden}
+.sec-hd{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--s2);border-bottom:1px solid var(--border)}
+.sec-ttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:1}
+.sec-bd{padding:10px 12px}
+
+/* BADGES */
+.badge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:2px 6px;border-radius:3px;text-transform:uppercase}
+.badge.pgm{background:var(--pgm);color:#fff}
+.badge.pvw{background:var(--pvw);color:#111}
+.badge.idle{background:var(--s3);color:var(--text3);border:1px solid var(--border)}
+.tag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid var(--border);color:var(--text3)}
+.tag.live{border-color:var(--pgm);color:var(--pgm)}
+.tag.replay{border-color:var(--blue);color:var(--blue)}
+.tag.vt{border-color:var(--pvw);color:var(--pvw)}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px;color:var(--text3);font-size:12px;text-align:center}
+.empty-ic{font-size:24px;opacity:.3}
+
+/* PACOTE GRAFICO */
+#screen-sel{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:24px;padding:32px}
+.sel-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
+.pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;width:100%;max-width:680px}
+.pkg-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 14px;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.pkg-card:hover{border-color:var(--accent);background:var(--acc-dim)}
+.pkg-card.sel{border-color:var(--accent);background:var(--acc-dim)}
+.pkg-ic{font-size:28px}
+.pkg-nm{font-weight:700;font-size:14px}
+.pkg-mt{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* AO VIVO */
+.live-wrap{display:grid;grid-template-rows:1fr auto;gap:8px;height:100%;overflow:hidden;padding:10px 14px}
+.live-mons{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:hidden;min-height:0}
+.live-mon{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column}
+.live-mon.pvw-mon{border-color:var(--pvw);box-shadow:0 0 0 1px var(--pvw),0 0 16px var(--pvw-glow)}
+.live-mon.pgm-mon{border-color:var(--pgm);box-shadow:0 0 0 1px var(--pgm),0 0 16px var(--pgm-glow)}
+.mon-hd{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
+.mon-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
+.mon-lbl.pvw{color:var(--pvw)}
+.mon-lbl.pgm{color:var(--pgm)}
+.mon-nm{font-size:12px;font-weight:600;flex:1}
+.mon-body{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.mon-prev{width:100%;flex:1;object-fit:contain;background:repeating-conic-gradient(#0d0d10 0% 25%,#111114 0% 50%) 0 0/14px 14px;display:block;min-height:0}
+.mon-ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.pip-chip{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:2px 5px;font-family:var(--mono);font-size:9px;color:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pvw-btns{padding:6px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;max-height:130px;overflow-y:auto;flex-shrink:0}
+.pr-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pr-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);width:40px;flex-shrink:0}
+.inp-btn{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--s3);color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.inp-btn:hover{border-color:var(--border2);color:var(--text)}
+.inp-btn.apvw{background:var(--pvw-dim);border-color:var(--pvw);color:var(--pvw)}
+
+/* FAIXA INFERIOR — multitelas arrastáveis */
+#tray-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;flex-shrink:0}
+#tray-hd{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
+#tray-hd .tray-ttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:1}
+#tray{display:flex;gap:6px;padding:8px;overflow-x:auto;min-height:90px;align-items:center}
+#tray::-webkit-scrollbar{height:3px}
+
+/* CARD DA MULTITELA NA FAIXA */
+.mt-card{flex-shrink:0;width:120px;background:var(--s3);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:grab;transition:border-color .15s,opacity .15s,transform .15s;position:relative;user-select:none}
+.mt-card:hover{border-color:var(--border2)}
+.mt-card.is-pvw{border-color:var(--pvw);box-shadow:0 0 8px var(--pvw-glow)}
+.mt-card.is-pgm{border-color:var(--pgm);box-shadow:0 0 8px var(--pgm-glow)}
+.mt-card.dragging{opacity:.4;transform:scale(.95);cursor:grabbing}
+.mt-card.drag-over{border-color:var(--accent);background:var(--acc-dim)}
+.mt-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:repeating-conic-gradient(#1a1a20 0% 25%,#222228 0% 50%) 0 0/10px 10px;pointer-events:none}
+.mt-nm{font-size:10px;padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2);pointer-events:none}
+.mt-badge{position:absolute;top:3px;left:3px}
+
+/* CONTEXT MENU */
+#ctx{position:fixed;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r2);padding:4px;z-index:500;display:none;flex-direction:column;gap:1px;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#ctx.show{display:flex}
+.ctx-item{font-size:12px;padding:6px 10px;border-radius:var(--r);cursor:pointer;color:var(--text2);transition:all .1s}
+.ctx-item:hover{background:var(--s3);color:var(--text)}
+.ctx-item.danger:hover{background:var(--pgm-dim);color:var(--pgm)}
+
+/* CTRL BAR */
+.live-ctrl{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:8px 14px;flex-shrink:0}
+.fsep{width:1px;height:16px;background:var(--border);margin:0 4px}
+.cinfo{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.cinfo span{color:var(--text2)}
+
+/* DEV */
+.dev-hd{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
+.dev-badge{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:var(--acc-dim);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:2px 7px}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.proj-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px}
+.proj-card:hover{border-color:var(--accent)}
+.proj-card.sel{border-color:var(--accent);background:var(--acc-dim)}
+.proj-nm{font-weight:700;font-size:13px}
+.proj-mt{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.proj-new{border-style:dashed;align-items:center;justify-content:center;color:var(--text3);font-size:22px}
+.proj-new:hover{color:var(--accent);border-color:var(--accent)}
+.png-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;margin-top:8px}
+.png-card{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.png-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:repeating-conic-gradient(#1a1a20 0% 25%,#222228 0% 50%) 0 0/12px 12px}
+.png-info{padding:5px 7px;display:flex;align-items:center;gap:4px}
+.png-nm{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pip-cnt{font-family:var(--mono);font-size:9px;color:var(--pvw);white-space:nowrap}
+.pip-cnt.an{color:var(--accent)}
+.drop-zone{border:1px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s;margin-top:8px}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);color:var(--accent)}
+.setup-card{background:var(--s3);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.setup-card .sc-title{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.setup-steps{display:flex;flex-direction:column;gap:6px}
+.setup-step{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);line-height:1.5}
+.step-num{font-family:var(--mono);font-size:10px;background:var(--accent);color:#111;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;margin-top:1px}
+.setup-step b{color:var(--text)}
+.url-copy-row{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px}
+.url-copy-row .uc-url{font-family:var(--mono);font-size:11px;color:var(--pvw);flex:1;word-break:break-all}
+
+/* FOOTER */
+#ftr{display:flex;align-items:center;gap:10px;padding:0 14px;height:30px;background:var(--s1);border-top:1px solid var(--border);flex-shrink:0}
+.fi{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.fi span{color:var(--text2)}
+.ftsep{width:1px;height:12px;background:var(--border)}
+
+/* MODAL */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.mov.show{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r2);padding:20px;min-width:300px;max-width:440px;width:90%}
+.modal h3{font-size:14px;font-weight:700;margin-bottom:12px}
+.mr{margin-bottom:10px}
+.mr label{display:block;font-size:11px;color:var(--text2);margin-bottom:4px;font-family:var(--mono)}
+.mr input,.mr select{width:100%}
+.ma{display:flex;gap:6px;justify-content:flex-end;margin-top:14px}
+
+/* STREAMDECK */
+.pvw-btns{padding:0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:0;flex-shrink:0;overflow:hidden}
+.sd-pip-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--s2);flex-shrink:0}
+.sd-pip-tab{font-family:var(--mono);font-size:10px;padding:5px 10px;cursor:pointer;color:var(--text3);border-right:1px solid var(--border);transition:all .15s;white-space:nowrap}
+.sd-pip-tab:hover{color:var(--text2)}
+.sd-pip-tab.active{color:var(--accent);background:var(--bg)}
+.sd-pip-tab.has-inp{color:var(--pvw)}
+.sd-pip-tab.active.has-inp{color:var(--pvw);background:var(--bg)}
+.sd-grid{display:flex;flex-wrap:wrap;gap:5px;padding:7px;overflow-y:auto;max-height:110px}
+.sd-btn{
+  font-family:var(--mono);font-size:10px;font-weight:700;
+  padding:0;width:60px;height:42px;
+  border-radius:5px;border:2px solid transparent;
+  cursor:pointer;transition:all .12s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;line-height:1.2;text-align:center;word-break:break-word;
+  letter-spacing:.02em;
+}
+.sd-btn.type-live{background:#2a1010;border-color:#5a2020;color:#e88;}
+.sd-btn.type-live:hover{background:#3a1515;border-color:var(--pgm);color:#fff}
+.sd-btn.type-live.active{background:var(--pgm);border-color:var(--pgm);color:#fff;box-shadow:0 0 8px var(--pgm-glow)}
+.sd-btn.type-vt{background:#0f1f10;border-color:#2a4a20;color:#8c8;}
+.sd-btn.type-vt:hover{background:#162a12;border-color:var(--pvw);color:#fff}
+.sd-btn.type-vt.active{background:var(--pvw);border-color:var(--pvw);color:#111;box-shadow:0 0 8px var(--pvw-glow)}
+.sd-btn.type-replay{background:#1a0f25;border-color:#4a2080;color:#c8a0ff;}
+.sd-btn.type-replay:hover{background:#251540;border-color:#8855cc;color:#fff}
+.sd-btn.type-replay.active{background:#7c3aed;border-color:#9f5cf0;color:#fff;box-shadow:0 0 8px rgba(124,58,237,.5)}
+.sd-btn.type-call{background:#1a1500;border-color:#4a3a00;color:#ffd460;}
+.sd-btn.type-call:hover{background:#2a2200;border-color:var(--accent);color:#fff}
+.sd-btn.type-call.active{background:var(--accent);border-color:var(--accent);color:#111;box-shadow:0 0 8px rgba(253,203,110,.4)}
+.sd-empty{font-size:11px;color:var(--text3);padding:16px;text-align:center;width:100%}
+
+/* DROP ZONE nos pips do PVW */
+.pip-drop-zone {
+  position: absolute;
+  border-radius: 4px;
+  border: 2px dashed transparent;
+  transition: all .15s;
+  cursor: default;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: transparent;
+  pointer-events: all;
+}
+.pip-drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(253,203,110,.18);
+  color: var(--accent);
+}
+.pip-drop-zone.has-input {
+  border-color: rgba(0,184,148,.3);
+}
+
+/* TOAST */
+#toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--s3);border:1px solid var(--border2);border-radius:var(--r2);padding:8px 14px;font-size:12px;font-family:var(--mono);color:var(--text);opacity:0;transition:all .25s;z-index:300;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:var(--pvw);color:var(--pvw)}
+#toast.err{border-color:var(--pgm);color:var(--pgm)}
+#toast.warn{border-color:var(--accent);color:var(--accent)}
+
+/* ── PIP EDITOR ── */
+#pip-editor-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+#pip-editor-overlay.open{display:flex}
+#pip-editor-wrap{position:relative;user-select:none;cursor:crosshair;border:2px solid var(--border2);border-radius:6px;overflow:hidden}
+#pip-editor-wrap img{display:block;max-width:88vw;max-height:72vh}
+.pip-rect{position:absolute;border:2px solid var(--pvw);background:rgba(0,184,148,.18);box-sizing:border-box;pointer-events:none}
+.pip-rect .pip-lbl{position:absolute;top:4px;left:6px;font:600 12px/1 var(--font);color:var(--pvw)}
+.pip-rect .pip-del{position:absolute;top:2px;right:4px;font-size:14px;color:var(--pgm);cursor:pointer;pointer-events:all}
+#pip-editor-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+#pip-editor-hint{font-size:12px;color:var(--fg3)}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx">
+  <div class="ctx-item" onclick="ctxCarregarPvw()">↓ Carregar no PVW</div>
+  <div class="ctx-item danger" onclick="ctxEsconder()">✕ Esconder da faixa</div>
+</div>
+
+<!-- MODAIS -->
+<div class="mov" id="m-proj">
+  <div class="modal">
+    <h3>Nova competição</h3>
+    <div class="mr"><label>Nome</label><input type="text" id="np-name" placeholder="Ex: Copa do Brasil 2025"/></div>
+    <div class="ma"><button class="btn ghost" onclick="cm('m-proj')">Cancelar</button><button class="btn acc" onclick="saveProj()">Criar</button></div>
+  </div>
+</div>
+<div class="mov" id="m-inp">
+  <div class="modal">
+    <h3>Adicionar input de sinal</h3>
+    <div class="mr"><label>Nome exato no vMix</label><input type="text" id="ni-name" placeholder="Ex: IN1 - Sinal Principal"/></div>
+    <div class="mr"><label>Nome curto (StreamDeck)</label><input type="text" id="ni-short" placeholder="Ex: IN1, REPLAY A, VT HOR" maxlength="12"/></div>
+    <div class="mr"><label>Tipo</label>
+      <select id="ni-type">
+        <option value="live">Ao vivo (câmera / sinal)</option>
+        <option value="vt">VT / Vídeo</option>
+        <option value="call">Call</option>
+        <option value="replay">Replay</option>
+      </select>
+    </div>
+    <div class="ma"><button class="btn ghost" onclick="cm('m-inp')">Cancelar</button><button class="btn acc" onclick="saveInp()">Adicionar</button></div>
+  </div>
+</div>
+<div class="mov" id="m-dev">
+  <div class="modal">
+    <h3>Acesso desenvolvedor</h3>
+    <div class="mr"><label>Senha</label><input type="password" id="dev-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')checkDev()"/></div>
+    <div class="ma"><button class="btn ghost" onclick="cm('m-dev')">Cancelar</button><button class="btn acc" onclick="checkDev()">Entrar</button></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div class="logo">MultiTela<span>/</span>Controller</div>
+  <div class="hsep"></div>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <div class="dot" id="dot"></div>
+    <span class="clbl" id="clbl">Desconectado</span>
+    <input type="text" id="vmix-host" value="localhost:8088" style="width:140px"/>
+    <button class="btn sm acc" onclick="doConnect()">Conectar</button>
+  </div>
+  <div class="hsep"></div>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <span class="clbl">Transp:</span>
+    <input type="text" id="cfg-transp" style="width:120px" placeholder="Nome input transparente"/>
+    <span class="clbl" style="margin-left:6px">Browser:</span>
+    <input type="text" id="cfg-browser" style="width:140px" placeholder="Nome input Web Browser"/>
+    <button class="btn sm" onclick="saveCfgInline()">✓</button>
+  </div>
+  <div id="output-pill" onclick="copyOutputUrl()" title="Copiar URL do output para o vMix">
+    <span class="pill-ic">📺</span>
+    <span class="pill-lbl">Output:</span>
+    <span class="pill-url" id="pill-url-txt">—</span>
+    <button class="pill-btn">Copiar URL</button>
+  </div>
+</div>
+
+<!-- TABS -->
+<div id="tabs">
+  <div class="tab active" onclick="goTab('sel')" id="tab-sel">Pacote Gráfico</div>
+  <div class="tab" onclick="goTab('live')" id="tab-live">Ao vivo</div>
+  <div class="tab" style="margin-left:auto;color:var(--text3)" onclick="om('m-dev')">⚙ Dev</div>
+</div>
+
+<div id="main">
+
+<!-- PACOTE GRÁFICO -->
+<div class="page active" id="page-sel">
+  <div id="screen-sel">
+    <div class="sel-title">Selecione o pacote gráfico</div>
+    <div class="pkg-grid" id="pkg-grid"></div>
+    <button class="btn pvwb" id="btn-usar" disabled onclick="usarPkg()">Ir ao vivo com este pacote →</button>
+  </div>
+</div>
+
+<!-- AO VIVO -->
+<div class="page" id="page-live">
+  <div class="live-wrap">
+
+    <!-- PVW + PGM -->
+    <div class="live-mons">
+      <div class="live-mon pvw-mon">
+        <div class="mon-hd">
+          <span class="mon-lbl pvw">○ PVW</span>
+          <span class="mon-nm" id="pvw-nm">—</span>
+        </div>
+        <div class="mon-body">
+          <img class="mon-prev" id="pvw-prev" src="" alt=""/>
+          <div class="mon-ov" id="pvw-ov"></div>
+          <div class="pvw-btns" id="pvw-btns"></div>
+        </div>
+      </div>
+      <div class="live-mon pgm-mon">
+        <div class="mon-hd">
+          <span class="mon-lbl pgm">● PGM</span>
+          <span class="mon-nm" id="pgm-nm">—</span>
+        </div>
+        <div class="mon-body">
+          <img class="mon-prev" id="pgm-prev" src="" alt=""/>
+          <div class="mon-ov" id="pgm-ov"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAIXA INFERIOR -->
+    <div id="tray-wrap">
+      <div id="tray-hd">
+        <span class="tray-ttl">Multitelas</span>
+        <span class="badge idle" id="tray-count">—</span>
+        <button class="btn xs ghost" id="btn-show-all" onclick="showAll()" style="display:none">Mostrar todas</button>
+        <div class="fsep"></div>
+        <button class="btn ghost sm" onclick="goTab('sel')" style="margin-left:auto">← Pacote</button>
+        <div class="fsep"></div>
+        <button class="btn pgmb" onclick="doCut()">✂ CUT</button>
+      </div>
+      <div id="tray"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DEV -->
+<div class="page" id="page-dev" style="display:none;flex-direction:column">
+  <div class="dev-hd">
+    <span class="dev-badge">Modo desenvolvedor</span>
+    <span style="font-size:12px;color:var(--text2)">Projetos, PNGs e configurações</span>
+    <button class="btn sm ghost" onclick="exitDev()" style="margin-left:auto">← Voltar</button>
+  </div>
+  <div class="scroll">
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">📺 Setup do output no vMix</span></div>
+      <div class="sec-bd">
+        <div class="setup-card">
+          <div class="sc-title">Como configurar — faça isso uma vez</div>
+          <div class="setup-steps">
+            <div class="setup-step"><span class="step-num">1</span><div>Copie a URL do output (pill no canto superior direito).</div></div>
+            <div class="setup-step"><span class="step-num">2</span><div>No vMix, crie um input <b>Web Browser</b> com essa URL.</div></div>
+            <div class="setup-step"><span class="step-num">3</span><div>Pronto — cada CUT atualiza o output automaticamente.</div></div>
+          </div>
+          <div class="url-copy-row">
+            <span class="uc-url" id="dev-output-url">—</span>
+            <button class="btn sm acc" onclick="copyOutputUrl()">Copiar URL</button>
+            <button class="btn sm ghost" onclick="resetChannel()">↺ Novo canal</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">Canal: <span id="ntfy-ch-lbl" style="color:var(--pvw);font-family:var(--mono)">—</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">Competições / Pacotes gráficos</span><button class="btn sm acc" onclick="om('m-proj')">+ Nova</button></div>
+      <div class="sec-bd"><div class="proj-grid" id="proj-grid"></div></div>
+    </div>
+    <div class="sec" id="sec-pngs" style="display:none">
+      <div class="sec-hd">
+        <span class="sec-ttl" id="pngs-ttl">Multitelas</span>
+        <button class="btn sm" onclick="document.getElementById('upng').click()">+ Upload PNG</button>
+        <input type="file" id="upng" accept="image/png" multiple style="display:none" onchange="hUpload(event)"/>
+      </div>
+      <div class="sec-bd">
+        <div class="drop-zone" id="dz"
+          ondragover="event.preventDefault();this.classList.add('drag')"
+          ondragleave="this.classList.remove('drag')"
+          ondrop="hDrop(event)">Arraste os PNGs aqui ou clique em Upload</div>
+        <div class="png-grid" id="png-grid"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-ttl">Inputs de sinal</span>
+        <button class="btn sm" onclick="om('m-inp')">+ Adicionar</button>
+        <button class="btn sm" onclick="importVmix()">Importar do vMix</button>
+        <button class="btn sm ghost" onclick="sortInputs()" title="Ordena: INs → VTs → Replays">↕ Reordenar</button>
+      </div>
+      <div class="sec-bd"><div id="inp-list"></div></div>
+    </div>
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">Senha dev</span></div>
+      <div class="sec-bd" style="display:flex;gap:8px;align-items:center">
+        <input type="password" id="new-pw" placeholder="Nova senha" style="width:200px"/>
+        <button class="btn sm acc" onclick="savePw()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div id="ftr">
+  <div class="fi">Pacote: <span id="ft-proj">—</span></div>
+  <div class="ftsep"></div>
+  <div class="fi">Multitelas: <span id="ft-mts">0</span></div>
+  <div class="ftsep"></div>
+  <div class="fi">Inputs: <span id="ft-inp">0</span></div>
+  <div class="ftsep"></div>
+  <div class="fi" id="ft-vmix">vMix: desconectado</div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// NTFY — canal de sync com o output.html
+// ════════════════════════════════════════
+// Gera um canal único por instalação, salvo no localStorage
+function getNtfyChannel() {
+  let ch = localStorage.getItem('mtc_ntfy_ch');
+  if (!ch) {
+    // canal aleatório longo para evitar colisão
+    ch = 'mtc-' + Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10);
+    localStorage.setItem('mtc_ntfy_ch', ch);
+  }
+  return ch;
+}
+const NTFY_CHANNEL = getNtfyChannel();
+// ════════════════════════════════════════
+// OUTPUT URL
+// ════════════════════════════════════════
+function getOutputUrl() {
+  const base = window.location.href.replace(/(\?.*)?$/, '').replace(/index\.html$/, '');
+  const base2 = base.endsWith('/') ? base : base + '/';
+  return base2 + 'output.html?ch=' + NTFY_CHANNEL;
+}
+
+function renderOutputUrl() {
+  const url = getOutputUrl();
+  const el1 = document.getElementById('pill-url-txt');
+  const el2 = document.getElementById('dev-output-url');
+  const el3 = document.getElementById('ntfy-ch-lbl');
+  if (el1) el1.textContent = url;
+  if (el2) el2.textContent = url;
+  if (el3) el3.textContent = NTFY_CHANNEL;
+}
+
+function resetChannel() {
+  if (!confirm('Isso vai gerar uma nova URL de output. Você precisará reconfigurar o Browser Input no vMix. Continuar?')) return;
+  localStorage.removeItem('mtc_ntfy_ch');
+  location.reload();
+}
+
+function copyOutputUrl() {
+  const url = getOutputUrl();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => toast('URL do output copiada!', 'ok'));
+  } else {
+    prompt('Copie a URL do output:', url);
+  }
+}
+
+// ════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════
+const S = {
+  host: 'localhost:8088',
+  connected: false,
+  projects: [],
+  inputs: [],
+  activeProj: null,
+  playlist: [],    // ordem das multitelas na faixa
+  hidden: [],      // ids de multitelas escondidas
+  liveIdx: -1,
+  pvwItem: null,
+  devPass: 'cazetv2025',
+  cfg: { transp: 'Transparente', browser: '' }
+};
+
+// ════════════════════════════════════════
+// PERSISTÊNCIA
+// ════════════════════════════════════════
+function save() {
+  try {
+    localStorage.setItem('mtc_v4', JSON.stringify({
+      projects: S.projects, inputs: S.inputs,
+      devPass: S.devPass, cfg: S.cfg, host: S.host,
+      hidden: S.hidden,
+    }));
+  } catch(e){}
+}
+function loadSt() {
+  try {
+    const d = JSON.parse(localStorage.getItem('mtc_v4') || '{}');
+    if (d.projects) S.projects = d.projects;
+    if (d.inputs)   S.inputs   = d.inputs;
+    if (d.devPass)  S.devPass  = d.devPass;
+    if (d.cfg)      S.cfg      = { ...S.cfg, ...d.cfg };
+    if (d.host)     S.host     = d.host;
+    if (d.hidden)   S.hidden   = d.hidden;
+  } catch(e){}
+}
+
+
+// ════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════
+function toast(m,t='',d=2500){const el=document.getElementById('toast');el.textContent=m;el.className='show '+t;clearTimeout(el._t);el._t=setTimeout(()=>el.className='',d)}
+function om(id){document.getElementById(id).classList.add('show')}
+function cm(id){document.getElementById(id).classList.remove('show')}
+function uid(){return Math.random().toString(36).slice(2,9)}
+function tc(t){return t==='replay'?'replay':t==='vt'?'vt':t==='call'?'call':'live'}
+function delay(ms){return new Promise(r=>setTimeout(r,ms))}
+
+function goTab(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const pg=document.getElementById('page-'+name);
+  const tb=document.getElementById('tab-'+name);
+  if(pg){pg.style.display='';pg.classList.add('active')}
+  if(tb)tb.classList.add('active');
+  if(name==='live')renderLive();
+  if(name==='sel')renderPkg();
+}
+
+function loadCfgFields(){
+  document.getElementById('vmix-host').value = S.host;
+  document.getElementById('cfg-transp').value = S.cfg.transp || '';
+  const bEl = document.getElementById('cfg-browser');
+  if (bEl) bEl.value = S.cfg.browser || '';
+}
+function saveCfgInline(){
+  S.cfg.transp  = document.getElementById('cfg-transp').value.trim()  || S.cfg.transp;
+  const bEl = document.getElementById('cfg-browser');
+  if (bEl) S.cfg.browser = bEl.value.trim() || S.cfg.browser;
+  save(); toast('Configuração salva', 'ok');
+}
+
+// ════════════════════════════════════════
+// VMIX API
+// ════════════════════════════════════════
+async function doConnect() {
+  S.host = document.getElementById('vmix-host').value.trim();
+  setDot('', 'Conectando...');
+  try {
+    const r = await fetch(`http://${S.host}/api`, { cache: 'no-store' });
+    if (!r.ok) throw new Error();
+    S.connected = true;
+    setDot('on', 'Conectado');
+    document.getElementById('ft-vmix').textContent = 'vMix: ' + S.host;
+    save(); toast('vMix conectado', 'ok');
+    await importVmix(true);
+  } catch(e) {
+    setDot('err', 'Erro');
+    toast('Não foi possível conectar ao vMix', 'err');
+  }
+}
+function setDot(cls, label) {
+  document.getElementById('dot').className = 'dot ' + cls;
+  document.getElementById('clbl').textContent = label;
+}
+async function vCmd(fn, p={}) {
+  const qs = new URLSearchParams({ Function: fn, ...p });
+  await fetch(`http://${S.host}/api/?${qs}`, { mode: 'cors' });
+}
+async function importVmix(silent=false) {
+  if (!S.connected) { if (!silent) toast('Conecte ao vMix primeiro', 'warn'); return; }
+  try {
+    const r   = await fetch(`http://${S.host}/api`, { cache: 'no-store' });
+    const txt = await r.text();
+    const doc = new DOMParser().parseFromString(txt, 'text/xml');
+    let added = 0;
+
+    doc.querySelectorAll('vmix > inputs > input').forEach(n => {
+      const title = n.getAttribute('title') || '';
+      const type  = n.getAttribute('type')  || '';
+
+      // Capture  = Decklinks (IN 1-6 etc)
+      // Camera   = webcams genéricas
+      // NDI/SRT/Stream = sinais de rede
+      // VideoCall = vMix Call
+      // VideoList = listas de vídeo/adbreak
+      // Replay   = Replay A (canal principal)
+      // ReplayPreview = Replay B (canal preview)
+      const isCall   = type === 'VideoCall';
+      const isCam    = ['Capture','Camera','NDI','SRT','Stream'].includes(type);
+      const isList   = type === 'VideoList';
+      const isReplay = ['Replay','ReplayPreview'].includes(type);
+
+      if (!title || (!isCam && !isList && !isReplay && !isCall)) return;
+      if (S.inputs.find(i => i.name === title)) return;
+
+      let itype = 'live';
+      if (isReplay) itype = 'replay';
+      else if (isList) itype = 'vt';
+      else if (isCall) itype = 'call';
+
+      const short = n.getAttribute('shortTitle') || title;
+      // Limpa o shortTitle para ficar compacto no botão (máx 12 chars)
+      const shortName = short.length > 12 ? short.slice(0,12) : short;
+      S.inputs.push({ id: uid(), name: title, shortName, type: itype });
+      added++;
+    });
+
+    save(); renderInps();
+    if (!silent || added > 0) toast(added + ' inputs importados', 'ok');
+    else if (!silent) toast('Nenhum input novo encontrado', 'warn');
+  } catch(e) { if (!silent) toast('Erro ao importar', 'err'); }
+}
+
+// ════════════════════════════════════════
+// ANÁLISE PNG
+// ════════════════════════════════════════
+async function analyzePng(dataUrl, alphaThreshold = 32, minAreaPct = 0.5) {
+  // alphaThreshold: pixels com alpha < threshold são considerados transparentes
+  // minAreaPct: área mínima do pip em % da imagem (filtra ruídos)
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      // Desenhar sempre em 1920x1080 para que as coords já saiam normalizadas
+      // independente do tamanho original do PNG
+      const OUT_W = 1920, OUT_H = 1080;
+      const cvs = document.createElement('canvas');
+      cvs.width = OUT_W; cvs.height = OUT_H;
+      const ctx = cvs.getContext('2d');
+      ctx.clearRect(0, 0, OUT_W, OUT_H);
+      ctx.drawImage(img, 0, 0, OUT_W, OUT_H);
+      const data = ctx.getImageData(0, 0, OUT_W, OUT_H).data;
+
+      // Mapa de pixels transparentes
+      const tr  = new Uint8Array(OUT_W * OUT_H);
+      for (let i = 0; i < OUT_W * OUT_H; i++) {
+        tr[i] = data[i * 4 + 3] < alphaThreshold ? 1 : 0;
+      }
+
+      const vis = new Uint8Array(OUT_W * OUT_H);
+      const regs = [];
+      const minArea = (OUT_W * OUT_H) * (minAreaPct / 100);
+
+      // Flood fill 4-conectado com pilha iterativa
+      function fill(sx, sy) {
+        const stack = [sy * OUT_W + sx];
+        let minX = sx, maxX = sx, minY = sy, maxY = sy, cnt = 0;
+        while (stack.length) {
+          const idx = stack.pop();
+          if (vis[idx] || !tr[idx]) continue;
+          vis[idx] = 1; cnt++;
+          const x = idx % OUT_W, y = (idx / OUT_W) | 0;
+          if (x < minX) minX = x; if (x > maxX) maxX = x;
+          if (y < minY) minY = y; if (y > maxY) maxY = y;
+          if (x + 1 < OUT_W)  stack.push(idx + 1);
+          if (x - 1 >= 0)     stack.push(idx - 1);
+          if (y + 1 < OUT_H)  stack.push(idx + OUT_W);
+          if (y - 1 >= 0)     stack.push(idx - OUT_W);
+        }
+        return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, count: cnt };
+      }
+
+      for (let y = 0; y < OUT_H; y++) {
+        for (let x = 0; x < OUT_W; x++) {
+          const idx = y * OUT_W + x;
+          if (tr[idx] && !vis[idx]) {
+            const r = fill(x, y);
+            if (r.count >= minArea && r.w > 20 && r.h > 20) regs.push(r);
+          }
+        }
+      }
+
+      // Normalizar para 0-1 (já estão em 1920x1080)
+      const pips = regs
+        .map(r => ({ x: r.x / OUT_W, y: r.y / OUT_H, w: r.w / OUT_W, h: r.h / OUT_H }))
+        .sort((a, b) => {
+          // Ordenar: cima→baixo, esquerda→direita (em blocos de linha)
+          const rowA = Math.round(a.y * 20);
+          const rowB = Math.round(b.y * 20);
+          return rowA !== rowB ? rowA - rowB : a.x - b.x;
+        });
+
+      resolve(pips);
+    };
+    img.src = dataUrl;
+  });
+}
+function pipToVmix(pip) {
+  // Sistema de coordenadas vMix (resolution-independent, verificado empiricamente):
+  //   zoom=1   → sinal ocupa 100% da tela (1920x1080)
+  //   PanX=0   → centrado; range real ≈ -1..+1 para bordas da tela
+  //   PanY=0   → centrado; range real ≈ -1..+1 para bordas da tela
+  //   Multiplicador: (cx_norm - 0.5) * 2  (não *4 — verificado com vMix real)
+  //
+  // Zoom: cover uniforme sem distorção
+  //   pip mais largo que 16:9 → limita pela largura → zoom = pip.w
+  //   pip mais alto  que 16:9 → limita pela altura  → zoom = pip.h * (16/9)
+  //   (ambos expressam: "qual fração da tela o sinal deve ocupar em largura")
+
+  // zoom = pip.w * sangria — escala pela largura do pip (verificado empiricamente)
+  // O PNG na layer 10 mascara o excesso. Sangria de 4% cobre bordas brancas.
+  const BLEED = 1.04;
+  const zoom  = pip.w * BLEED;
+
+  // Centro do pip → coordenadas Pan vMix (multiplicador=2, verificado empiricamente)
+  // PanY: vMix usa positivo=CIMA, negativo=BAIXO (oposto do canvas HTML)
+  const cx   = pip.x + pip.w / 2;
+  const cy   = pip.y + pip.h / 2;
+  const panX = (cx - 0.5) * 2;
+  const panY = (0.5 - cy) * 2;  // sinal invertido: pip no topo → panY positivo
+
+  const r4 = v => Math.round(v * 10000) / 10000;
+  return { zoom: r4(zoom), panX: r4(panX), panY: r4(panY) };
+}
+
+
+// Pre-comprime WebP no upload — no CUT ja esta pronto, zero espera de compressao
+function comprimirWebP(dataUrl) {
+  return new Promise(resolve => {
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const cvs = document.createElement('canvas');
+      cvs.width = 960; cvs.height = 540;
+      const ctx = cvs.getContext('2d');
+      ctx.clearRect(0, 0, 960, 540);
+      ctx.drawImage(imgEl, 0, 0, 960, 540);
+      const w = cvs.toDataURL('image/webp', 0.9);
+      resolve(w.startsWith('data:image/webp') ? w : cvs.toDataURL('image/png'));
+    };
+    imgEl.src = dataUrl;
+  });
+}
+
+function dataUrlToBlob(dataUrl) {
+  const parts = dataUrl.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
+  const bin  = atob(parts[1]);
+  const arr  = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+
+async function sendToOutput(item) {
+  // Tenta webpCache pre-comprimido; PNGs antigos (sem cache) comprimem na hora
+  const proj   = S.projects.find(p => p.id === item.projId);
+  const pngObj = proj?.pngs.find(p => p.id === item.pngId);
+
+  // Se nao tem cache ainda, gera agora e guarda para proxima vez
+  if (pngObj && !pngObj.webpCache) {
+    pngObj.webpCache = await comprimirWebP(item.dataUrl);
+  }
+  const dataUrl = pngObj?.webpCache || await comprimirWebP(item.dataUrl);
+
+  console.log('[sendToOutput] dataUrl prefix:', dataUrl.slice(0, 30), 'length:', dataUrl.length);
+
+  const isWebp = dataUrl.startsWith('data:image/webp');
+  const blob   = dataUrlToBlob(dataUrl);
+
+  console.log('[sendToOutput] blob size:', blob.size, 'bytes, type:', blob.type);
+
+  try {
+    const resp = await fetch('https://ntfy.sh/' + NTFY_CHANNEL, {
+      method: 'POST',
+      headers: {
+        'Filename':     isWebp ? 'multitela.webp' : 'multitela.png',
+        'Content-Type': isWebp ? 'image/webp'     : 'image/png',
+      },
+      body: blob,
+    });
+    const body = await resp.text();
+    console.log('[sendToOutput] ntfy resp:', resp.status, body.slice(0, 200));
+    if (!resp.ok) toast('Erro ntfy: ' + resp.status + ' ' + body.slice(0,80), 'warn');
+    else toast('Output enviado', 'ok');
+  } catch(e) {
+    console.warn('[sendToOutput] fetch error:', e);
+    toast('Erro de rede ao enviar output', 'err');
+  }
+}
+
+async function clearOutput() {
+  // Envia pixel transparente para limpar o output no vMix
+  const cvs = document.createElement('canvas');
+  cvs.width = 1; cvs.height = 1;
+  const blob = await new Promise(r => cvs.toBlob(r, 'image/png'));
+  try {
+    await fetch('https://ntfy.sh/' + NTFY_CHANNEL, {
+      method: 'POST',
+      headers: { 'Filename': 'clear.png', 'Content-Type': 'image/png', 'X-Tags': 'clear' },
+      body: blob,
+    });
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════
+// DEV
+// ════════════════════════════════════════
+function checkDev() {
+  if (document.getElementById('dev-pw').value === S.devPass) {
+    cm('m-dev'); document.getElementById('dev-pw').value = '';
+    enterDev();
+  } else toast('Senha incorreta', 'err');
+}
+function enterDev() {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const pg = document.getElementById('page-dev');
+  pg.style.display='flex'; pg.classList.add('active');
+  renderProjs(); renderInps(); renderOutputUrl();
+}
+function exitDev() { document.getElementById('page-dev').style.display='none'; goTab('sel'); }
+function savePw() {
+  const pw = document.getElementById('new-pw').value.trim();
+  if (!pw) { toast('Informe a senha','warn'); return; }
+  S.devPass = pw; save(); document.getElementById('new-pw').value='';
+  toast('Senha atualizada','ok');
+}
+
+// ════════════════════════════════════════
+// PROJETOS
+// ════════════════════════════════════════
+function renderProjs() {
+  const g = document.getElementById('proj-grid');
+  g.innerHTML = '';
+  S.projects.forEach(p => {
+    const c = document.createElement('div');
+    c.className = 'proj-card' + (S.activeProj?.id===p.id?' sel':'');
+    c.innerHTML = `<div class="proj-nm">${p.name}</div><div class="proj-mt">${p.pngs.length} multitela${p.pngs.length!==1?'s':''}</div>`;
+    c.onclick = () => selProj(p.id);
+    g.appendChild(c);
+  });
+  const a = document.createElement('div');
+  a.className='proj-card proj-new'; a.textContent='+';
+  a.onclick = () => om('m-proj');
+  g.appendChild(a);
+}
+function saveProj() {
+  const n = document.getElementById('np-name').value.trim();
+  if (!n) { toast('Informe o nome','warn'); return; }
+  const p = { id:uid(), name:n, pngs:[] };
+  S.projects.push(p); save();
+  cm('m-proj'); document.getElementById('np-name').value='';
+  renderProjs(); selProj(p.id);
+}
+function selProj(id) {
+  S.activeProj = S.projects.find(p=>p.id===id);
+  renderProjs();
+  document.getElementById('sec-pngs').style.display='';
+  document.getElementById('pngs-ttl').textContent='Multitelas — '+S.activeProj.name;
+  renderPngs(); updFt();
+}
+
+// ════════════════════════════════════════
+// PNGs
+// ════════════════════════════════════════
+function renderPngs() {
+  const g = document.getElementById('png-grid');
+  g.innerHTML = '';
+  if (!S.activeProj) return;
+  S.activeProj.pngs.forEach(png => {
+    const c = document.createElement('div');
+    c.className = 'png-card';
+    const pt = png.pips ? `${png.pips.length} pip${png.pips.length!==1?'s':''}` : 'Analisando...';
+    c.innerHTML = `
+      <img class="png-thumb" src="${png.dataUrl}" style="cursor:pointer" onclick="openPipEditor('${png.id}')"/>
+      <div class="png-info">
+        <span class="png-nm">${png.name}</span>
+        <span class="pip-cnt ${png.pips?'':'an'}" style="cursor:pointer" onclick="openPipEditor('${png.id}')">${pt}</span>
+        <button class="btn xs ghost" title="Editar pips manualmente" onclick="openPipEditor('${png.id}')">✎</button>
+        <button class="btn xs ghost" onclick="rmPng('${png.id}',event)">✕</button>
+      </div>`;
+    g.appendChild(c);
+  });
+  updFt();
+}
+async function hUpload(e) { await procPngs(Array.from(e.target.files)); e.target.value=''; }
+async function hDrop(e) {
+  e.preventDefault(); document.getElementById('dz').classList.remove('drag');
+  await procPngs(Array.from(e.dataTransfer.files).filter(f=>f.type==='image/png'));
+}
+async function procPngs(files) {
+  if (!S.activeProj) { toast('Selecione uma competição','warn'); return; }
+  for (const f of files) {
+    const du = await rdFile(f);
+    const png = { id:uid(), name:f.name.replace('.png',''), dataUrl:du, webpCache:null, pips:null };
+    S.activeProj.pngs.push(png); renderPngs();
+    Promise.all([analyzePng(du), comprimirWebP(du)]).then(([pips, webp]) => {
+      png.pips = pips;
+      png.webpCache = webp;
+      save(); renderPngs();
+      toast(`${png.name}: ${pips.length} pip${pips.length!==1?'s':''} detectado${pips.length!==1?'s':''}`, 'ok');
+    });
+  }
+}
+function rmPng(id,e) {
+  e.stopPropagation();
+  if (!S.activeProj) return;
+  S.activeProj.pngs = S.activeProj.pngs.filter(p=>p.id!==id);
+  save(); renderPngs();
+}
+function rdFile(f) {
+  return new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(f); });
+}
+
+// ════════════════════════════════════════
+// INPUTS
+// ════════════════════════════════════════
+function renderInps() {
+  const el = document.getElementById('inp-list');
+  el.innerHTML='';
+  if (!S.inputs.length) { el.innerHTML='<div class="empty"><div>Nenhum input</div></div>'; return; }
+  S.inputs.forEach(inp=>{
+    const r=document.createElement('div');
+    r.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--s2);margin-bottom:4px';
+    r.innerHTML=`
+      <span class="tag ${tc(inp.type)}">${inp.type}</span>
+      <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${inp.name}</span>
+      <input type="text" value="${inp.shortName||inp.name.slice(0,12)}"
+        maxlength="12" placeholder="Nome curto"
+        style="width:90px;font-size:11px;padding:2px 6px"
+        onchange="setShortName('${inp.id}',this.value)"
+        title="Nome no botão StreamDeck"/>
+      <button class="btn xs ghost" onclick="rmInp('${inp.id}')">✕</button>`;
+    el.appendChild(r);
+  });
+  document.getElementById('ft-inp').textContent=S.inputs.length;
+}
+function saveInp() {
+  const n=document.getElementById('ni-name').value.trim();
+  const s=document.getElementById('ni-short').value.trim();
+  const t=document.getElementById('ni-type').value;
+  if (!n) { toast('Informe o nome','warn'); return; }
+  if (S.inputs.find(i=>i.name===n)) { toast('Já existe','warn'); return; }
+  S.inputs.push({id:uid(), name:n, shortName:s||n.slice(0,10), type:t}); save();
+  cm('m-inp');
+  document.getElementById('ni-name').value='';
+  document.getElementById('ni-short').value='';
+  renderInps(); toast('"'+n+'" adicionado','ok');
+}
+function rmInp(id) { S.inputs=S.inputs.filter(i=>i.id!==id); save(); renderInps(); }
+function setShortName(id, val) {
+  const inp = S.inputs.find(i=>i.id===id);
+  if (inp) { inp.shortName = val.trim().slice(0,12) || inp.name.slice(0,12); save(); }
+}
+function sortInputs() {
+  const order = { live:0, vt:1, call:2, replay:3 };
+  S.inputs.sort((a,b) => (order[a.type]??9) - (order[b.type]??9));
+  save(); renderInps();
+  toast('Inputs reordenados','ok');
+}
+
+
+// ════════════════════════════════════════
+// SELEÇÃO DE PACOTE
+// ════════════════════════════════════════
+function renderPkg(){
+  const g=document.getElementById('pkg-grid');g.innerHTML='';
+  if(!S.projects.length){
+    g.innerHTML='<div class="empty"><div class="empty-ic">🏆</div><div>Nenhum pacote.<br>Acesse Dev para adicionar.</div></div>';
+    document.getElementById('btn-usar').disabled=true;return;
+  }
+  const ics=['🏆','⚽','🏀','🎾','🏈','🏐','🎽','🥊'];
+  S.projects.forEach((p,i)=>{
+    const c=document.createElement('div');
+    c.className='pkg-card'+(S.activeProj?.id===p.id?' sel':'');
+    c.innerHTML=`<div class="pkg-ic">${ics[i%ics.length]}</div><div class="pkg-nm">${p.name}</div><div class="pkg-mt">${p.pngs.length} multitela${p.pngs.length!==1?'s':''}</div>`;
+    c.onclick=()=>{document.querySelectorAll('.pkg-card').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');S.activeProj=p;document.getElementById('btn-usar').disabled=false;updFt()};
+    g.appendChild(c);
+  });
+  document.getElementById('btn-usar').disabled=!S.activeProj;
+}
+
+function usarPkg(){
+  if(!S.activeProj)return;
+  // Inicializa playlist com todas as multitelas do pacote na ordem atual
+  S.playlist=S.activeProj.pngs.map(png=>({
+    id:uid(),projId:S.activeProj.id,pngId:png.id,
+    pngName:png.name,dataUrl:png.dataUrl,
+    pips:(png.pips||[]).map((_,i)=>({pipIdx:i,inputName:''}))
+  }));
+  S.hidden=[];
+  S.liveIdx=-1;S.pvwItem=null;
+  updFt();goTab('live');
+  toast('Pacote "'+S.activeProj.name+'" carregado','ok');
+}
+
+// ════════════════════════════════════════
+// FAIXA DE MULTITELAS (TRAY)
+// ════════════════════════════════════════
+let dragSrc=null;
+let ctxTargetId=null;
+
+function renderTray(){
+  const tray=document.getElementById('tray');
+  tray.innerHTML='';
+  const visible=S.playlist.filter(it=>!S.hidden.includes(it.id));
+  const hidden=S.playlist.filter(it=>S.hidden.includes(it.id));
+
+  document.getElementById('tray-count').textContent=
+    visible.length+' de '+S.playlist.length;
+  const btnAll=document.getElementById('btn-show-all');
+  btnAll.style.display=hidden.length?'':'none';
+  btnAll.textContent='Mostrar '+hidden.length+' oculta'+(hidden.length!==1?'s':'');
+
+  visible.forEach(it=>{
+    const isPgm=S.playlist[S.liveIdx]?.id===it.id;
+    const isPvw=S.pvwItem?.id===it.id;
+    const card=document.createElement('div');
+    card.className='mt-card'+(isPgm?' is-pgm':isPvw?' is-pvw':'');
+    card.draggable=true;
+    card.dataset.id=it.id;
+    card.innerHTML=
+      (isPgm?'<span class="badge pgm mt-badge">PGM</span>':
+       isPvw?'<span class="badge pvw mt-badge">PVW</span>':'')+
+      `<img class="mt-img" src="${it.dataUrl}"/>
+       <div class="mt-nm">${it.pngName}</div>`;
+
+    // Clique simples → carrega no PVW
+    card.onclick=()=>loadPvwItem(it);
+
+    // Botão direito → context menu
+    card.addEventListener('contextmenu',e=>{
+      e.preventDefault();
+      ctxTargetId=it.id;
+      const ctx=document.getElementById('ctx');
+      ctx.style.left=Math.min(e.clientX,window.innerWidth-160)+'px';
+      ctx.style.top=Math.min(e.clientY,window.innerHeight-80)+'px';
+      ctx.classList.add('show');
+    });
+
+    // Drag & drop para reordenar
+    card.addEventListener('dragstart',e=>{
+      dragSrc=it.id;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+    card.addEventListener('dragover',e=>{
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+    card.addEventListener('drop',e=>{
+      e.preventDefault();card.classList.remove('drag-over');
+      if(dragSrc===it.id)return;
+      const fromIdx=S.playlist.findIndex(x=>x.id===dragSrc);
+      const toIdx  =S.playlist.findIndex(x=>x.id===it.id);
+      if(fromIdx<0||toIdx<0)return;
+      const [moved]=S.playlist.splice(fromIdx,1);
+      S.playlist.splice(toIdx,0,moved);
+      // Atualiza liveIdx se necessario
+      if(S.liveIdx>=0){
+        S.liveIdx=S.playlist.findIndex(x=>x.id===(S.playlist[S.liveIdx]?.id));
+      }
+      renderTray();
+    });
+
+    tray.appendChild(card);
+  });
+}
+
+function ctxCarregarPvw(){
+  closeCtx();
+  const it=S.playlist.find(x=>x.id===ctxTargetId);
+  if(it)loadPvwItem(it);
+}
+function ctxEsconder(){
+  closeCtx();
+  if(!S.hidden.includes(ctxTargetId))S.hidden.push(ctxTargetId);
+  renderTray();
+}
+function showAll(){S.hidden=[];renderTray()}
+function closeCtx(){document.getElementById('ctx').classList.remove('show')}
+document.addEventListener('click',closeCtx);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCtx()});
+
+// ════════════════════════════════════════
+// AO VIVO
+// ════════════════════════════════════════
+function renderLive(){renderTray();updMons()}
+
+function loadPvwItem(item){
+  S.pvwItem=item;
+  updMons();renderTray();
+}
+
+function updMons(){
+  const pgm=S.playlist[S.liveIdx];
+  const pvw=S.pvwItem;
+  document.getElementById('pvw-nm').textContent=pvw?pvw.pngName:'—';
+  document.getElementById('pvw-prev').src=pvw?pvw.dataUrl:'';
+  renderChips('pvw-ov',pvw,'pvw-prev');renderPvwBtns(pvw);
+  document.getElementById('pgm-nm').textContent=pgm?pgm.pngName:'—';
+  document.getElementById('pgm-prev').src=pgm?pgm.dataUrl:'';
+  renderChips('pgm-ov',pgm,'pgm-prev');
+}
+
+function renderChips(oid,item,imgId){
+  const el=document.getElementById(oid);if(!el)return;
+  // Remove apenas chips, preserva drop zones
+  el.querySelectorAll('.pip-chip').forEach(e=>e.remove());
+  if(!item)return;
+  const proj=S.projects.find(p=>p.id===item.projId);
+  const png=proj?.pngs.find(p=>p.id===item.pngId);
+  if(!png?.pips)return;
+  const imgEl=document.getElementById(imgId);
+  const mW=imgEl?.clientWidth||160,mH=imgEl?.clientHeight||90;
+  png.pips.forEach((pip,i)=>{
+    const ch=document.createElement('div');ch.className='pip-chip';
+    ch.style.cssText=`left:${(pip.x*mW).toFixed(0)}px;top:${(pip.y*mH).toFixed(0)}px;width:${(pip.w*mW*.65).toFixed(0)}px`;
+    ch.textContent=item.pips[i]?.inputName||`PIP ${String.fromCharCode(65+i)}`;
+    el.appendChild(ch);
+  });
+}
+
+// input sendo arrastado no momento
+let sdDragInput = null;
+// pip selecionado atualmente na streamdeck (índice)
+let sdSelectedPip = 0;
+
+function renderPvwBtns(item){
+  const el=document.getElementById('pvw-btns');el.innerHTML='';
+  if(!item?.pips?.length)return;
+  if(sdSelectedPip >= item.pips.length) sdSelectedPip = 0;
+
+  // Abas por pip (ainda úteis para referência visual)
+  const tabs = document.createElement('div');
+  tabs.className = 'sd-pip-tabs';
+  item.pips.forEach((pip, i) => {
+    const tab = document.createElement('div');
+    const hasPip = !!pip.inputName;
+    tab.className = 'sd-pip-tab' + (i===sdSelectedPip?' active':'') + (hasPip?' has-inp':'');
+    tab.textContent = 'PIP ' + String.fromCharCode(65+i) + (hasPip ? ' ✓' : '');
+    tab.onclick = () => { sdSelectedPip=i; renderPvwBtns(item); };
+    tabs.appendChild(tab);
+  });
+  el.appendChild(tabs);
+
+  // Grid de botões StreamDeck — draggable
+  const grid = document.createElement('div');
+  grid.className = 'sd-grid';
+
+  if (!S.inputs.length) {
+    grid.innerHTML = '<div class="sd-empty">Nenhum input cadastrado.<br>Importe no Dev.</div>';
+    el.appendChild(grid); return;
+  }
+
+  const currentPip = item.pips[sdSelectedPip];
+  S.inputs.forEach(inp => {
+    const b = document.createElement('button');
+    const isActive = item.pips.some(p=>p.inputName===inp.name);
+    b.className = `sd-btn type-${inp.type}` + (isActive ? ' active' : '');
+    b.title = inp.name + '\nArraste para o pip ou clique';
+    b.textContent = inp.shortName || inp.name.slice(0,10);
+    b.draggable = true;
+
+    // Drag start — guarda qual input está sendo arrastado
+    b.addEventListener('dragstart', e => {
+      sdDragInput = inp;
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('text/plain', inp.name);
+      setTimeout(()=>b.style.opacity='0.5', 0);
+    });
+    b.addEventListener('dragend', () => {
+      b.style.opacity='';
+      sdDragInput = null;
+    });
+
+    // Clique simples — atribui ao pip selecionado
+    b.onclick = () => {
+      if(currentPip) currentPip.inputName = inp.name;
+      renderPvwBtns(item);
+      renderChips('pvw-ov', item, 'pvw-prev');
+      if(sdSelectedPip < item.pips.length - 1) {
+        sdSelectedPip++;
+        setTimeout(()=>renderPvwBtns(item), 150);
+      }
+    };
+    grid.appendChild(b);
+  });
+  el.appendChild(grid);
+
+  // Renderiza drop zones sobre os pips no preview
+  renderPipDropZones(item);
+}
+
+function renderPipDropZones(item) {
+  const ov   = document.getElementById('pvw-ov');
+  const img  = document.getElementById('pvw-prev');
+  if (!ov || !img) return;
+
+  // Remove drop zones anteriores (mantém chips)
+  ov.querySelectorAll('.pip-drop-zone').forEach(el=>el.remove());
+
+  const proj = S.projects.find(p=>p.id===item.projId);
+  const png  = proj?.pngs.find(p=>p.id===item.pngId);
+  if (!png?.pips) return;
+
+  const mW = img.clientWidth || 320;
+  const mH = img.clientHeight || 180;
+
+  png.pips.forEach((pip, i) => {
+    const dz = document.createElement('div');
+    dz.className = 'pip-drop-zone' + (item.pips[i]?.inputName ? ' has-input' : '');
+    dz.style.cssText = `
+      left:${(pip.x*mW).toFixed(0)}px;
+      top:${(pip.y*mH).toFixed(0)}px;
+      width:${(pip.w*mW).toFixed(0)}px;
+      height:${(pip.h*mH).toFixed(0)}px;
+    `;
+    dz.textContent = item.pips[i]?.inputName
+      ? (S.inputs.find(x=>x.name===item.pips[i].inputName)?.shortName || item.pips[i].inputName.slice(0,10))
+      : 'PIP ' + String.fromCharCode(65+i);
+
+    dz.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      dz.classList.add('drag-over');
+    });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+    dz.addEventListener('drop', e => {
+      e.preventDefault();
+      dz.classList.remove('drag-over');
+      if (!sdDragInput) return;
+      item.pips[i].inputName = sdDragInput.name;
+      sdSelectedPip = i;
+      renderPvwBtns(item);
+      renderChips('pvw-ov', item, 'pvw-prev');
+    });
+
+    ov.appendChild(dz);
+  });
+}
+
+// ════════════════════════════════════════
+// APLICAR NO VMIX
+// ════════════════════════════════════════
+async function applyToPgm(item){
+  if(!item||!S.connected)return;
+  const tn   = S.cfg.transp;
+  const proj = S.projects.find(p=>p.id===item.projId);
+  const png  = proj?.pngs.find(p=>p.id===item.pngId);
+  if(!png?.pips)return;
+
+  // Dispara output e comandos vMix em paralelo — sem await sequencial
+  const cmds = [];
+
+  // ① Output via ntfy (não bloqueia os comandos vMix)
+  sendToOutput(item);
+
+  // ② Limpa todas as layers 1–9 (overlay, zoom e pan)
+  for (let li = 1; li <= 9; li++) {
+    cmds.push(vCmd('SetMultiViewOverlay', { Input: tn, Value: `${li},` }));
+    cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: tn, Value: '1' }));
+    cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: tn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: tn, Value: '0' }));
+  }
+
+  // ③ Para cada pip: overlay + Rectangle
+  // Passa x,y,w — height calculado pelo vMix preservando AR 16:9 do sinal
+  for(let i=0;i<item.pips.length;i++){
+    const pipCfg   = item.pips[i];
+    const pipCoord = png.pips[i];
+    if(!pipCfg?.inputName || !pipCoord) continue;
+    const li = i + 1;
+    const p  = pipToVmix(pipCoord);
+
+    cmds.push(vCmd('SetMultiViewOverlay',   { Input: tn, Value: `${li},${pipCfg.inputName}` }));
+    cmds.push(vCmd(`SetLayer${li}Zoom`,     { Input: tn, Value: `${p.zoom}` }));
+    cmds.push(vCmd(`SetLayer${li}PanX`,     { Input: tn, Value: `${p.panX}` }));
+    cmds.push(vCmd(`SetLayer${li}PanY`,     { Input: tn, Value: `${p.panY}` }));
+  }
+
+  // Dispara tudo em paralelo
+  await Promise.all(cmds.map(p=>p.catch(()=>{})));
+  toast('"'+item.pngName+'" no ar','ok');
+}
+
+async function doCut(){
+  if(!S.connected){toast('vMix desconectado','err');return}
+  const item=S.pvwItem;
+  if(!item){toast('Nada no PVW — clique em uma multitela','warn');return}
+
+  await applyToPgm(item);
+
+  // Avança PGM
+  const newIdx=S.playlist.findIndex(x=>x.id===item.id);
+  S.liveIdx=newIdx;
+  S.pvwItem=null;
+
+  updMons();renderTray();
+}
+
+// ════════════════════════════════════════
+// FOOTER
+// ════════════════════════════════════════
+function updFt(){
+  document.getElementById('ft-proj').textContent=S.activeProj?.name??'—';
+  document.getElementById('ft-mts').textContent=S.projects.reduce((a,p)=>a+p.pngs.length,0);
+  document.getElementById('ft-inp').textContent=S.inputs.length;
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+loadSt();
+loadCfgFields();
+renderPkg();
+renderInps();
+updFt();
+renderOutputUrl();
+setDot('','Desconectado');
+
+// Recalcula drop zones se a janela for redimensionada
+window.addEventListener('resize', () => {
+  if (S.pvwItem) renderPipDropZones(S.pvwItem);
+});
+</script>
+
+<!-- PIP EDITOR MODAL -->
+<div id="pip-editor-overlay">
+  <div id="pip-editor-bar">
+    <span style="font:600 14px/1 var(--font);color:var(--fg1)" id="pip-editor-title">Editor de Pips</span>
+    <span id="pip-editor-hint">Clique e arraste para desenhar um pip. Clique no ✕ para remover.</span>
+    <button class="btn sm" onclick="pipEditorConfirm()">✓ Salvar</button>
+    <button class="btn sm ghost" onclick="pipEditorCancel()">Cancelar</button>
+  </div>
+  <div id="pip-editor-wrap">
+    <img id="pip-editor-img" src="" alt=""/>
+    <div id="pip-editor-rects"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// PIP EDITOR MANUAL
+// ════════════════════════════════════════
+let _pipEditorPng = null;
+let _pipEditorRects = [];  // [{x,y,w,h} normalizados 0-1]
+let _pipEditorDrag = null; // {startX, startY, el}
+
+function openPipEditor(pngId) {
+  const proj = S.activeProj;
+  if (!proj) return;
+  const png = proj.pngs.find(p => p.id === pngId);
+  if (!png) return;
+  _pipEditorPng = png;
+  _pipEditorRects = (png.pips || []).map(p => ({...p}));
+
+  const img = document.getElementById('pip-editor-img');
+  img.src = png.dataUrl;
+  document.getElementById('pip-editor-title').textContent = png.name + ' — Pips';
+  document.getElementById('pip-editor-overlay').classList.add('open');
+  img.onload = () => pipEditorRenderRects();
+  if (img.complete) pipEditorRenderRects();
+}
+
+function pipEditorCancel() {
+  document.getElementById('pip-editor-overlay').classList.remove('open');
+  _pipEditorPng = null; _pipEditorRects = []; _pipEditorDrag = null;
+}
+
+function pipEditorConfirm() {
+  if (!_pipEditorPng) return;
+  // Ordenar cima→baixo, esq→dir
+  _pipEditorRects.sort((a,b) => {
+    const ra = Math.round(a.y*20), rb = Math.round(b.y*20);
+    return ra !== rb ? ra - rb : a.x - b.x;
+  });
+  _pipEditorPng.pips = _pipEditorRects.map(r => ({
+    x: Math.round(r.x*10000)/10000,
+    y: Math.round(r.y*10000)/10000,
+    w: Math.round(r.w*10000)/10000,
+    h: Math.round(r.h*10000)/10000
+  }));
+  save(); renderPngs();
+  toast(`${_pipEditorPng.name}: ${_pipEditorPng.pips.length} pip(s) salvos`, 'ok');
+  pipEditorCancel();
+}
+
+function pipEditorRenderRects() {
+  const wrap = document.getElementById('pip-editor-wrap');
+  const img  = document.getElementById('pip-editor-img');
+  const container = document.getElementById('pip-editor-rects');
+  container.innerHTML = '';
+  const iW = img.offsetWidth, iH = img.offsetHeight;
+
+  _pipEditorRects.forEach((r, i) => {
+    const el = document.createElement('div');
+    el.className = 'pip-rect';
+    el.style.cssText = `left:${r.x*iW}px;top:${r.y*iH}px;width:${r.w*iW}px;height:${r.h*iH}px`;
+    el.innerHTML = `<span class="pip-lbl">PIP ${i+1}</span><span class="pip-del" onclick="pipEditorRemove(${i})">✕</span>`;
+    container.appendChild(el);
+  });
+}
+
+function pipEditorRemove(i) {
+  _pipEditorRects.splice(i, 1);
+  pipEditorRenderRects();
+}
+
+// Desenhar novo pip por clique+arraste
+const _wrap = document.getElementById('pip-editor-wrap');
+
+_wrap.addEventListener('mousedown', e => {
+  if (e.target.classList.contains('pip-del')) return;
+  const img = document.getElementById('pip-editor-img');
+  const rect = img.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top)  / rect.height;
+  if (x < 0 || x > 1 || y < 0 || y > 1) return;
+
+  // Criar elemento de preview do retângulo sendo desenhado
+  const el = document.createElement('div');
+  el.className = 'pip-rect';
+  el.style.cssText = `left:${x*rect.width}px;top:${y*rect.height}px;width:0;height:0;border-color:var(--pgm)`;
+  document.getElementById('pip-editor-rects').appendChild(el);
+
+  _pipEditorDrag = { x0: x, y0: y, x0px: e.clientX, y0px: e.clientY, el, rect };
+  e.preventDefault();
+});
+
+window.addEventListener('mousemove', e => {
+  if (!_pipEditorDrag) return;
+  const { x0, y0, rect, el } = _pipEditorDrag;
+  const x1 = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const y1 = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
+  const lx = Math.min(x0, x1), ly = Math.min(y0, y1);
+  const lw = Math.abs(x1-x0),  lh = Math.abs(y1-y0);
+  el.style.left   = (lx * rect.width)  + 'px';
+  el.style.top    = (ly * rect.height) + 'px';
+  el.style.width  = (lw * rect.width)  + 'px';
+  el.style.height = (lh * rect.height) + 'px';
+});
+
+window.addEventListener('mouseup', e => {
+  if (!_pipEditorDrag) return;
+  const { x0, y0, rect, el } = _pipEditorDrag;
+  const x1 = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+  const y1 = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
+  const lx = Math.min(x0,x1), ly = Math.min(y0,y1);
+  const lw = Math.abs(x1-x0), lh = Math.abs(y1-y0);
+
+  el.remove(); // remove preview
+  _pipEditorDrag = null;
+
+  // Só salva se maior que 2% da tela
+  if (lw > 0.02 && lh > 0.02) {
+    _pipEditorRects.push({ x: lx, y: ly, w: lw, h: lh });
+    pipEditorRenderRects();
+  }
+});
+
+// Fechar com ESC
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') pipEditorCancel();
+});
+</script>
+</body>
+</html>
