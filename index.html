@@ -184,6 +184,10 @@ select{cursor:pointer}
 .png-card{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .png-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:repeating-conic-gradient(#1a1a20 0% 25%,#222228 0% 50%) 0 0/12px 12px}
 .png-info{padding:5px 7px;display:flex;align-items:center;gap:4px}
+.proj-folder-row{padding:10px 12px;display:flex;align-items:center;gap:8px;background:var(--s2);border-bottom:1px solid var(--border)}
+.proj-folder-row input{flex:1;background:var(--s3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:3px;font:11px var(--mono);outline:none}
+.proj-folder-row input:focus{border-color:var(--accent)}
+.clbl-hint{font-size:11px;color:var(--text3);min-width:90px;text-align:right}
 .png-path-row{padding:0 7px 6px;display:flex;align-items:center;gap:4px;border-top:1px dashed transparent}
 .png-path-row.path-warn{border-top-color:var(--accent)}
 .png-path-row.path-ok{border-top-color:var(--pvw)}
@@ -432,8 +436,8 @@ select{cursor:pointer}
           <div class="sc-title">Como configurar — faça isso uma vez por máquina</div>
           <div class="setup-steps">
             <div class="setup-step"><span class="step-num">1</span><div>No vMix, crie <b>2 inputs Colour transparentes</b> com os nomes <code>Colour PVW</code> e <code>Colour PGM</code>.</div></div>
-            <div class="setup-step"><span class="step-num">2</span><div>Crie <b>2 inputs GT Title</b> (com um único campo de imagem) e nomeie <code>Moldura PVW</code> e <code>Moldura PGM</code>.</div></div>
-            <div class="setup-step"><span class="step-num">3</span><div>Em cada Colour, adicione o respectivo Moldura como <b>Layer 10</b>.</div></div>
+            <div class="setup-step"><span class="step-num">2</span><div>Crie <b>2 inputs GT Title</b> (com um único campo de imagem) e nomeie como configurado abaixo (default: <code>Multitela.gtzip PVW</code> e <code>Multitela.gtzip PGM</code>).</div></div>
+            <div class="setup-step"><span class="step-num">3</span><div>Em cada Colour, adicione o respectivo Multitela.gtzip como <b>Layer 10</b>.</div></div>
             <div class="setup-step"><span class="step-num">4</span><div>Configure abaixo os nomes base e o campo de imagem do GT.</div></div>
           </div>
 
@@ -445,7 +449,7 @@ select{cursor:pointer}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="clbl" style="min-width:120px">Base GT Title:</span>
-              <input type="text" id="dev-gtbase" style="width:160px" placeholder="Moldura"/>
+              <input type="text" id="dev-gtbase" style="width:160px" placeholder="Multitela.gtzip"/>
               <span style="font-size:11px;color:var(--text3)">→ <code>{base} PVW</code> / <code>{base} PGM</code></span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -469,6 +473,12 @@ select{cursor:pointer}
         <span class="sec-ttl" id="pngs-ttl">Multitelas</span>
         <button class="btn sm" onclick="document.getElementById('upng').click()">+ Upload PNG</button>
         <input type="file" id="upng" accept="image/png" multiple style="display:none" onchange="hUpload(event)"/>
+      </div>
+      <div class="proj-folder-row">
+        <span class="clbl">📁 Pasta dos PNGs:</span>
+        <input type="text" id="proj-folder" placeholder="C:\\Multitelas\\TENIS\\"
+               oninput="setProjFolder(this.value)"/>
+        <span class="clbl-hint" id="proj-folder-status">—</span>
       </div>
       <div class="sec-bd">
         <div class="drop-zone" id="dz"
@@ -599,7 +609,7 @@ function saveDevCfg() {
   const g = document.getElementById('dev-gtbase');
   const f = document.getElementById('dev-gtfield');
   if (t) S.cfg.transp  = (t.value.trim() || 'Colour');
-  if (g) S.cfg.gtBase  = (g.value.trim() || 'Moldura');
+  if (g) S.cfg.gtBase  = (g.value.trim() || 'Multitela.gtzip');
   if (f) S.cfg.gtField = (f.value.trim() || 'Image1.Source');
   save();
   toast('Configurações salvas', 'ok');
@@ -610,7 +620,7 @@ function loadDevCfg() {
   const g = document.getElementById('dev-gtbase');
   const f = document.getElementById('dev-gtfield');
   if (t) t.value = (S.cfg && S.cfg.transp)  || 'Colour';
-  if (g) g.value = (S.cfg && S.cfg.gtBase)  || 'Moldura';
+  if (g) g.value = (S.cfg && S.cfg.gtBase)  || 'Multitela.gtzip';
   if (f) f.value = (S.cfg && S.cfg.gtField) || 'Image1.Source';
 }
 
@@ -952,6 +962,7 @@ function selProj(id) {
 // PNGs
 // ════════════════════════════════════════
 function renderPngs() {
+  loadProjFolder();
   const g = document.getElementById('png-grid');
   g.innerHTML = '';
   if (!S.activeProj) return;
@@ -978,6 +989,36 @@ function renderPngs() {
   });
   updFt();
 }
+function setProjFolder(folder) {
+  if (!S.activeProj) return;
+  S.activeProj.folderPath = folder.trim();
+  // Atualizar caminhos dos PNGs que estão usando o folder atual
+  // (apenas os que não foram editados manualmente, ou seja, que seguem o padrão antigo)
+  const oldFolder = S.activeProj._lastFolder || '';
+  S.activeProj.pngs.forEach(png => {
+    // Re-gera path se ele segue o padrão do folder antigo
+    const expectedOld = buildPngPath(oldFolder, png.name + '.png');
+    const expectedNew = buildPngPath(folder, png.name + '.png');
+    if (!png.path || png.path === expectedOld) {
+      png.path = expectedNew;
+    }
+  });
+  S.activeProj._lastFolder = folder.trim();
+  save();
+  renderPngs();
+  // Status visual
+  const st = document.getElementById('proj-folder-status');
+  if (st) st.textContent = folder.trim() ? '✓ aplicado' : '';
+}
+
+function loadProjFolder() {
+  const el = document.getElementById('proj-folder');
+  if (!el) return;
+  el.value = (S.activeProj && S.activeProj.folderPath) || '';
+  const st = document.getElementById('proj-folder-status');
+  if (st) st.textContent = el.value ? '✓ aplicado' : '';
+}
+
 function setPngPath(pngId, path) {
   const proj = S.activeProj;
   if (!proj) return;
@@ -996,11 +1037,32 @@ async function hDrop(e) {
   e.preventDefault(); document.getElementById('dz').classList.remove('drag');
   await procPngs(Array.from(e.dataTransfer.files).filter(f=>f.type==='image/png'));
 }
+// Helper: monta caminho absoluto combinando pasta do projeto + nome do arquivo
+function buildPngPath(folder, fileName) {
+  if (!folder) return '';
+  // Detectar separador (Windows usa \, Unix usa /)
+  let sep = folder.includes('\\') ? '\\' : '/';
+  let normalized = folder.trim();
+  // Garante que termina com separador
+  if (!normalized.endsWith('\\') && !normalized.endsWith('/')) {
+    normalized += sep;
+  }
+  return normalized + fileName;
+}
+
 async function procPngs(files) {
   if (!S.activeProj) { toast('Selecione uma competição','warn'); return; }
   for (const f of files) {
     const du = await rdFile(f);
-    const png = { id:uid(), name:f.name.replace('.png',''), dataUrl:du, pips:null };
+    // Caminho automático: combina pasta do projeto + nome do arquivo original
+    const autoPath = buildPngPath(S.activeProj.folderPath || '', f.name);
+    const png = {
+      id:uid(),
+      name:f.name.replace('.png',''),
+      dataUrl:du,
+      pips:null,
+      path: autoPath   // pode ser '' se não há folder configurada
+    };
     S.activeProj.pngs.push(png); renderPngs();
     analyzePng(du).then(pips => {
       png.pips = pips;
@@ -1431,7 +1493,7 @@ async function applyTo(item, target) {
 
   // Nomes dos inputs no vMix:
   const baseColour = (S.cfg.transp || 'Colour').trim();
-  const baseGT     = (S.cfg.gtBase || 'Moldura').trim();
+  const baseGT     = (S.cfg.gtBase || 'Multitela.gtzip').trim();
   const fieldName  = (S.cfg.gtField || 'Image1.Source').trim();
   const suffix     = target.toUpperCase();
   const colourIn   = baseColour + ' ' + suffix;   // ex: "Colour PVW"
@@ -1532,7 +1594,7 @@ if (!S.activeWs)   S.activeWs = 'w1';
 if (!S.cfg) S.cfg = {};
 if (!S.cfg.transp) S.cfg.transp = 'Colour';
 // Novo: input base do GT Title (substitui o Browser Input)
-if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Moldura';   // nome base do GT: vira "Moldura PVW" e "Moldura PGM"
+if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Multitela.gtzip';   // nome base do GT
 if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem no GT Title
 loadCfgFields();
 loadDevCfg();
