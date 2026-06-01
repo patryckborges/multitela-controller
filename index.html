@@ -1004,17 +1004,46 @@ function renderPngs() {
   updFt();
 }
 async function testPngPath(pngId) {
-  if (!S.connected) { toast('Conecte ao vMix primeiro', 'warn'); return; }
+  if (!S.connected) { alert('Conecte ao vMix primeiro'); return; }
   if (!S.activeProj) return;
   const png = S.activeProj.pngs.find(p => p.id === pngId);
   if (!png) return;
-  if (!png.path) { toast('Caminho vazio', 'warn'); return; }
+  if (!png.path) { alert('Caminho vazio'); return; }
+
   const baseGT    = (S.cfg.gtBase || 'Multitela.gtzip').trim();
   const fieldName = (S.cfg.gtField || 'Image1.Source').trim();
   const gtIn      = baseGT + ' PVW';
-  console.log('[testPngPath] Enviando:', { Input: gtIn, SelectedName: fieldName, Value: png.path });
-  await vExec({ fn: 'SetImage', p: { Input: gtIn, SelectedName: fieldName, Value: png.path } });
-  toast('Teste enviado — veja se o GT mudou', 'ok');
+
+  // Montar URL completa do request
+  const qs = new URLSearchParams({
+    Function: 'SetImage',
+    Input: gtIn,
+    SelectedName: fieldName,
+    Value: png.path
+  });
+  const url = `http://${S.host}/api/?${qs}`;
+
+  // Fazer fetch e capturar resposta
+  let status = 'erro de conexão';
+  let respText = '';
+  try {
+    const r = await fetch(url, { mode: 'cors' });
+    status = r.status + ' ' + r.statusText;
+    respText = await r.text();
+  } catch(e) {
+    status = 'fetch error: ' + e.message;
+  }
+
+  // Mostrar tudo num alert
+  alert(
+    '═══ TESTE DE CAMINHO ═══\n\n' +
+    'INPUT vMix:\n' + gtIn + '\n\n' +
+    'CAMPO:\n' + fieldName + '\n\n' +
+    'CAMINHO DO PNG:\n' + png.path + '\n\n' +
+    'STATUS HTTP:\n' + status + '\n\n' +
+    'RESPOSTA:\n' + (respText.substring(0, 500) || '(vazio)') + '\n\n' +
+    'URL COMPLETA:\n' + url
+  );
 }
 
 function setProjFolder(folder) {
