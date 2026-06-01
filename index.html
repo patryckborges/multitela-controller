@@ -997,11 +997,26 @@ function renderPngs() {
         <input type="text" class="png-path-input" value="${(png.path||'').replace(/"/g,'&quot;')}"
                placeholder="C:\\caminho\\multitela.png"
                oninput="setPngPath('${png.id}', this.value)"/>
+        <button class="btn xs" onclick="testPngPath('${png.id}')" title="Testar caminho no vMix (envia SetImage no PVW)">▶ testar</button>
       </div>`;
     g.appendChild(c);
   });
   updFt();
 }
+async function testPngPath(pngId) {
+  if (!S.connected) { toast('Conecte ao vMix primeiro', 'warn'); return; }
+  if (!S.activeProj) return;
+  const png = S.activeProj.pngs.find(p => p.id === pngId);
+  if (!png) return;
+  if (!png.path) { toast('Caminho vazio', 'warn'); return; }
+  const baseGT    = (S.cfg.gtBase || 'Multitela.gtzip').trim();
+  const fieldName = (S.cfg.gtField || 'Image1.Source').trim();
+  const gtIn      = baseGT + ' PVW';
+  console.log('[testPngPath] Enviando:', { Input: gtIn, SelectedName: fieldName, Value: png.path });
+  await vExec({ fn: 'SetImage', p: { Input: gtIn, SelectedName: fieldName, Value: png.path } });
+  toast('Teste enviado — veja se o GT mudou', 'ok');
+}
+
 function setProjFolder(folder) {
   if (!S.activeProj) return;
   S.activeProj.folderPath = folder.trim();
