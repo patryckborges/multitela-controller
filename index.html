@@ -15,7 +15,8 @@
   --r:5px;--r2:8px;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;font-size:13px;max-width:720px;margin:0 auto}
+@media (min-width: 721px) { body{border-left:1px solid var(--border);border-right:1px solid var(--border)} }
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
@@ -29,7 +30,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh
 .dot.on{background:var(--pvw);box-shadow:0 0 6px var(--pvw-glow)}
 .dot.err{background:var(--pgm);box-shadow:0 0 6px var(--pgm-glow)}
 .clbl{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
-#output-pill{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--s3);border:1px solid var(--border2);border-radius:20px;padding:5px 10px 5px 12px;cursor:pointer;transition:all .2s;flex-shrink:0}
+#output-pill{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer;transition:all .15s;min-width:0;max-width:200px;overflow:hidden}
 #output-pill:hover{border-color:var(--pvw);background:var(--pvw-dim)}
 #output-pill .pill-ic{font-size:13px}
 #output-pill .pill-lbl{font-family:var(--mono);font-size:10px;color:var(--text2)}
@@ -48,7 +49,7 @@ select{cursor:pointer}
 .btn.acc:hover:not(:disabled){background:#e6b85c}
 .btn.pgmb{background:var(--pgm);color:#fff;border-color:var(--pgm);font-size:15px;font-weight:700;padding:8px 28px;letter-spacing:.04em}
 .btn.pgmb:hover:not(:disabled){background:#bf2729}
-.btn.pvwb{background:var(--pvw);color:#111;border-color:var(--pvw)}
+.btn.pvwb{background:var(--pvw);color:#111;border-color:var(--pvw);font-size:15px;font-weight:700;padding:8px 28px;letter-spacing:.04em}
 .btn.pvwb:hover:not(:disabled){background:#00a381}
 .btn.ghost{background:transparent;border-color:transparent}
 .btn.ghost:hover:not(:disabled){background:var(--s3);border-color:var(--border);color:var(--text)}
@@ -98,8 +99,27 @@ select{cursor:pointer}
 
 /* AO VIVO */
 .live-wrap{display:grid;grid-template-rows:1fr auto;gap:8px;height:100%;overflow:hidden;padding:10px 14px}
-.live-mons{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:hidden;min-height:0}
+/* ── Tabs de workspace ── */
+.ws-tabs{display:flex;align-items:stretch;gap:6px;padding:6px 8px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);flex-shrink:0}
+.ws-tab{flex:1;display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:12px;font-weight:600;transition:all .15s;min-width:0}
+.ws-tab:hover{background:var(--s3);color:var(--text)}
+.ws-tab .ws-tab-num{font-size:14px;flex-shrink:0}
+.ws-tab .ws-tab-nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-tab.ws-tab-1.active{background:rgba(0,184,148,.15);border-color:var(--pvw);color:var(--pvw)}
+.ws-tab.ws-tab-2.active{background:rgba(214,48,49,.15);border-color:var(--pgm);color:var(--pgm)}
+.btn.ws-go{flex-shrink:0;padding:8px 22px;font-size:14px;font-weight:700;background:var(--pvw);color:#0a0a0a;border-color:var(--pvw);letter-spacing:.04em}
+.btn.ws-go.go-2{background:var(--pgm);color:#fff;border-color:var(--pgm)}
+.btn.ws-go:hover:not(:disabled){filter:brightness(1.1)}
+/* ── Workspace ativo ── */
+.live-mons{display:flex;flex-direction:column;gap:8px;overflow:hidden;min-height:0;flex:1}
+.live-mon.ws-mon{border-color:var(--pvw);box-shadow:0 0 0 1px var(--pvw),0 0 16px var(--pvw-glow);transition:border-color .15s,box-shadow .15s}
+.live-mon.ws-mon.is-w2{border-color:var(--pgm);box-shadow:0 0 0 1px var(--pgm),0 0 16px var(--pgm-glow)}
 .live-mon{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column}
+.live-mon{transition:outline .15s,background .15s;outline:2px solid transparent;outline-offset:-2px;cursor:pointer}
+.live-mon.ws-active{outline-color:var(--pvw);background:rgba(0,184,148,.05)}
+.live-mon.pgm-mon.ws-active{outline-color:var(--pgm);background:rgba(214,48,49,.05)}
+.live-mon.drag-over{outline-color:var(--pvw);outline-style:dashed;outline-width:3px;background:rgba(0,184,148,.1)}
+.mon-hd .btn{margin-left:auto}
 .live-mon.pvw-mon{border-color:var(--pvw);box-shadow:0 0 0 1px var(--pvw),0 0 16px var(--pvw-glow)}
 .live-mon.pgm-mon{border-color:var(--pgm);box-shadow:0 0 0 1px var(--pgm),0 0 16px var(--pgm-glow)}
 .mon-hd{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
@@ -111,7 +131,7 @@ select{cursor:pointer}
 .mon-prev{width:100%;flex:1;object-fit:contain;background:repeating-conic-gradient(#0d0d10 0% 25%,#111114 0% 50%) 0 0/14px 14px;display:block;min-height:0}
 .mon-ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 .pip-chip{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:2px 5px;font-family:var(--mono);font-size:9px;color:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pvw-btns{padding:6px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;max-height:130px;overflow-y:auto;flex-shrink:0}
+.pvw-btns{padding:6px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px;max-height:110px;overflow-y:auto;flex-shrink:0}
 .pr-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .pr-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);width:40px;flex-shrink:0}
 .inp-btn{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--s3);color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
@@ -122,11 +142,11 @@ select{cursor:pointer}
 #tray-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;flex-shrink:0}
 #tray-hd{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
 #tray-hd .tray-ttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:1}
-#tray{display:flex;gap:6px;padding:8px;overflow-x:auto;min-height:90px;align-items:center}
+#tray{display:flex;gap:6px;padding:6px;overflow-x:auto;min-height:78px;align-items:center}
 #tray::-webkit-scrollbar{height:3px}
 
 /* CARD DA MULTITELA NA FAIXA */
-.mt-card{flex-shrink:0;width:120px;background:var(--s3);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:grab;transition:border-color .15s,opacity .15s,transform .15s;position:relative;user-select:none}
+.mt-card{flex-shrink:0;width:96px;background:var(--s3);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:grab;transition:border-color .15s,opacity .15s,transform .15s;position:relative;user-select:none}
 .mt-card:hover{border-color:var(--border2)}
 .mt-card.is-pvw{border-color:var(--pvw);box-shadow:0 0 8px var(--pvw-glow)}
 .mt-card.is-pgm{border-color:var(--pgm);box-shadow:0 0 8px var(--pgm-glow)}
@@ -259,7 +279,8 @@ select{cursor:pointer}
 #pip-editor-overlay.open{display:flex}
 #pip-editor-wrap{position:relative;user-select:none;cursor:crosshair;border:2px solid var(--border2);border-radius:6px;overflow:hidden}
 #pip-editor-wrap img{display:block;max-width:88vw;max-height:72vh}
-.pip-rect{position:absolute;border:2px solid var(--pvw);background:rgba(0,184,148,.18);box-sizing:border-box;pointer-events:none}
+.pip-rect{position:absolute;border:2px solid var(--pvw);background:rgba(0,184,148,.18);box-sizing:border-box;transition:border-color .15s,background .15s}
+.pip-rect.selected{border-color:#ffd700;background:rgba(255,215,0,.22);border-width:3px}
 .pip-rect .pip-lbl{position:absolute;top:4px;left:6px;font:600 12px/1 var(--font);color:var(--pvw)}
 .pip-rect .pip-del{position:absolute;top:2px;right:4px;font-size:14px;color:var(--pgm);cursor:pointer;pointer-events:all}
 #pip-editor-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
@@ -271,7 +292,8 @@ select{cursor:pointer}
 
 <!-- CONTEXT MENU -->
 <div id="ctx">
-  <div class="ctx-item" onclick="ctxCarregarPvw()">↓ Carregar no PVW</div>
+  <div class="ctx-item" onclick="ctxCarregarWs('w1')">↓ Carregar no Workspace 1</div>
+  <div class="ctx-item" onclick="ctxCarregarWs('w2')">↓ Carregar no Workspace 2</div>
   <div class="ctx-item danger" onclick="ctxEsconder()">✕ Esconder da faixa</div>
 </div>
 
@@ -320,10 +342,7 @@ select{cursor:pointer}
   <div class="hsep"></div>
   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
     <span class="clbl">Transp:</span>
-    <input type="text" id="cfg-transp" style="width:120px" placeholder="Nome input transparente"/>
-    <span class="clbl" style="margin-left:6px">Browser:</span>
-    <input type="text" id="cfg-browser" style="width:140px" placeholder="Nome input Web Browser"/>
-    <button class="btn sm" onclick="saveCfgInline()">✓</button>
+    <code style="font-family:var(--mono);font-size:11px;color:var(--fg2);padding:3px 8px;background:var(--s2);border-radius:4px" title="Nome base dos inputs transparentes no vMix. Configure em Dev se quiser alterar.">Colour</code>
   </div>
   <div id="output-pill" onclick="copyOutputUrl()" title="Copiar URL do output para o vMix">
     <span class="pill-ic">📺</span>
@@ -355,27 +374,29 @@ select{cursor:pointer}
 <div class="page" id="page-live">
   <div class="live-wrap">
 
-    <!-- PVW + PGM -->
+    <!-- TABS DE WORKSPACE + GO -->
+    <div class="ws-tabs">
+      <button class="ws-tab ws-tab-1 active" id="ws-tab-1" onclick="setActiveWs('w1')">
+        <span class="ws-tab-num">①</span>
+        <span class="ws-tab-nm" id="ws-tab-1-nm">vazio</span>
+      </button>
+      <button class="ws-tab ws-tab-2" id="ws-tab-2" onclick="setActiveWs('w2')">
+        <span class="ws-tab-num">②</span>
+        <span class="ws-tab-nm" id="ws-tab-2-nm">vazio</span>
+      </button>
+      <button class="btn ws-go" id="ws-go-btn" onclick="applyActiveWs()">▶ GO 1</button>
+    </div>
+
+    <!-- WORKSPACE ATIVO -->
     <div class="live-mons">
-      <div class="live-mon pvw-mon">
-        <div class="mon-hd">
-          <span class="mon-lbl pvw">○ PVW</span>
-          <span class="mon-nm" id="pvw-nm">—</span>
-        </div>
+      <div class="live-mon ws-mon ws-active" id="ws-mon"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="event.preventDefault();this.classList.remove('drag-over');handleActiveWsDrop(event)">
         <div class="mon-body">
-          <img class="mon-prev" id="pvw-prev" src="" alt=""/>
-          <div class="mon-ov" id="pvw-ov"></div>
-          <div class="pvw-btns" id="pvw-btns"></div>
-        </div>
-      </div>
-      <div class="live-mon pgm-mon">
-        <div class="mon-hd">
-          <span class="mon-lbl pgm">● PGM</span>
-          <span class="mon-nm" id="pgm-nm">—</span>
-        </div>
-        <div class="mon-body">
-          <img class="mon-prev" id="pgm-prev" src="" alt=""/>
-          <div class="mon-ov" id="pgm-ov"></div>
+          <img class="mon-prev" id="ws-prev" src="" alt=""/>
+          <div class="mon-ov" id="ws-ov"></div>
+          <div class="pvw-btns" id="ws-pip-btns"></div>
         </div>
       </div>
     </div>
@@ -388,8 +409,7 @@ select{cursor:pointer}
         <button class="btn xs ghost" id="btn-show-all" onclick="showAll()" style="display:none">Mostrar todas</button>
         <div class="fsep"></div>
         <button class="btn ghost sm" onclick="goTab('sel')" style="margin-left:auto">← Pacote</button>
-        <div class="fsep"></div>
-        <button class="btn pgmb" onclick="doCut()">✂ CUT</button>
+        
       </div>
       <div id="tray"></div>
     </div>
@@ -417,10 +437,19 @@ select{cursor:pointer}
           </div>
           <div class="url-copy-row">
             <span class="uc-url" id="dev-output-url">—</span>
-            <button class="btn sm acc" onclick="copyOutputUrl()">Copiar URL</button>
+            <button class="btn sm acc" onclick="copyOutputUrl('pvw')">Copiar URL PVW</button>
+            <button class="btn sm acc" onclick="copyOutputUrl('pgm')" style="margin-left:4px">Copiar URL PGM</button>
             <button class="btn sm ghost" onclick="resetChannel()">↺ Novo canal</button>
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:6px">Canal: <span id="ntfy-ch-lbl" style="color:var(--pvw);font-family:var(--mono)">—</span></div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px">Canal: <span id="ntfy-ch-lbl" style="color:var(--pvw);font-family:var(--mono)">—</span
+      </div>
+      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
+        <div style="font:600 11px var(--mono);color:var(--fg2);margin-bottom:6px">INPUT TRANSPARENTE NO VMIX</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="clbl">Base:</span>
+          <input type="text" id="dev-transp" style="width:160px" placeholder="Colour"/>
+          <span style="font-size:11px;color:var(--fg3)">→ procura <code>{base} PVW</code> e <code>{base} PGM</code> no vMix</span>
+          <button class="btn sm" onclick="saveDevTransp()">Salvar</button>></div>
         </div>
       </div>
     </div>
@@ -491,19 +520,26 @@ const NTFY_CHANNEL = getNtfyChannel();
 // ════════════════════════════════════════
 // OUTPUT URL
 // ════════════════════════════════════════
-function getOutputUrl() {
+function getOutputUrl(target) {
+  // target = 'pvw' (out=1) ou 'pgm' (out=2). Default: 'pvw'
   const base = window.location.href.replace(/(\?.*)?$/, '').replace(/index\.html$/, '');
   const base2 = base.endsWith('/') ? base : base + '/';
-  return base2 + 'output.html?ch=' + NTFY_CHANNEL;
+  const out = target === 'pgm' ? '2' : '1';
+  return base2 + 'output.html?ch=' + NTFY_CHANNEL + '&out=' + out;
 }
 
 function renderOutputUrl() {
-  const url = getOutputUrl();
+  const urlPvw = getOutputUrl('pvw');
+  const urlPgm = getOutputUrl('pgm');
   const el1 = document.getElementById('pill-url-txt');
   const el2 = document.getElementById('dev-output-url');
   const el3 = document.getElementById('ntfy-ch-lbl');
-  if (el1) el1.textContent = url;
-  if (el2) el2.textContent = url;
+  // No pill mostra "PVW: …  PGM: …" abreviado
+  if (el1) el1.innerHTML = '<b>1:</b> …&out=1 &nbsp; <b>2:</b> …&out=2';
+  // No Dev mostra as duas URLs completas
+  if (el2) el2.innerHTML =
+    '<div style="margin-bottom:4px"><b>Output 1 (PVW):</b> <code>' + urlPvw + '</code></div>' +
+    '<div><b>Output 2 (PGM):</b> <code>' + urlPgm + '</code></div>';
   if (el3) el3.textContent = NTFY_CHANNEL;
 }
 
@@ -513,12 +549,18 @@ function resetChannel() {
   location.reload();
 }
 
-function copyOutputUrl() {
-  const url = getOutputUrl();
+function copyOutputUrl(target) {
+  // Se não vier target, abre menu rápido
+  if (!target) {
+    const which = confirm('Copiar URL do Output 1 (PVW)?\n\nOK = PVW (out=1)\nCancelar = PGM (out=2)');
+    target = which ? 'pvw' : 'pgm';
+  }
+  const url = getOutputUrl(target);
   if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() => toast('URL do output copiada!', 'ok'));
+    navigator.clipboard.writeText(url).then(() =>
+      toast('URL ' + target.toUpperCase() + ' copiada!', 'ok'));
   } else {
-    prompt('Copie a URL do output:', url);
+    prompt('Copie a URL do output ' + target.toUpperCase() + ':', url);
   }
 }
 
@@ -534,9 +576,13 @@ const S = {
   playlist: [],    // ordem das multitelas na faixa
   hidden: [],      // ids de multitelas escondidas
   liveIdx: -1,
-  pvwItem: null,
+  // Workspaces independentes: cada um pode ter sua multitela configurada
+  // workspaces.w1 vai para o Output 1, workspaces.w2 vai para o Output 2
+  workspaces: { w1: null, w2: null },
+  // Workspace selecionado (para qual lado os botões IN apontam)
+  activeWs: 'w1',
   devPass: 'cazetv2025',
-  cfg: { transp: 'Transparente', browser: '' }
+  cfg: { transp: 'Colour', browser: '' }
 };
 
 // ════════════════════════════════════════
@@ -585,6 +631,21 @@ function goTab(name){
   if(name==='sel')renderPkg();
 }
 
+function saveDevTransp() {
+  const el = document.getElementById('dev-transp');
+  if (!el) return;
+  const v = el.value.trim() || 'Colour';
+  S.cfg = S.cfg || {};
+  S.cfg.transp = v;
+  save();
+  toast('Base do transparente: ' + v, 'ok');
+}
+
+function loadDevTransp() {
+  const el = document.getElementById('dev-transp');
+  if (el) el.value = (S.cfg && S.cfg.transp) || 'Colour';
+}
+
 function loadCfgFields(){
   document.getElementById('vmix-host').value = S.host;
   document.getElementById('cfg-transp').value = S.cfg.transp || '';
@@ -621,9 +682,25 @@ function setDot(cls, label) {
   document.getElementById('dot').className = 'dot ' + cls;
   document.getElementById('clbl').textContent = label;
 }
-async function vCmd(fn, p={}) {
-  const qs = new URLSearchParams({ Function: fn, ...p });
-  await fetch(`http://${S.host}/api/?${qs}`, { mode: 'cors' });
+// vCmd: retorna o objeto descritor do comando (NÃO executa)
+// Use vMulti(cmds) para executar uma lista de comandos em sequência
+function vCmd(fn, p={}) {
+  return { fn, p };
+}
+
+// Executa um único comando direto no vMix
+async function vExec(cmd) {
+  const qs = new URLSearchParams({ Function: cmd.fn, ...cmd.p });
+  try {
+    await fetch(`http://${S.host}/api/?${qs}`, { mode: 'cors' });
+  } catch(e) { console.warn('[vExec]', cmd.fn, e); }
+}
+
+// Executa uma lista de comandos em sequência rápida
+async function vMulti(cmds) {
+  if (!Array.isArray(cmds) || !cmds.length) return;
+  // Disparar em paralelo (vMix aguenta) — mais rápido que sequencial
+  await Promise.all(cmds.map(c => vExec(c)));
 }
 async function importVmix(silent=false) {
   if (!S.connected) { if (!silent) toast('Conecte ao vMix primeiro', 'warn'); return; }
@@ -743,32 +820,90 @@ async function analyzePng(dataUrl, alphaThreshold = 32, minAreaPct = 0.5) {
     img.src = dataUrl;
   });
 }
-function pipToVmix(pip) {
-  // Sistema de coordenadas vMix (resolution-independent, verificado empiricamente):
-  //   zoom=1   → sinal ocupa 100% da tela (1920x1080)
-  //   PanX=0   → centrado; range real ≈ -1..+1 para bordas da tela
-  //   PanY=0   → centrado; range real ≈ -1..+1 para bordas da tela
-  //   Multiplicador: (cx_norm - 0.5) * 2  (não *4 — verificado com vMix real)
+// Detecta o modo padrão de um pip pela posição:
+// Pip que toca bordas da tela → cover (sinal pode vazar e gráfico não mascara fora)
+// Pip interno → fit (gráfico mascara o entorno naturalmente)
+function defaultCropMode(pip, srcAR) {
+  const EPS = 0.01;
+  const touchesEdge =
+    pip.x <= EPS ||
+    pip.y <= EPS ||
+    (pip.x + pip.w) >= (1 - EPS) ||
+    (pip.y + pip.h) >= (1 - EPS);
+  return touchesEdge ? 'cover' : 'fit';
+}
+
+function pipToVmix(pip, bleed, cropMode, srcAR) {
+  // Sistema vMix:
+  //   zoom=1 → espaço 16:9 (1920x1080) ocupa toda a tela
+  //   PanX, PanY: range -1..+1, sinal invertido em Y (cima = positivo)
   //
-  // Zoom: cover uniforme sem distorção
-  //   pip mais largo que 16:9 → limita pela largura → zoom = pip.w
-  //   pip mais alto  que 16:9 → limita pela altura  → zoom = pip.h * (16/9)
-  //   (ambos expressam: "qual fração da tela o sinal deve ocupar em largura")
+  // Como o sinal preenche o espaço (depende do AR do sinal):
+  //   srcAR >= 16/9 → sinal preenche largura: sW=zoom,        sH=zoom/srcAR
+  //   srcAR <  16/9 → sinal preenche altura:  sW=zoom*srcAR,  sH=zoom
+  //
+  // cropMode:
+  //   'fit'   → zoom NATURAL (preenche a dimensão correspondente ao AR do pip)
+  //             Pode deixar transparência ao redor (gráfico mascara).
+  //             Sem crop.
+  //   'cover' → zoom COVER REAL (preenche AMBAS dimensões do pip,
+  //             cortando o excedente). Use quando o pip toca as bordas
+  //             da tela e o sinal pode vazar pra fora dela.
 
-  // zoom = pip.w * sangria — escala pela largura do pip (verificado empiricamente)
-  // O PNG na layer 10 mascara o excesso. Sangria de 4% cobre bordas brancas.
-  const BLEED = 1.04;
-  const zoom  = pip.w * BLEED;
+  const CANVAS_AR = 16 / 9;
+  const SRC_AR    = (typeof srcAR === 'number' && srcAR > 0) ? srcAR : CANVAS_AR;
+  const BLEED     = (typeof bleed === 'number' && bleed >= 1) ? bleed : 1.04;
+  const mode      = cropMode === 'cover' ? 'cover' : 'fit';
 
-  // Centro do pip → coordenadas Pan vMix (multiplicador=2, verificado empiricamente)
-  // PanY: vMix usa positivo=CIMA, negativo=BAIXO (oposto do canvas HTML)
+  // Como o sinal preenche o espaço
+  let sW_per_zoom, sH_per_zoom;
+  if (SRC_AR >= CANVAS_AR) {
+    sW_per_zoom = 1;
+    sH_per_zoom = 1 / SRC_AR;
+  } else {
+    sH_per_zoom = 1;
+    sW_per_zoom = SRC_AR;
+  }
+
+  // Cálculo do zoom
+  let zoom;
+  if (mode === 'cover') {
+    // COVER: o sinal cobre 100% do pip (ambas dimensões)
+    const zoomByW = pip.w / sW_per_zoom;
+    const zoomByH = pip.h / sH_per_zoom;
+    zoom = Math.max(zoomByW, zoomByH) * BLEED;
+  } else {
+    // FIT: zoom natural (preenche só a dimensão "natural" do AR do sinal)
+    if (SRC_AR >= CANVAS_AR) zoom = pip.w * BLEED;
+    else                     zoom = pip.h * BLEED;
+  }
+
+  const sinalW = zoom * sW_per_zoom;
+  const sinalH = zoom * sH_per_zoom;
+
+  // Crop apenas em modo cover, e só nas dimensões onde o sinal excede o pip
+  let cropFracX = 0, cropFracY = 0;
+  if (mode === 'cover') {
+    if (sinalW > pip.w) cropFracX = (sinalW - pip.w) / (2 * sinalW);
+    if (sinalH > pip.h) cropFracY = (sinalH - pip.h) / (2 * sinalH);
+  }
+
+  // Centro do pip → coordenadas Pan vMix
   const cx   = pip.x + pip.w / 2;
   const cy   = pip.y + pip.h / 2;
   const panX = (cx - 0.5) * 2;
-  const panY = (0.5 - cy) * 2;  // sinal invertido: pip no topo → panY positivo
+  const panY = (0.5 - cy) * 2;
 
   const r4 = v => Math.round(v * 10000) / 10000;
-  return { zoom: r4(zoom), panX: r4(panX), panY: r4(panY) };
+  return {
+    zoom:   r4(zoom),
+    panX:   r4(panX),
+    panY:   r4(panY),
+    cropX1: r4(cropFracX),
+    cropX2: r4(1 - cropFracX),
+    cropY1: r4(cropFracY),
+    cropY2: r4(1 - cropFracY)
+  };
 }
 
 
@@ -798,26 +933,31 @@ function dataUrlToBlob(dataUrl) {
   return new Blob([arr], { type: mime });
 }
 
-async function sendToOutput(item) {
-  // Tenta webpCache pre-comprimido; PNGs antigos (sem cache) comprimem na hora
+// Helper: canal ntfy para PVW ou PGM
+function ntfyChannelFor(target) {
+  // target = 'pvw' ou 'pgm'
+  return NTFY_CHANNEL + '-' + target;
+}
+
+async function sendToOutput(item, target) {
+  // target obrigatório: 'pvw' ou 'pgm'
+  if (target !== 'pvw' && target !== 'pgm') {
+    console.warn('[sendToOutput] target inválido:', target);
+    return;
+  }
   const proj   = S.projects.find(p => p.id === item.projId);
   const pngObj = proj?.pngs.find(p => p.id === item.pngId);
 
-  // Se nao tem cache ainda, gera agora e guarda para proxima vez
   if (pngObj && !pngObj.webpCache) {
     pngObj.webpCache = await comprimirWebP(item.dataUrl);
   }
   const dataUrl = pngObj?.webpCache || await comprimirWebP(item.dataUrl);
-
-  console.log('[sendToOutput] dataUrl prefix:', dataUrl.slice(0, 30), 'length:', dataUrl.length);
-
-  const isWebp = dataUrl.startsWith('data:image/webp');
-  const blob   = dataUrlToBlob(dataUrl);
-
-  console.log('[sendToOutput] blob size:', blob.size, 'bytes, type:', blob.type);
+  const isWebp  = dataUrl.startsWith('data:image/webp');
+  const blob    = dataUrlToBlob(dataUrl);
+  const channel = ntfyChannelFor(target);
 
   try {
-    const resp = await fetch('https://ntfy.sh/' + NTFY_CHANNEL, {
+    const resp = await fetch('https://ntfy.sh/' + channel, {
       method: 'POST',
       headers: {
         'Filename':     isWebp ? 'multitela.webp' : 'multitela.png',
@@ -825,23 +965,25 @@ async function sendToOutput(item) {
       },
       body: blob,
     });
-    const body = await resp.text();
-    console.log('[sendToOutput] ntfy resp:', resp.status, body.slice(0, 200));
-    if (!resp.ok) toast('Erro ntfy: ' + resp.status + ' ' + body.slice(0,80), 'warn');
-    else toast('Output enviado', 'ok');
+    if (!resp.ok) {
+      const body = await resp.text();
+      toast('Erro ntfy ' + target.toUpperCase() + ': ' + resp.status, 'warn');
+    } else {
+      toast('Enviado para ' + target.toUpperCase(), 'ok');
+    }
   } catch(e) {
     console.warn('[sendToOutput] fetch error:', e);
-    toast('Erro de rede ao enviar output', 'err');
+    toast('Erro de rede no ' + target.toUpperCase(), 'err');
   }
 }
 
-async function clearOutput() {
-  // Envia pixel transparente para limpar o output no vMix
+async function clearOutput(target) {
+  if (target !== 'pvw' && target !== 'pgm') return;
   const cvs = document.createElement('canvas');
   cvs.width = 1; cvs.height = 1;
   const blob = await new Promise(r => cvs.toBlob(r, 'image/png'));
   try {
-    await fetch('https://ntfy.sh/' + NTFY_CHANNEL, {
+    await fetch('https://ntfy.sh/' + ntfyChannelFor(target), {
       method: 'POST',
       headers: { 'Filename': 'clear.png', 'Content-Type': 'image/png', 'X-Tags': 'clear' },
       body: blob,
@@ -1036,7 +1178,7 @@ function usarPkg(){
     pips:(png.pips||[]).map((_,i)=>({pipIdx:i,inputName:''}))
   }));
   S.hidden=[];
-  S.liveIdx=-1;S.pvwItem=null;
+  S.liveIdx=-1; if (S.workspaces) { S.workspaces.w1=null; S.workspaces.w2=null; }
   updFt();goTab('live');
   toast('Pacote "'+S.activeProj.name+'" carregado','ok');
 }
@@ -1060,8 +1202,10 @@ function renderTray(){
   btnAll.textContent='Mostrar '+hidden.length+' oculta'+(hidden.length!==1?'s':'');
 
   visible.forEach(it=>{
-    const isPgm=S.playlist[S.liveIdx]?.id===it.id;
-    const isPvw=S.pvwItem?.id===it.id;
+    const w1Id = S.workspaces?.w1?.id;
+    const w2Id = S.workspaces?.w2?.id;
+    const isPgm = w2Id === it.id;     // emularia PGM
+    const isPvw = w1Id === it.id;     // emularia PVW
     const card=document.createElement('div');
     card.className='mt-card'+(isPgm?' is-pgm':isPvw?' is-pvw':'');
     card.draggable=true;
@@ -1072,8 +1216,17 @@ function renderTray(){
       `<img class="mt-img" src="${it.dataUrl}"/>
        <div class="mt-nm">${it.pngName}</div>`;
 
-    // Clique simples → carrega no PVW
-    card.onclick=()=>loadPvwItem(it);
+    // Drag para os workspaces (W1/W2)
+    card.draggable = true;
+    card.ondragstart = (ev) => {
+      ev.dataTransfer.setData('text/multitela-id', it.id);
+      ev.dataTransfer.effectAllowed = 'copy';
+      card.classList.add('dragging');
+    };
+    card.ondragend = () => card.classList.remove('dragging');
+
+    // Click simples → carrega no workspace ATIVO
+    card.onclick = () => loadIntoWs(it, S.activeWs || 'w1');
 
     // Botão direito → context menu
     card.addEventListener('contextmenu',e=>{
@@ -1116,11 +1269,12 @@ function renderTray(){
   });
 }
 
-function ctxCarregarPvw(){
-  closeCtx();
-  const it=S.playlist.find(x=>x.id===ctxTargetId);
-  if(it)loadPvwItem(it);
+function ctxCarregarWs(ws) {
+  if (!_ctxItem) return;
+  loadIntoWs(_ctxItem, ws);
+  fecharCtx();
 }
+function ctxCarregarPvw(){ ctxCarregarWs('w1'); }  // compat
 function ctxEsconder(){
   closeCtx();
   if(!S.hidden.includes(ctxTargetId))S.hidden.push(ctxTargetId);
@@ -1136,20 +1290,59 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCtx()});
 // ════════════════════════════════════════
 function renderLive(){renderTray();updMons()}
 
-function loadPvwItem(item){
-  S.pvwItem=item;
-  updMons();renderTray();
+function loadIntoWs(item, ws){
+  // ws = 'w1' ou 'w2'
+  if (!S.workspaces) S.workspaces = { w1: null, w2: null };
+  S.workspaces[ws] = item;
+  S.activeWs = ws;
+  save();
+  updMons(); renderTray();
+}
+
+function setActiveWs(ws){
+  S.activeWs = ws;
+  save(); updMons();
 }
 
 function updMons(){
-  const pgm=S.playlist[S.liveIdx];
-  const pvw=S.pvwItem;
-  document.getElementById('pvw-nm').textContent=pvw?pvw.pngName:'—';
-  document.getElementById('pvw-prev').src=pvw?pvw.dataUrl:'';
-  renderChips('pvw-ov',pvw,'pvw-prev');renderPvwBtns(pvw);
-  document.getElementById('pgm-nm').textContent=pgm?pgm.pngName:'—';
-  document.getElementById('pgm-prev').src=pgm?pgm.dataUrl:'';
-  renderChips('pgm-ov',pgm,'pgm-prev');
+  const w1 = S.workspaces?.w1;
+  const w2 = S.workspaces?.w2;
+  const active = S.activeWs || 'w1';
+  const ws = active === 'w2' ? w2 : w1;
+
+  // Tabs: nomes
+  const t1nm = document.getElementById('ws-tab-1-nm');
+  const t2nm = document.getElementById('ws-tab-2-nm');
+  if (t1nm) t1nm.textContent = w1 ? w1.pngName : 'vazio';
+  if (t2nm) t2nm.textContent = w2 ? w2.pngName : 'vazio';
+
+  // Tabs: ativo
+  const t1 = document.getElementById('ws-tab-1');
+  const t2 = document.getElementById('ws-tab-2');
+  if (t1) t1.classList.toggle('active', active === 'w1');
+  if (t2) t2.classList.toggle('active', active === 'w2');
+
+  // Botão GO único
+  const goBtn = document.getElementById('ws-go-btn');
+  if (goBtn) {
+    if (active === 'w2') {
+      goBtn.textContent = '▶ GO 2';
+      goBtn.classList.add('go-2');
+    } else {
+      goBtn.textContent = '▶ GO 1';
+      goBtn.classList.remove('go-2');
+    }
+  }
+
+  // Workspace view: preview, chips e botões IN
+  const prev = document.getElementById('ws-prev');
+  if (prev) prev.src = ws ? ws.dataUrl : '';
+  renderChips('ws-ov', ws, 'ws-prev');
+  renderPvwBtns(ws);
+
+  // Cor do workspace ativo
+  const mon = document.getElementById('ws-mon');
+  if (mon) mon.classList.toggle('is-w2', active === 'w2');
 }
 
 function renderChips(oid,item,imgId){
@@ -1176,7 +1369,7 @@ let sdDragInput = null;
 let sdSelectedPip = 0;
 
 function renderPvwBtns(item){
-  const el=document.getElementById('pvw-btns');el.innerHTML='';
+  const el=document.getElementById('ws-pip-btns');el.innerHTML='';
   if(!item?.pips?.length)return;
   if(sdSelectedPip >= item.pips.length) sdSelectedPip = 0;
 
@@ -1227,7 +1420,7 @@ function renderPvwBtns(item){
     b.onclick = () => {
       if(currentPip) currentPip.inputName = inp.name;
       renderPvwBtns(item);
-      renderChips('pvw-ov', item, 'pvw-prev');
+      renderChips('ws-ov', item, 'ws-prev');
       if(sdSelectedPip < item.pips.length - 1) {
         sdSelectedPip++;
         setTimeout(()=>renderPvwBtns(item), 150);
@@ -1242,8 +1435,8 @@ function renderPvwBtns(item){
 }
 
 function renderPipDropZones(item) {
-  const ov   = document.getElementById('pvw-ov');
-  const img  = document.getElementById('pvw-prev');
+  const ov   = document.getElementById('ws-ov');
+  const img  = document.getElementById('ws-prev');
   if (!ov || !img) return;
 
   // Remove drop zones anteriores (mantém chips)
@@ -1282,7 +1475,7 @@ function renderPipDropZones(item) {
       item.pips[i].inputName = sdDragInput.name;
       sdSelectedPip = i;
       renderPvwBtns(item);
-      renderChips('pvw-ov', item, 'pvw-prev');
+      renderChips('ws-ov', item, 'ws-prev');
     });
 
     ov.appendChild(dz);
@@ -1290,62 +1483,103 @@ function renderPipDropZones(item) {
 }
 
 // ════════════════════════════════════════
+// WORKSPACE DROP
+// ════════════════════════════════════════
+function handleWsDrop(e, ws) {
+  const itemId = e.dataTransfer.getData('text/multitela-id');
+  if (!itemId) return;
+  const item = S.playlist.find(x => x.id === itemId);
+  if (!item) return;
+  loadIntoWs(item, ws);
+  toast('Carregado no Workspace ' + (ws === 'w2' ? '2' : '1'), 'ok');
+}
+
+// ════════════════════════════════════════
 // APLICAR NO VMIX
 // ════════════════════════════════════════
-async function applyToPgm(item){
-  if(!item||!S.connected)return;
-  const tn   = S.cfg.transp;
-  const proj = S.projects.find(p=>p.id===item.projId);
-  const png  = proj?.pngs.find(p=>p.id===item.pngId);
-  if(!png?.pips)return;
+async function applyTo(item, target) {
+  // target = 'pvw' ou 'pgm'
+  if (target !== 'pvw' && target !== 'pgm') return;
+  if (!item) { toast('Nada selecionado', 'warn'); return; }
 
-  // Dispara output e comandos vMix em paralelo — sem await sequencial
+  const proj = S.projects.find(p => p.id === item.projId);
+  const png  = proj?.pngs.find(p => p.id === item.pngId);
+  if (!png) { toast('PNG não encontrado', 'err'); return; }
+
+  // Nome do input transparente: base + sufixo PVW/PGM
+  // Se cfg.transp = "Colour" → "Colour PVW" e "Colour PGM"
+  const base = (S.cfg.transp || 'Colour').trim();
+  const tn   = base + ' ' + target.toUpperCase();
+
+  // ① Envia imagem para o output correspondente
+  sendToOutput(item, target);
+
+  // ② Limpa todas as layers 1–9 do input transparente (overlay, zoom, pan, crop)
   const cmds = [];
-
-  // ① Output via ntfy (não bloqueia os comandos vMix)
-  sendToOutput(item);
-
-  // ② Limpa todas as layers 1–9 (overlay, zoom e pan)
   for (let li = 1; li <= 9; li++) {
     cmds.push(vCmd('SetMultiViewOverlay', { Input: tn, Value: `${li},` }));
     cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: tn, Value: '1' }));
     cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: tn, Value: '0' }));
     cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: tn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: tn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: tn, Value: '1' }));
+    cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: tn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: tn, Value: '1' }));
   }
 
-  // ③ Para cada pip: overlay + Rectangle
-  // Passa x,y,w — height calculado pelo vMix preservando AR 16:9 do sinal
-  for(let i=0;i<item.pips.length;i++){
+  // ③ Aplica cada pip configurado
+  for (let i = 0; i < item.pips.length; i++) {
     const pipCfg   = item.pips[i];
     const pipCoord = png.pips[i];
-    if(!pipCfg?.inputName || !pipCoord) continue;
+    if (!pipCfg.inputName || !pipCoord) continue;
     const li = i + 1;
-    const p  = pipToVmix(pipCoord);
+    // Configurações por pip; default detectado pela posição
+    const sAR  = pipCoord.srcAR   || (16/9);
+    const mode = pipCoord.cropMode || defaultCropMode(pipCoord, sAR);
+    const p    = pipToVmix(pipCoord, png.bleed, mode, sAR);
 
     cmds.push(vCmd('SetMultiViewOverlay',   { Input: tn, Value: `${li},${pipCfg.inputName}` }));
     cmds.push(vCmd(`SetLayer${li}Zoom`,     { Input: tn, Value: `${p.zoom}` }));
     cmds.push(vCmd(`SetLayer${li}PanX`,     { Input: tn, Value: `${p.panX}` }));
     cmds.push(vCmd(`SetLayer${li}PanY`,     { Input: tn, Value: `${p.panY}` }));
+    // Só envia comandos de crop se houver crop real (> 0.001)
+    // Isso evita ativar o "Cropping" do vMix sem necessidade,
+    // que afeta a interação com ZoomX/ZoomY
+    const hasCrop = (p.cropX1 > 0.001) || (p.cropY1 > 0.001);
+    if (hasCrop) {
+      cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: tn, Value: `${p.cropX1}` }));
+      cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: tn, Value: `${p.cropX2}` }));
+      cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: tn, Value: `${p.cropY1}` }));
+      cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: tn, Value: `${p.cropY2}` }));
+    }
   }
 
-  // Dispara tudo em paralelo
-  await Promise.all(cmds.map(p=>p.catch(()=>{})));
-  toast('"'+item.pngName+'" no ar','ok');
+  // ④ Envia tudo de uma vez para o vMix
+  await vMulti(cmds);
+  toast('Aplicado em ' + target.toUpperCase(), 'ok');
 }
 
-async function doCut(){
-  if(!S.connected){toast('vMix desconectado','err');return}
-  const item=S.pvwItem;
-  if(!item){toast('Nada no PVW — clique em uma multitela','warn');return}
+// Helpers de UI
+function applyWs1() { applyTo(S.workspaces?.w1, 'pvw'); }
+function applyWs2() { applyTo(S.workspaces?.w2, 'pgm'); }
+function applyActiveWs() {
+  const a = S.activeWs || 'w1';
+  if (a === 'w2') applyWs2(); else applyWs1();
+}
+function handleActiveWsDrop(e) {
+  const itemId = e.dataTransfer.getData('text/multitela-id');
+  if (!itemId) return;
+  const item = S.playlist.find(x => x.id === itemId);
+  if (!item) return;
+  loadIntoWs(item, S.activeWs || 'w1');
+  toast('Carregado no Workspace ' + ((S.activeWs || 'w1') === 'w2' ? '2' : '1'), 'ok');
+}
 
-  await applyToPgm(item);
-
-  // Avança PGM
-  const newIdx=S.playlist.findIndex(x=>x.id===item.id);
-  S.liveIdx=newIdx;
-  S.pvwItem=null;
-
-  updMons();renderTray();
+async function doCut() {
+  // Compat: aplica o workspace ativo no seu output
+  const ws = S.activeWs || 'w1';
+  const target = ws === 'w2' ? 'pgm' : 'pvw';
+  await applyTo(S.workspaces?.[ws], target);
 }
 
 // ════════════════════════════════════════
@@ -1361,7 +1595,13 @@ function updFt(){
 // INIT
 // ════════════════════════════════════════
 loadSt();
+// Inicializa workspaces se não existirem (não persistem no localStorage por design)
+if (!S.workspaces) S.workspaces = { w1: null, w2: null };
+if (!S.activeWs)   S.activeWs = 'w1';
+if (!S.cfg) S.cfg = {};
+if (!S.cfg.transp) S.cfg.transp = 'Colour';
 loadCfgFields();
+loadDevTransp();
 renderPkg();
 renderInps();
 updFt();
@@ -1370,7 +1610,8 @@ setDot('','Desconectado');
 
 // Recalcula drop zones se a janela for redimensionada
 window.addEventListener('resize', () => {
-  if (S.pvwItem) renderPipDropZones(S.pvwItem);
+  const _initWs = S.workspaces?.[S.activeWs || 'w1'];
+  if (_initWs) renderPipDropZones(_initWs);
 });
 </script>
 
@@ -1378,7 +1619,31 @@ window.addEventListener('resize', () => {
 <div id="pip-editor-overlay">
   <div id="pip-editor-bar">
     <span style="font:600 14px/1 var(--font);color:var(--fg1)" id="pip-editor-title">Editor de Pips</span>
-    <span id="pip-editor-hint">Clique e arraste para desenhar um pip. Clique no ✕ para remover.</span>
+    <span id="pip-editor-hint">Arraste para desenhar um pip. ✕ remove.</span>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:12px">
+      <span class="clbl">Sangria:</span>
+      <input type="range" id="pip-editor-bleed" min="0" max="30" step="1" value="4"
+             oninput="document.getElementById('pip-editor-bleed-v').textContent=this.value+'%'"
+             style="width:120px"/>
+      <span id="pip-editor-bleed-v" style="font:600 12px var(--mono);color:var(--fg1);min-width:34px">4%</span>
+    </div>
+    <div id="pip-editor-panel" style="display:flex;align-items:center;gap:8px;margin-left:12px;padding:0 10px;border-left:1px solid var(--border)">
+      <span id="pip-editor-panel-lbl" class="clbl">Clique num pip para configurar</span>
+      <div id="pip-editor-panel-ctl" style="display:none;align-items:center;gap:8px">
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer" title="Cover = preenche cortando. Fit = sinal inteiro, pode haver transparência.">
+          <input type="checkbox" id="pip-sel-crop"/>
+          <span class="clbl">Cover</span>
+        </label>
+        <span class="clbl">Sinal:</span>
+        <select id="pip-sel-srcar" style="background:var(--s2);color:var(--fg1);border:1px solid var(--border);padding:3px 5px;border-radius:4px;font-size:11px">
+          <option value="1.7778">16:9</option>
+          <option value="0.5625">9:16</option>
+          <option value="1">1:1</option>
+          <option value="1.3333">4:3</option>
+          <option value="2.3333">21:9</option>
+        </select>
+      </div>
+    </div>
     <button class="btn sm" onclick="pipEditorConfirm()">✓ Salvar</button>
     <button class="btn sm ghost" onclick="pipEditorCancel()">Cancelar</button>
   </div>
@@ -1393,8 +1658,9 @@ window.addEventListener('resize', () => {
 // PIP EDITOR MANUAL
 // ════════════════════════════════════════
 let _pipEditorPng = null;
-let _pipEditorRects = [];  // [{x,y,w,h} normalizados 0-1]
-let _pipEditorDrag = null; // {startX, startY, el}
+let _pipEditorRects = [];   // [{x,y,w,h,srcAR,cropMode} normalizados 0-1]
+let _pipEditorDrag = null;  // {startX, startY, el}
+let _pipEditorSel  = -1;    // índice do pip selecionado (-1 = nenhum)
 
 function openPipEditor(pngId) {
   const proj = S.activeProj;
@@ -1402,7 +1668,18 @@ function openPipEditor(pngId) {
   const png = proj.pngs.find(p => p.id === pngId);
   if (!png) return;
   _pipEditorPng = png;
+  // Copia pips preservando suas configs individuais (srcAR, cropMode)
   _pipEditorRects = (png.pips || []).map(p => ({...p}));
+  _pipEditorSel = -1;
+
+  // Carrega sangria salva (padrão = 4%)
+  const bleedPct = png.bleed ? Math.round((png.bleed - 1) * 100) : 4;
+  const bleedSlider = document.getElementById('pip-editor-bleed');
+  if (bleedSlider) {
+    bleedSlider.value = bleedPct;
+    document.getElementById('pip-editor-bleed-v').textContent = bleedPct + '%';
+  }
+  // (cropMode e srcAR agora são por pip — configurados no painel ao selecionar)
 
   const img = document.getElementById('pip-editor-img');
   img.src = png.dataUrl;
@@ -1428,8 +1705,16 @@ function pipEditorConfirm() {
     x: Math.round(r.x*10000)/10000,
     y: Math.round(r.y*10000)/10000,
     w: Math.round(r.w*10000)/10000,
-    h: Math.round(r.h*10000)/10000
+    h: Math.round(r.h*10000)/10000,
+    cropMode: r.cropMode || 'cover',
+    srcAR:    r.srcAR    || (16/9)
   }));
+  // Salva sangria (1.00 = sem sangria; 1.04 = 4%; etc.)
+  const bleedSlider = document.getElementById('pip-editor-bleed');
+  if (bleedSlider) {
+    _pipEditorPng.bleed = 1 + (parseInt(bleedSlider.value, 10) || 0) / 100;
+  }
+  // (cropMode/srcAR já estão salvos em cada pip individualmente)
   save(); renderPngs();
   toast(`${_pipEditorPng.name}: ${_pipEditorPng.pips.length} pip(s) salvos`, 'ok');
   pipEditorCancel();
@@ -1444,15 +1729,90 @@ function pipEditorRenderRects() {
 
   _pipEditorRects.forEach((r, i) => {
     const el = document.createElement('div');
-    el.className = 'pip-rect';
-    el.style.cssText = `left:${r.x*iW}px;top:${r.y*iH}px;width:${r.w*iW}px;height:${r.h*iH}px`;
-    el.innerHTML = `<span class="pip-lbl">PIP ${i+1}</span><span class="pip-del" onclick="pipEditorRemove(${i})">✕</span>`;
+    el.className = 'pip-rect' + (i === _pipEditorSel ? ' selected' : '');
+    el.style.cssText = `left:${r.x*iW}px;top:${r.y*iH}px;width:${r.w*iW}px;height:${r.h*iH}px;pointer-events:auto;cursor:pointer`;
+    // Badge do modo (C=cover, F=fit) + AR resumido
+    const ar   = r.srcAR    || (16/9);
+    const mode = r.cropMode || defaultCropMode(r, ar);
+    const arLbl = Math.abs(ar - 16/9) < 0.01 ? '16:9'
+               : Math.abs(ar - 9/16) < 0.01 ? '9:16'
+               : Math.abs(ar - 1) < 0.01    ? '1:1'
+               : Math.abs(ar - 4/3) < 0.01  ? '4:3'
+               : Math.abs(ar - 21/9) < 0.01 ? '21:9'
+               : ar.toFixed(2);
+    el.innerHTML =
+      `<span class="pip-lbl">PIP ${i+1} · ${mode==='cover'?'Cover':'Fit'} · ${arLbl}</span>` +
+      `<span class="pip-del" data-i="${i}">✕</span>`;
+    // Click no pip seleciona (exceto se clicou no botão de remover)
+    el.addEventListener('mousedown', (e) => {
+      if (e.target.classList.contains('pip-del')) {
+        e.stopPropagation();
+        e.preventDefault();
+        const idx = parseInt(e.target.getAttribute('data-i'), 10);
+        pipEditorRemove(idx);
+        return;
+      }
+      e.stopPropagation();   // evita iniciar desenho de novo pip
+      pipEditorSelect(i);
+    });
     container.appendChild(el);
   });
+
+  // Atualizar painel lateral
+  pipEditorUpdatePanel();
+}
+
+function pipEditorSelect(i) {
+  _pipEditorSel = i;
+  pipEditorRenderRects();
+}
+
+function pipEditorUpdatePanel() {
+  const lbl = document.getElementById('pip-editor-panel-lbl');
+  const ctl = document.getElementById('pip-editor-panel-ctl');
+  if (!lbl || !ctl) return;
+
+  if (_pipEditorSel < 0 || _pipEditorSel >= _pipEditorRects.length) {
+    lbl.textContent = 'Clique num pip para configurar';
+    lbl.style.display = '';
+    ctl.style.display = 'none';
+    return;
+  }
+
+  const r = _pipEditorRects[_pipEditorSel];
+  lbl.textContent = `PIP ${_pipEditorSel + 1}:`;
+  lbl.style.display = '';
+  ctl.style.display = 'flex';
+
+  const cropChk = document.getElementById('pip-sel-crop');
+  const srcSel  = document.getElementById('pip-sel-srcar');
+  if (cropChk) {
+    const effectiveMode = r.cropMode || defaultCropMode(r, r.srcAR || (16/9));
+    cropChk.checked = effectiveMode !== 'fit';
+    cropChk.onchange = () => {
+      r.cropMode = cropChk.checked ? 'cover' : 'fit';
+      pipEditorRenderRects();
+    };
+  }
+  if (srcSel) {
+    const v = r.srcAR || (16/9);
+    let best = srcSel.options[0], bd = Infinity;
+    for (const o of srcSel.options) {
+      const d = Math.abs(parseFloat(o.value) - v);
+      if (d < bd) { bd = d; best = o; }
+    }
+    srcSel.value = best.value;
+    srcSel.onchange = () => {
+      r.srcAR = parseFloat(srcSel.value) || (16/9);
+      pipEditorRenderRects();
+    };
+  }
 }
 
 function pipEditorRemove(i) {
   _pipEditorRects.splice(i, 1);
+  if (_pipEditorSel === i) _pipEditorSel = -1;
+  else if (_pipEditorSel > i) _pipEditorSel--;
   pipEditorRenderRects();
 }
 
@@ -1460,20 +1820,28 @@ function pipEditorRemove(i) {
 const _wrap = document.getElementById('pip-editor-wrap');
 
 _wrap.addEventListener('mousedown', e => {
+  // Cliques em pip-rect já são tratados via stopPropagation (seleção)
+  // Aqui só processa cliques na área "vazia" (desenhar novo pip)
+  if (e.target.closest('.pip-rect')) return;
   if (e.target.classList.contains('pip-del')) return;
+
   const img = document.getElementById('pip-editor-img');
   const rect = img.getBoundingClientRect();
   const x = (e.clientX - rect.left) / rect.width;
   const y = (e.clientY - rect.top)  / rect.height;
   if (x < 0 || x > 1 || y < 0 || y > 1) return;
 
+  // Click fora de qualquer pip → desseleciona
+  _pipEditorSel = -1;
+  pipEditorUpdatePanel();
+
   // Criar elemento de preview do retângulo sendo desenhado
   const el = document.createElement('div');
   el.className = 'pip-rect';
-  el.style.cssText = `left:${x*rect.width}px;top:${y*rect.height}px;width:0;height:0;border-color:var(--pgm)`;
+  el.style.cssText = `left:${x*rect.width}px;top:${y*rect.height}px;width:0;height:0;border-color:var(--pgm);pointer-events:none`;
   document.getElementById('pip-editor-rects').appendChild(el);
 
-  _pipEditorDrag = { x0: x, y0: y, x0px: e.clientX, y0px: e.clientY, el, rect };
+  _pipEditorDrag = { x0: x, y0: y, x0px: e.clientX, y0px: e.clientY, el, rect, moved: false };
   e.preventDefault();
 });
 
@@ -1501,9 +1869,12 @@ window.addEventListener('mouseup', e => {
   el.remove(); // remove preview
   _pipEditorDrag = null;
 
-  // Só salva se maior que 2% da tela
+  // Só salva se for um drag real (não click) — mínimo 2% em ambas dimensões
   if (lw > 0.02 && lh > 0.02) {
-    _pipEditorRects.push({ x: lx, y: ly, w: lw, h: lh });
+    const newPip = { x: lx, y: ly, w: lw, h: lh, srcAR: 16/9 };
+    // cropMode não definido → será detectado automaticamente pela posição
+    _pipEditorRects.push(newPip);
+    _pipEditorSel = _pipEditorRects.length - 1;
     pipEditorRenderRects();
   }
 });
