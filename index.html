@@ -184,6 +184,11 @@ select{cursor:pointer}
 .png-card{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
 .png-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:repeating-conic-gradient(#1a1a20 0% 25%,#222228 0% 50%) 0 0/12px 12px}
 .png-info{padding:5px 7px;display:flex;align-items:center;gap:4px}
+.png-path-row{padding:0 7px 6px;display:flex;align-items:center;gap:4px;border-top:1px dashed transparent}
+.png-path-row.path-warn{border-top-color:var(--accent)}
+.png-path-row.path-ok{border-top-color:var(--pvw)}
+.png-path-input{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:3px;font:11px var(--mono);outline:none}
+.png-path-input:focus{border-color:var(--accent)}
 .png-nm{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pip-cnt{font-family:var(--mono);font-size:9px;color:var(--pvw);white-space:nowrap}
 .pip-cnt.an{color:var(--accent)}
@@ -344,12 +349,7 @@ select{cursor:pointer}
     <span class="clbl">Transp:</span>
     <code style="font-family:var(--mono);font-size:11px;color:var(--fg2);padding:3px 8px;background:var(--s2);border-radius:4px" title="Nome base dos inputs transparentes no vMix. Configure em Dev se quiser alterar.">Colour</code>
   </div>
-  <div id="output-pill" onclick="copyOutputUrl()" title="Copiar URL do output para o vMix">
-    <span class="pill-ic">📺</span>
-    <span class="pill-lbl">Output:</span>
-    <span class="pill-url" id="pill-url-txt">—</span>
-    <button class="pill-btn">Copiar URL</button>
-  </div>
+  
 </div>
 
 <!-- TABS -->
@@ -426,30 +426,37 @@ select{cursor:pointer}
   </div>
   <div class="scroll">
     <div class="sec">
-      <div class="sec-hd"><span class="sec-ttl">📺 Setup do output no vMix</span></div>
+      <div class="sec-hd"><span class="sec-ttl">📺 Setup no vMix</span></div>
       <div class="sec-bd">
         <div class="setup-card">
-          <div class="sc-title">Como configurar — faça isso uma vez</div>
+          <div class="sc-title">Como configurar — faça isso uma vez por máquina</div>
           <div class="setup-steps">
-            <div class="setup-step"><span class="step-num">1</span><div>Copie a URL do output (pill no canto superior direito).</div></div>
-            <div class="setup-step"><span class="step-num">2</span><div>No vMix, crie um input <b>Web Browser</b> com essa URL.</div></div>
-            <div class="setup-step"><span class="step-num">3</span><div>Pronto — cada CUT atualiza o output automaticamente.</div></div>
+            <div class="setup-step"><span class="step-num">1</span><div>No vMix, crie <b>2 inputs Colour transparentes</b> com os nomes <code>Colour PVW</code> e <code>Colour PGM</code>.</div></div>
+            <div class="setup-step"><span class="step-num">2</span><div>Crie <b>2 inputs GT Title</b> (com um único campo de imagem) e nomeie <code>Moldura PVW</code> e <code>Moldura PGM</code>.</div></div>
+            <div class="setup-step"><span class="step-num">3</span><div>Em cada Colour, adicione o respectivo Moldura como <b>Layer 10</b>.</div></div>
+            <div class="setup-step"><span class="step-num">4</span><div>Configure abaixo os nomes base e o campo de imagem do GT.</div></div>
           </div>
-          <div class="url-copy-row">
-            <span class="uc-url" id="dev-output-url">—</span>
-            <button class="btn sm acc" onclick="copyOutputUrl('pvw')">Copiar URL PVW</button>
-            <button class="btn sm acc" onclick="copyOutputUrl('pgm')" style="margin-left:4px">Copiar URL PGM</button>
-            <button class="btn sm ghost" onclick="resetChannel()">↺ Novo canal</button>
+
+          <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="clbl" style="min-width:120px">Base Colour:</span>
+              <input type="text" id="dev-transp" style="width:160px" placeholder="Colour"/>
+              <span style="font-size:11px;color:var(--text3)">→ <code>{base} PVW</code> / <code>{base} PGM</code></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="clbl" style="min-width:120px">Base GT Title:</span>
+              <input type="text" id="dev-gtbase" style="width:160px" placeholder="Moldura"/>
+              <span style="font-size:11px;color:var(--text3)">→ <code>{base} PVW</code> / <code>{base} PGM</code></span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="clbl" style="min-width:120px">Campo imagem GT:</span>
+              <input type="text" id="dev-gtfield" style="width:200px" placeholder="Image1.Source"/>
+              <span style="font-size:11px;color:var(--text3)">→ ex: <code>Image1.Source</code></span>
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <button class="btn sm" onclick="saveDevCfg()">✓ Salvar configurações</button>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:6px">Canal: <span id="ntfy-ch-lbl" style="color:var(--pvw);font-family:var(--mono)">—</span
-      </div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
-        <div style="font:600 11px var(--mono);color:var(--fg2);margin-bottom:6px">INPUT TRANSPARENTE NO VMIX</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span class="clbl">Base:</span>
-          <input type="text" id="dev-transp" style="width:160px" placeholder="Colour"/>
-          <span style="font-size:11px;color:var(--fg3)">→ procura <code>{base} PVW</code> e <code>{base} PGM</code> no vMix</span>
-          <button class="btn sm" onclick="saveDevTransp()">Salvar</button>></div>
         </div>
       </div>
     </div>
@@ -507,62 +514,17 @@ select{cursor:pointer}
 // NTFY — canal de sync com o output.html
 // ════════════════════════════════════════
 // Gera um canal único por instalação, salvo no localStorage
-function getNtfyChannel() {
-  let ch = localStorage.getItem('mtc_ntfy_ch');
-  if (!ch) {
-    // canal aleatório longo para evitar colisão
-    ch = 'mtc-' + Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10);
-    localStorage.setItem('mtc_ntfy_ch', ch);
-  }
-  return ch;
-}
-const NTFY_CHANNEL = getNtfyChannel();
+
 // ════════════════════════════════════════
 // OUTPUT URL
 // ════════════════════════════════════════
-function getOutputUrl(target) {
-  // target = 'pvw' (out=1) ou 'pgm' (out=2). Default: 'pvw'
-  const base = window.location.href.replace(/(\?.*)?$/, '').replace(/index\.html$/, '');
-  const base2 = base.endsWith('/') ? base : base + '/';
-  const out = target === 'pgm' ? '2' : '1';
-  return base2 + 'output.html?ch=' + NTFY_CHANNEL + '&out=' + out;
-}
 
-function renderOutputUrl() {
-  const urlPvw = getOutputUrl('pvw');
-  const urlPgm = getOutputUrl('pgm');
-  const el1 = document.getElementById('pill-url-txt');
-  const el2 = document.getElementById('dev-output-url');
-  const el3 = document.getElementById('ntfy-ch-lbl');
-  // No pill mostra "PVW: …  PGM: …" abreviado
-  if (el1) el1.innerHTML = '<b>1:</b> …&out=1 &nbsp; <b>2:</b> …&out=2';
-  // No Dev mostra as duas URLs completas
-  if (el2) el2.innerHTML =
-    '<div style="margin-bottom:4px"><b>Output 1 (PVW):</b> <code>' + urlPvw + '</code></div>' +
-    '<div><b>Output 2 (PGM):</b> <code>' + urlPgm + '</code></div>';
-  if (el3) el3.textContent = NTFY_CHANNEL;
-}
 
-function resetChannel() {
-  if (!confirm('Isso vai gerar uma nova URL de output. Você precisará reconfigurar o Browser Input no vMix. Continuar?')) return;
-  localStorage.removeItem('mtc_ntfy_ch');
-  location.reload();
-}
 
-function copyOutputUrl(target) {
-  // Se não vier target, abre menu rápido
-  if (!target) {
-    const which = confirm('Copiar URL do Output 1 (PVW)?\n\nOK = PVW (out=1)\nCancelar = PGM (out=2)');
-    target = which ? 'pvw' : 'pgm';
-  }
-  const url = getOutputUrl(target);
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(() =>
-      toast('URL ' + target.toUpperCase() + ' copiada!', 'ok'));
-  } else {
-    prompt('Copie a URL do output ' + target.toUpperCase() + ':', url);
-  }
-}
+
+
+
+
 
 // ════════════════════════════════════════
 // ESTADO
@@ -631,20 +593,30 @@ function goTab(name){
   if(name==='sel')renderPkg();
 }
 
-function saveDevTransp() {
-  const el = document.getElementById('dev-transp');
-  if (!el) return;
-  const v = el.value.trim() || 'Colour';
+function saveDevCfg() {
   S.cfg = S.cfg || {};
-  S.cfg.transp = v;
+  const t = document.getElementById('dev-transp');
+  const g = document.getElementById('dev-gtbase');
+  const f = document.getElementById('dev-gtfield');
+  if (t) S.cfg.transp  = (t.value.trim() || 'Colour');
+  if (g) S.cfg.gtBase  = (g.value.trim() || 'Moldura');
+  if (f) S.cfg.gtField = (f.value.trim() || 'Image1.Source');
   save();
-  toast('Base do transparente: ' + v, 'ok');
+  toast('Configurações salvas', 'ok');
 }
 
-function loadDevTransp() {
-  const el = document.getElementById('dev-transp');
-  if (el) el.value = (S.cfg && S.cfg.transp) || 'Colour';
+function loadDevCfg() {
+  const t = document.getElementById('dev-transp');
+  const g = document.getElementById('dev-gtbase');
+  const f = document.getElementById('dev-gtfield');
+  if (t) t.value = (S.cfg && S.cfg.transp)  || 'Colour';
+  if (g) g.value = (S.cfg && S.cfg.gtBase)  || 'Moldura';
+  if (f) f.value = (S.cfg && S.cfg.gtField) || 'Image1.Source';
 }
+
+// Compat: nomes antigos chamando os novos
+function saveDevTransp() { saveDevCfg(); }
+function loadDevTransp() { loadDevCfg(); }
 
 function loadCfgFields(){
   document.getElementById('vmix-host').value = S.host;
@@ -908,88 +880,15 @@ function pipToVmix(pip, bleed, cropMode, srcAR) {
 
 
 // Pre-comprime WebP no upload — no CUT ja esta pronto, zero espera de compressao
-function comprimirWebP(dataUrl) {
-  return new Promise(resolve => {
-    const imgEl = new Image();
-    imgEl.onload = () => {
-      const cvs = document.createElement('canvas');
-      cvs.width = 960; cvs.height = 540;
-      const ctx = cvs.getContext('2d');
-      ctx.clearRect(0, 0, 960, 540);
-      ctx.drawImage(imgEl, 0, 0, 960, 540);
-      const w = cvs.toDataURL('image/webp', 0.9);
-      resolve(w.startsWith('data:image/webp') ? w : cvs.toDataURL('image/png'));
-    };
-    imgEl.src = dataUrl;
-  });
-}
 
-function dataUrlToBlob(dataUrl) {
-  const parts = dataUrl.split(',');
-  const mime = parts[0].match(/:(.*?);/)[1];
-  const bin  = atob(parts[1]);
-  const arr  = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-  return new Blob([arr], { type: mime });
-}
 
-// Helper: canal ntfy para PVW ou PGM
-function ntfyChannelFor(target) {
-  // target = 'pvw' ou 'pgm'
-  return NTFY_CHANNEL + '-' + target;
-}
 
-async function sendToOutput(item, target) {
-  // target obrigatório: 'pvw' ou 'pgm'
-  if (target !== 'pvw' && target !== 'pgm') {
-    console.warn('[sendToOutput] target inválido:', target);
-    return;
-  }
-  const proj   = S.projects.find(p => p.id === item.projId);
-  const pngObj = proj?.pngs.find(p => p.id === item.pngId);
 
-  if (pngObj && !pngObj.webpCache) {
-    pngObj.webpCache = await comprimirWebP(item.dataUrl);
-  }
-  const dataUrl = pngObj?.webpCache || await comprimirWebP(item.dataUrl);
-  const isWebp  = dataUrl.startsWith('data:image/webp');
-  const blob    = dataUrlToBlob(dataUrl);
-  const channel = ntfyChannelFor(target);
 
-  try {
-    const resp = await fetch('https://ntfy.sh/' + channel, {
-      method: 'POST',
-      headers: {
-        'Filename':     isWebp ? 'multitela.webp' : 'multitela.png',
-        'Content-Type': isWebp ? 'image/webp'     : 'image/png',
-      },
-      body: blob,
-    });
-    if (!resp.ok) {
-      const body = await resp.text();
-      toast('Erro ntfy ' + target.toUpperCase() + ': ' + resp.status, 'warn');
-    } else {
-      toast('Enviado para ' + target.toUpperCase(), 'ok');
-    }
-  } catch(e) {
-    console.warn('[sendToOutput] fetch error:', e);
-    toast('Erro de rede no ' + target.toUpperCase(), 'err');
-  }
-}
 
-async function clearOutput(target) {
-  if (target !== 'pvw' && target !== 'pgm') return;
-  const cvs = document.createElement('canvas');
-  cvs.width = 1; cvs.height = 1;
-  const blob = await new Promise(r => cvs.toBlob(r, 'image/png'));
-  try {
-    await fetch('https://ntfy.sh/' + ntfyChannelFor(target), {
-      method: 'POST',
-      headers: { 'Filename': 'clear.png', 'Content-Type': 'image/png', 'X-Tags': 'clear' },
-      body: blob,
-    });
-  } catch(e) {}
-}
+
+
+
 
 // ════════════════════════════════════════
 // DEV
@@ -1005,7 +904,7 @@ function enterDev() {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   const pg = document.getElementById('page-dev');
   pg.style.display='flex'; pg.classList.add('active');
-  renderProjs(); renderInps(); renderOutputUrl();
+  renderProjs(); renderInps(); 
 }
 function exitDev() { document.getElementById('page-dev').style.display='none'; goTab('sel'); }
 function savePw() {
@@ -1060,6 +959,8 @@ function renderPngs() {
     const c = document.createElement('div');
     c.className = 'png-card';
     const pt = png.pips ? `${png.pips.length} pip${png.pips.length!==1?'s':''}` : 'Analisando...';
+    const pathClass  = png.path ? 'path-ok' : 'path-warn';
+    const pathTitle  = png.path ? png.path : 'Defina o caminho do PNG no PC';
     c.innerHTML = `
       <img class="png-thumb" src="${png.dataUrl}" style="cursor:pointer" onclick="openPipEditor('${png.id}')"/>
       <div class="png-info">
@@ -1067,11 +968,29 @@ function renderPngs() {
         <span class="pip-cnt ${png.pips?'':'an'}" style="cursor:pointer" onclick="openPipEditor('${png.id}')">${pt}</span>
         <button class="btn xs ghost" title="Editar pips manualmente" onclick="openPipEditor('${png.id}')">✎</button>
         <button class="btn xs ghost" onclick="rmPng('${png.id}',event)">✕</button>
+      </div>
+      <div class="png-path-row ${pathClass}" title="${pathTitle}">
+        <input type="text" class="png-path-input" value="${(png.path||'').replace(/"/g,'&quot;')}"
+               placeholder="C:\\caminho\\multitela.png"
+               oninput="setPngPath('${png.id}', this.value)"/>
       </div>`;
     g.appendChild(c);
   });
   updFt();
 }
+function setPngPath(pngId, path) {
+  const proj = S.activeProj;
+  if (!proj) return;
+  const png = proj.pngs.find(p => p.id === pngId);
+  if (!png) return;
+  png.path = path.trim();
+  save();
+  // Atualiza visual do card sem re-render completo
+  const card = document.querySelector(`[data-png-id="${pngId}"]`);
+  // Simples: re-render
+  // (mantemos foco no input se possível)
+}
+
 async function hUpload(e) { await procPngs(Array.from(e.target.files)); e.target.value=''; }
 async function hDrop(e) {
   e.preventDefault(); document.getElementById('dz').classList.remove('drag');
@@ -1081,11 +1000,10 @@ async function procPngs(files) {
   if (!S.activeProj) { toast('Selecione uma competição','warn'); return; }
   for (const f of files) {
     const du = await rdFile(f);
-    const png = { id:uid(), name:f.name.replace('.png',''), dataUrl:du, webpCache:null, pips:null };
+    const png = { id:uid(), name:f.name.replace('.png',''), dataUrl:du, pips:null };
     S.activeProj.pngs.push(png); renderPngs();
-    Promise.all([analyzePng(du), comprimirWebP(du)]).then(([pips, webp]) => {
+    analyzePng(du).then(pips => {
       png.pips = pips;
-      png.webpCache = webp;
       save(); renderPngs();
       toast(`${png.name}: ${pips.length} pip${pips.length!==1?'s':''} detectado${pips.length!==1?'s':''}`, 'ok');
     });
@@ -1506,57 +1424,70 @@ async function applyTo(item, target) {
   const png  = proj?.pngs.find(p => p.id === item.pngId);
   if (!png) { toast('PNG não encontrado', 'err'); return; }
 
-  // Nome do input transparente: base + sufixo PVW/PGM
-  // Se cfg.transp = "Colour" → "Colour PVW" e "Colour PGM"
-  const base = (S.cfg.transp || 'Colour').trim();
-  const tn   = base + ' ' + target.toUpperCase();
-
-  // ① Envia imagem para o output correspondente
-  sendToOutput(item, target);
-
-  // ② Limpa todas as layers 1–9 do input transparente (overlay, zoom, pan, crop)
-  const cmds = [];
-  for (let li = 1; li <= 9; li++) {
-    cmds.push(vCmd('SetMultiViewOverlay', { Input: tn, Value: `${li},` }));
-    cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: tn, Value: '1' }));
-    cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: tn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: tn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: tn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: tn, Value: '1' }));
-    cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: tn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: tn, Value: '1' }));
+  if (!png.path) {
+    toast('Caminho do PNG não configurado (configure no Dev)', 'warn');
+    return;
   }
 
-  // ③ Aplica cada pip configurado
+  // Nomes dos inputs no vMix:
+  const baseColour = (S.cfg.transp || 'Colour').trim();
+  const baseGT     = (S.cfg.gtBase || 'Moldura').trim();
+  const fieldName  = (S.cfg.gtField || 'Image1.Source').trim();
+  const suffix     = target.toUpperCase();
+  const colourIn   = baseColour + ' ' + suffix;   // ex: "Colour PVW"
+  const gtIn       = baseGT     + ' ' + suffix;   // ex: "Moldura PVW"
+
+  const cmds = [];
+
+  // ① Trocar a imagem do GT Title (moldura)
+  cmds.push(vCmd('SetImage', {
+    Input: gtIn,
+    SelectedName: fieldName,
+    Value: png.path
+  }));
+
+  // ② Limpa todas as layers 1–9 do Colour (overlay, zoom, pan, crop)
+  for (let li = 1; li <= 9; li++) {
+    cmds.push(vCmd('SetMultiViewOverlay', { Input: colourIn, Value: `${li},` }));
+    cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: colourIn, Value: '1' }));
+    cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: colourIn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: colourIn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: colourIn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: colourIn, Value: '1' }));
+    cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: colourIn, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: colourIn, Value: '1' }));
+  }
+
+  // ③ Garante que a layer 10 do Colour exibe a moldura GT
+  cmds.push(vCmd('SetMultiViewOverlay', { Input: colourIn, Value: `10,${gtIn}` }));
+
+  // ④ Aplica cada pip configurado nas layers 1-9
   for (let i = 0; i < item.pips.length; i++) {
     const pipCfg   = item.pips[i];
     const pipCoord = png.pips[i];
     if (!pipCfg.inputName || !pipCoord) continue;
     const li = i + 1;
-    // Configurações por pip; default detectado pela posição
     const sAR  = pipCoord.srcAR   || (16/9);
     const mode = pipCoord.cropMode || defaultCropMode(pipCoord, sAR);
     const p    = pipToVmix(pipCoord, png.bleed, mode, sAR);
 
-    cmds.push(vCmd('SetMultiViewOverlay',   { Input: tn, Value: `${li},${pipCfg.inputName}` }));
-    cmds.push(vCmd(`SetLayer${li}Zoom`,     { Input: tn, Value: `${p.zoom}` }));
-    cmds.push(vCmd(`SetLayer${li}PanX`,     { Input: tn, Value: `${p.panX}` }));
-    cmds.push(vCmd(`SetLayer${li}PanY`,     { Input: tn, Value: `${p.panY}` }));
-    // Só envia comandos de crop se houver crop real (> 0.001)
-    // Isso evita ativar o "Cropping" do vMix sem necessidade,
-    // que afeta a interação com ZoomX/ZoomY
+    cmds.push(vCmd('SetMultiViewOverlay',   { Input: colourIn, Value: `${li},${pipCfg.inputName}` }));
+    cmds.push(vCmd(`SetLayer${li}Zoom`,     { Input: colourIn, Value: `${p.zoom}` }));
+    cmds.push(vCmd(`SetLayer${li}PanX`,     { Input: colourIn, Value: `${p.panX}` }));
+    cmds.push(vCmd(`SetLayer${li}PanY`,     { Input: colourIn, Value: `${p.panY}` }));
+    // Crop só se houver crop real
     const hasCrop = (p.cropX1 > 0.001) || (p.cropY1 > 0.001);
     if (hasCrop) {
-      cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: tn, Value: `${p.cropX1}` }));
-      cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: tn, Value: `${p.cropX2}` }));
-      cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: tn, Value: `${p.cropY1}` }));
-      cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: tn, Value: `${p.cropY2}` }));
+      cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: colourIn, Value: `${p.cropX1}` }));
+      cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: colourIn, Value: `${p.cropX2}` }));
+      cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: colourIn, Value: `${p.cropY1}` }));
+      cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: colourIn, Value: `${p.cropY2}` }));
     }
   }
 
-  // ④ Envia tudo de uma vez para o vMix
+  // ⑤ Envia tudo em paralelo
   await vMulti(cmds);
-  toast('Aplicado em ' + target.toUpperCase(), 'ok');
+  toast('Aplicado em ' + suffix, 'ok');
 }
 
 // Helpers de UI
@@ -1600,12 +1531,15 @@ if (!S.workspaces) S.workspaces = { w1: null, w2: null };
 if (!S.activeWs)   S.activeWs = 'w1';
 if (!S.cfg) S.cfg = {};
 if (!S.cfg.transp) S.cfg.transp = 'Colour';
+// Novo: input base do GT Title (substitui o Browser Input)
+if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Moldura';   // nome base do GT: vira "Moldura PVW" e "Moldura PGM"
+if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem no GT Title
 loadCfgFields();
-loadDevTransp();
+loadDevCfg();
 renderPkg();
 renderInps();
 updFt();
-renderOutputUrl();
+
 setDot('','Desconectado');
 
 // Recalcula drop zones se a janela for redimensionada
