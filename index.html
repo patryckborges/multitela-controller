@@ -457,6 +457,11 @@ select{cursor:pointer}
               <input type="text" id="dev-gtfield" style="width:200px" placeholder="Image1.Source"/>
               <span style="font-size:11px;color:var(--text3)">→ ex: <code>Image1.Source</code></span>
             </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="clbl" style="min-width:120px">Pasta raiz:</span>
+              <input type="text" id="dev-rootpath" style="width:300px" placeholder="D:\\PROJETOS VMIX PDS\\"/>
+              <span style="font-size:11px;color:var(--text3)">→ caminho fixo desta máquina</span>
+            </div>
             <div style="display:flex;justify-content:flex-end">
               <button class="btn sm" onclick="saveDevCfg()">✓ Salvar configurações</button>
             </div>
@@ -484,7 +489,7 @@ select{cursor:pointer}
         <div class="drop-zone" id="dz"
           ondragover="event.preventDefault();this.classList.add('drag')"
           ondragleave="this.classList.remove('drag')"
-          ondrop="hDrop(event)">Arraste os PNGs aqui ou clique em Upload</div>
+          ondrop="hDrop(event)">Arraste a pasta da competição ou PNGs individuais</div>
         <div class="png-grid" id="png-grid"></div>
       </div>
     </div>
@@ -608,9 +613,15 @@ function saveDevCfg() {
   const t = document.getElementById('dev-transp');
   const g = document.getElementById('dev-gtbase');
   const f = document.getElementById('dev-gtfield');
-  if (t) S.cfg.transp  = (t.value.trim() || 'Colour');
-  if (g) S.cfg.gtBase  = (g.value.trim() || 'Multitela.gtzip');
-  if (f) S.cfg.gtField = (f.value.trim() || 'Image1.Source');
+  const r = document.getElementById('dev-rootpath');
+  if (t) S.cfg.transp   = (t.value.trim() || 'Colour');
+  if (g) S.cfg.gtBase   = (g.value.trim() || 'Multitela.gtzip');
+  if (f) S.cfg.gtField  = (f.value.trim() || 'Image1.Source');
+  if (r) {
+    let rp = r.value.trim();
+    if (rp && !rp.endsWith('\\') && !rp.endsWith('/')) rp += '\\';
+    S.cfg.rootPath = rp;
+  }
   save();
   toast('Configurações salvas', 'ok');
 }
@@ -619,9 +630,11 @@ function loadDevCfg() {
   const t = document.getElementById('dev-transp');
   const g = document.getElementById('dev-gtbase');
   const f = document.getElementById('dev-gtfield');
-  if (t) t.value = (S.cfg && S.cfg.transp)  || 'Colour';
-  if (g) g.value = (S.cfg && S.cfg.gtBase)  || 'Multitela.gtzip';
-  if (f) f.value = (S.cfg && S.cfg.gtField) || 'Image1.Source';
+  const r = document.getElementById('dev-rootpath');
+  if (t) t.value = (S.cfg && S.cfg.transp)   || 'Colour';
+  if (g) g.value = (S.cfg && S.cfg.gtBase)   || 'Multitela.gtzip';
+  if (f) f.value = (S.cfg && S.cfg.gtField)  || 'Image1.Source';
+  if (r) r.value = (S.cfg && S.cfg.rootPath) || 'D:\\PROJETOS VMIX PDS\\';
 }
 
 // Compat: nomes antigos chamando os novos
@@ -1035,7 +1048,57 @@ function setPngPath(pngId, path) {
 async function hUpload(e) { await procPngs(Array.from(e.target.files)); e.target.value=''; }
 async function hDrop(e) {
   e.preventDefault(); document.getElementById('dz').classList.remove('drag');
-  await procPngs(Array.from(e.dataTransfer.files).filter(f=>f.type==='image/png'));
+
+  // Tenta usar DataTransferItem para arrastar PASTAS (entrega webkitRelativePath)
+  const items = e.dataTransfer.items;
+  const allFiles = [];
+  if (items && items.length && items[0].webkitGetAsEntry) {
+    // Drag&drop suporta entries (arquivos OU pastas)
+    const promises = [];
+    for (const item of items) {
+      const entry = item.webkitGetAsEntry && item.webkitGetAsEntry();
+      if (entry) promises.push(readEntry(entry, allFiles, ''));
+    }
+    await Promise.all(promises);
+  }
+  // Se nada foi resolvido via entries, cai pro modo simples
+  const files = allFiles.length ? allFiles : Array.from(e.dataTransfer.files);
+  await procPngs(files.filter(f => f.type === 'image/png' || /\.png$/i.test(f.name)));
+}
+
+// Lê um FileSystemEntry recursivamente, preenchendo o array files
+// Cada File ganha uma propriedade _relPath com o caminho relativo (ex: "TENIS/50_50.png")
+async function readEntry(entry, files, prefix) {
+  if (entry.isFile) {
+    return new Promise(resolve => {
+      entry.file(file => {
+        // Anexar caminho relativo customizado
+        file._relPath = prefix + entry.name;
+        files.push(file);
+        resolve();
+      }, () => resolve());
+    });
+  } else if (entry.isDirectory) {
+    const reader = entry.createReader();
+    return new Promise(resolve => {
+      const allEntries = [];
+      const readBatch = () => {
+        reader.readEntries(async entries => {
+          if (!entries.length) {
+            // Terminou — processar todos
+            await Promise.all(allEntries.map(e =>
+              readEntry(e, files, prefix + entry.name + '/')
+            ));
+            resolve();
+          } else {
+            allEntries.push(...entries);
+            readBatch(); // continuar lendo (readEntries vem em batches)
+          }
+        }, () => resolve());
+      };
+      readBatch();
+    });
+  }
 }
 // Helper: monta caminho absoluto combinando pasta do projeto + nome do arquivo
 function buildPngPath(folder, fileName) {
@@ -1052,16 +1115,39 @@ function buildPngPath(folder, fileName) {
 
 async function procPngs(files) {
   if (!S.activeProj) { toast('Selecione uma competição','warn'); return; }
+  let folderFromDrop = null;
   for (const f of files) {
     const du = await rdFile(f);
-    // Caminho automático: combina pasta do projeto + nome do arquivo original
-    const autoPath = buildPngPath(S.activeProj.folderPath || '', f.name);
+
+    // Determinar o caminho do PNG:
+    // 1) Se veio com _relPath (arrastou pasta inteira), usa rootPath + relPath
+    // 2) Senão, usa folderPath do projeto + nome
+    let pngPath = '';
+    const rel = f._relPath || f.webkitRelativePath || '';
+    if (rel && rel.includes('/')) {
+      // Veio de uma pasta arrastada — usar rootPath + caminho relativo (em formato Windows)
+      const root = (S.cfg && S.cfg.rootPath) || '';
+      // Converter / para \ (Windows)
+      const winRel = rel.replace(/\//g, '\\');
+      pngPath = root + winRel;
+
+      // Aproveitar para detectar a folderPath do projeto automaticamente
+      // pasta = root + primeira parte do relPath
+      const firstFolder = rel.split('/')[0];
+      if (firstFolder && !folderFromDrop) {
+        folderFromDrop = root + firstFolder + '\\';
+      }
+    } else {
+      // Drop de arquivo solto — usar folderPath manual do projeto
+      pngPath = buildPngPath(S.activeProj.folderPath || '', f.name);
+    }
+
     const png = {
       id:uid(),
-      name:f.name.replace('.png',''),
+      name:f.name.replace(/\.png$/i,''),
       dataUrl:du,
       pips:null,
-      path: autoPath   // pode ser '' se não há folder configurada
+      path: pngPath
     };
     S.activeProj.pngs.push(png); renderPngs();
     analyzePng(du).then(pips => {
@@ -1069,6 +1155,15 @@ async function procPngs(files) {
       save(); renderPngs();
       toast(`${png.name}: ${pips.length} pip${pips.length!==1?'s':''} detectado${pips.length!==1?'s':''}`, 'ok');
     });
+  }
+
+  // Se detectamos uma pasta arrastada, salvar como folderPath do projeto
+  if (folderFromDrop && !S.activeProj.folderPath) {
+    S.activeProj.folderPath = folderFromDrop;
+    S.activeProj._lastFolder = folderFromDrop;
+    save();
+    loadProjFolder();
+    toast('Pasta detectada: ' + folderFromDrop, 'ok');
   }
 }
 function rmPng(id,e) {
@@ -1596,6 +1691,7 @@ if (!S.cfg.transp) S.cfg.transp = 'Colour';
 // Novo: input base do GT Title (substitui o Browser Input)
 if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Multitela.gtzip';   // nome base do GT
 if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem no GT Title
+if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX PDS\\'; // raiz onde ficam todas as pastas de PNGs por máquina
 loadCfgFields();
 loadDevCfg();
 renderPkg();
