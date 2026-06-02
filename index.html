@@ -473,7 +473,7 @@ select{cursor:pointer}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="clbl" style="min-width:120px">Pasta raiz:</span>
-              <input type="text" id="dev-rootpath" style="width:300px" placeholder="D:\\PROJETOS VMIX {PC}\\"/>
+              <input type="text" id="dev-rootpath" style="width:300px" placeholder="D:\\PROJETOS VMIX PDS\\"/>
               <span style="font-size:11px;color:var(--text3)">→ caminho fixo desta máquina</span>
             </div>
             <div style="display:flex;justify-content:flex-end">
@@ -648,7 +648,7 @@ function loadDevCfg() {
   if (t) t.value = (S.cfg && S.cfg.transp)   || 'Colour';
   if (g) g.value = (S.cfg && S.cfg.gtBase)   || 'Multitela.gtzip';
   if (f) f.value = (S.cfg && S.cfg.gtField)  || 'Image1.Source';
-  if (r) r.value = (S.cfg && S.cfg.rootPath) || 'D:\\PROJETOS VMIX {PC}\\';
+  if (r) r.value = (S.cfg && S.cfg.rootPath) || 'D:\\PROJETOS VMIX PDS\\';
 }
 
 // Compat: nomes antigos chamando os novos
@@ -1824,33 +1824,32 @@ if (!S.cfg.transp) S.cfg.transp = 'Colour';
 // Novo: input base do GT Title (substitui o Browser Input)
 if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Multitela.gtzip';   // nome base do GT
 if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem no GT Title
-if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX {PC}\\'; // {PC} é substituído pelo PC atual
+if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX PDS\\'; // raiz fixa (igual em todos PCs)
 if (!S.pcName)       S.pcName       = '';   // PD2/PD3/PD4/PD5/PD6 — definido pelo operador
 
-// Migração: paths com PD\d (PD3, PD5...) OU PDS (default antigo) → {PC}
-// Roda sempre que detectar algum (não usa flag, pra cobrir casos novos)
-{
-  const pcPat = /PD(S|\d+)/g;
-  let migrated = 0;
+// Reversão: {PC} → PDS (pasta é igual em todos PCs, era mal-entendido)
+// Roda 1x (com flag para não rodar de novo)
+if (!S._pcReverted) {
+  let reverted = 0;
   (S.projects || []).forEach(proj => {
-    if (proj.folderPath && pcPat.test(proj.folderPath)) {
-      proj.folderPath = proj.folderPath.replace(/PD(S|\d+)/g, '{PC}');
-      migrated++;
+    if (proj.folderPath && proj.folderPath.includes('{PC}')) {
+      proj.folderPath = proj.folderPath.replace(/\{PC\}/g, 'PDS');
+      reverted++;
     }
     (proj.pngs || []).forEach(png => {
-      if (png.path && pcPat.test(png.path)) {
-        png.path = png.path.replace(/PD(S|\d+)/g, '{PC}');
-        migrated++;
+      if (png.path && png.path.includes('{PC}')) {
+        png.path = png.path.replace(/\{PC\}/g, 'PDS');
+        reverted++;
       }
     });
   });
-  // Migrar também o cfg.rootPath
-  if (S.cfg && S.cfg.rootPath && pcPat.test(S.cfg.rootPath)) {
-    S.cfg.rootPath = S.cfg.rootPath.replace(/PD(S|\d+)/g, '{PC}');
-    migrated++;
+  if (S.cfg && S.cfg.rootPath && S.cfg.rootPath.includes('{PC}')) {
+    S.cfg.rootPath = S.cfg.rootPath.replace(/\{PC\}/g, 'PDS');
+    reverted++;
   }
-  if (migrated > 0) {
-    console.log(`[Migração] ${migrated} caminhos atualizados para usar {PC}`);
+  S._pcReverted = true;
+  if (reverted > 0) {
+    console.log(`[Reversão] ${reverted} caminhos restaurados para PDS`);
     save();
   }
 }
