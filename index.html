@@ -317,6 +317,9 @@ select{cursor:pointer}
 </style>
 </head>
 <body>
+<!-- Botão de emergência: sempre visível pra trocar PC -->
+<button onclick="openPcSelect()" style="position:fixed;top:6px;right:6px;z-index:9998;background:#fdcb6e;color:#000;border:none;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:11px;cursor:pointer;font-weight:bold">🖥️ TROCAR PC</button>
+
 <div id="toast"></div>
 
 <!-- CONTEXT MENU -->
@@ -1096,7 +1099,19 @@ function renderPngs() {
 }
 // ═══ Seleção de PC ═══
 function openPcSelect() {
-  document.getElementById('pc-select-overlay').style.display = 'flex';
+  const ov = document.getElementById('pc-select-overlay');
+  if (!ov) { console.error('[openPcSelect] elemento pc-select-overlay NÃO ENCONTRADO'); alert('Erro: modal de PC não existe no HTML'); return; }
+  ov.style.display = 'flex';
+  ov.style.position = 'fixed';
+  ov.style.top = '0';
+  ov.style.left = '0';
+  ov.style.width = '100vw';
+  ov.style.height = '100vh';
+  ov.style.zIndex = '99999';
+  ov.style.background = 'rgba(0,0,0,0.8)';
+  ov.style.alignItems = 'center';
+  ov.style.justifyContent = 'center';
+  console.log('[openPcSelect] Modal aberto');
 }
 
 function closePcSelect() {
@@ -1137,14 +1152,26 @@ function updatePcBadge() {
 function ensurePcSelected() {
   // Valida: precisa ser PD2-PD6 (formato esperado)
   const valid = /^PD[2-6]$/.test(S.pcName || '');
+  console.log('[ensurePcSelected] S.pcName atual:', S.pcName, 'valid:', valid);
   if (!valid) {
     if (S.pcName) {
       console.log('[ensurePcSelected] PC inválido:', S.pcName, '— forçando modal');
-      S.pcName = ''; // limpa lixo
+      S.pcName = '';
     }
-    setTimeout(() => openPcSelect(), 100);
+    setTimeout(() => {
+      console.log('[ensurePcSelected] Chamando openPcSelect()');
+      openPcSelect();
+    }, 200);
   }
 }
+// Expor globalmente para chamar do console
+window.openPcSelect = openPcSelect;
+window.forceReset = function() {
+  if (confirm('Apagar TUDO e recomeçar?')) {
+    localStorage.clear();
+    location.reload();
+  }
+};
 
 async function testPngPath(pngId) {
   if (!S.connected) { alert('Conecte ao vMix primeiro'); return; }
