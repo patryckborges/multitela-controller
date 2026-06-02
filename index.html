@@ -142,7 +142,11 @@ select{cursor:pointer}
 #tray-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;flex-shrink:0}
 #tray-hd{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
 #tray-hd .tray-ttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:1}
-#tray{display:flex;gap:6px;padding:6px;overflow-x:auto;min-height:78px;align-items:center}
+#tray{display:flex;gap:6px;padding:6px 6px 10px;overflow-x:auto;overflow-y:hidden;min-height:78px;align-items:center;scrollbar-width:thin;scrollbar-color:var(--accent) var(--s2)}
+#tray::-webkit-scrollbar{height:8px}
+#tray::-webkit-scrollbar-track{background:var(--s2);border-radius:4px}
+#tray::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
+#tray::-webkit-scrollbar-thumb:hover{background:var(--accent)}
 #tray::-webkit-scrollbar{height:3px}
 
 /* CARD DA MULTITELA NA FAIXA */
@@ -358,16 +362,12 @@ select{cursor:pointer}
   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
     <div class="dot" id="dot"></div>
     <span class="clbl" id="clbl">Desconectado</span>
-    <input type="text" id="vmix-host" value="localhost:8088" style="width:140px"/>
-    <button class="btn sm acc" onclick="doConnect()">Conectar</button>
   </div>
-  <div class="hsep"></div>
-  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-    <span class="clbl">Transp:</span>
-    <code style="font-family:var(--mono);font-size:11px;color:var(--fg2);padding:3px 8px;background:var(--s2);border-radius:4px" title="Nome base dos inputs transparentes no vMix. Configure em Dev se quiser alterar.">Colour</code>
-    <span class="pc-badge" id="pc-badge" onclick="openPcSelect()" title="Clique para trocar o PC">🖥️ <span id="pc-name">—</span></span>
-  </div>
-  
+  <div style="flex:1"></div>
+  <span class="pc-badge" id="pc-badge" onclick="openPcSelect()" title="Clique para trocar o PC">🖥️ <span id="pc-name">—</span></span>
+  <!-- Campos ocultos mantidos pra compatibilidade com funções existentes -->
+  <input type="hidden" id="vmix-host" value="localhost:8088"/>
+  <input type="hidden" id="cfg-transp" value=""/>
 </div>
 
 <!-- TABS -->
@@ -1827,29 +1827,34 @@ if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem 
 if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX PDS\\'; // raiz fixa (igual em todos PCs)
 if (!S.pcName)       S.pcName       = '';   // PD2/PD3/PD4/PD5/PD6 — definido pelo operador
 
-// Reversão: {PC} → PDS (pasta é igual em todos PCs, era mal-entendido)
-// Roda 1x (com flag para não rodar de novo)
-if (!S._pcReverted) {
+// Reversão definitiva: {PC} ou PD\d+ → PDS (pasta raiz é fixa, mal-entendido anterior)
+// Roda sempre que detectar inconsistência (sem flag de "já migrou")
+{
   let reverted = 0;
+  const fixPath = (p) => {
+    if (!p) return p;
+    let r = p.replace(/\{PC\}/g, 'PDS');
+    r = r.replace(/(VMIX )PD\d+/g, '$1PDS');   // "VMIX PD5" → "VMIX PDS"
+    return r;
+  };
   (S.projects || []).forEach(proj => {
-    if (proj.folderPath && proj.folderPath.includes('{PC}')) {
-      proj.folderPath = proj.folderPath.replace(/\{PC\}/g, 'PDS');
-      reverted++;
+    if (proj.folderPath) {
+      const f = fixPath(proj.folderPath);
+      if (f !== proj.folderPath) { proj.folderPath = f; reverted++; }
     }
     (proj.pngs || []).forEach(png => {
-      if (png.path && png.path.includes('{PC}')) {
-        png.path = png.path.replace(/\{PC\}/g, 'PDS');
-        reverted++;
+      if (png.path) {
+        const f = fixPath(png.path);
+        if (f !== png.path) { png.path = f; reverted++; }
       }
     });
   });
-  if (S.cfg && S.cfg.rootPath && S.cfg.rootPath.includes('{PC}')) {
-    S.cfg.rootPath = S.cfg.rootPath.replace(/\{PC\}/g, 'PDS');
-    reverted++;
+  if (S.cfg && S.cfg.rootPath) {
+    const f = fixPath(S.cfg.rootPath);
+    if (f !== S.cfg.rootPath) { S.cfg.rootPath = f; reverted++; }
   }
-  S._pcReverted = true;
   if (reverted > 0) {
-    console.log(`[Reversão] ${reverted} caminhos restaurados para PDS`);
+    console.log(`[Reversão] ${reverted} caminhos corrigidos para PDS`);
     save();
   }
 }
@@ -1857,6 +1862,10 @@ loadCfgFields();
 loadDevCfg();
 updatePcBadge();
 ensurePcSelected();
+// Auto-conectar se já tem host salvo e PC selecionado
+if (S.host && S.host !== 'localhost:8088' && S.pcName) {
+  setTimeout(() => { if (typeof doConnect === 'function') doConnect(); }, 300);
+}
 renderPkg();
 renderInps();
 updFt();
