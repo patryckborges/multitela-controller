@@ -91,6 +91,9 @@ select{cursor:pointer}
 .sel-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
 .pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;width:100%;max-width:680px}
 .pkg-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 14px;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.proj-card{position:relative}
+.proj-del{position:absolute;top:4px;right:4px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:3px;transition:all .15s;line-height:1}
+.proj-del:hover{background:var(--pgm);color:#fff}
 .pkg-card:hover{border-color:var(--accent);background:var(--acc-dim)}
 .pkg-card.sel{border-color:var(--accent);background:var(--acc-dim)}
 .pkg-ic{font-size:28px}
@@ -581,23 +584,53 @@ const S = {
 // ════════════════════════════════════════
 function save() {
   try {
-    localStorage.setItem('mtc_v4', JSON.stringify({
-      projects: S.projects, inputs: S.inputs,
-      devPass: S.devPass, cfg: S.cfg, host: S.host,
+    const payload = {
+      projects: S.projects,
+      inputs: S.inputs,
+      devPass: S.devPass,
+      cfg: S.cfg,
+      host: S.host,
       hidden: S.hidden,
-    }));
-  } catch(e){}
+      // Estado de uso (faltava!)
+      playlist: S.playlist,
+      workspaces: S.workspaces,
+      activeWs: S.activeWs,
+      activeProjId: S.activeProj ? S.activeProj.id : null,
+      pcName: S.pcName,
+      // Flags de migração
+      _pcReverted: S._pcReverted,
+    };
+    const json = JSON.stringify(payload);
+    localStorage.setItem('mtc_v4', json);
+  } catch(e){
+    console.error('[save] FALHA ao salvar:', e);
+    alert('ERRO ao salvar: ' + e.message);
+  }
 }
 function loadSt() {
   try {
-    const d = JSON.parse(localStorage.getItem('mtc_v4') || '{}');
-    if (d.projects) S.projects = d.projects;
-    if (d.inputs)   S.inputs   = d.inputs;
-    if (d.devPass)  S.devPass  = d.devPass;
-    if (d.cfg)      S.cfg      = { ...S.cfg, ...d.cfg };
-    if (d.host)     S.host     = d.host;
-    if (d.hidden)   S.hidden   = d.hidden;
-  } catch(e){}
+    const raw = localStorage.getItem('mtc_v4');
+    if (!raw) { console.log('[loadSt] localStorage vazio (primeira execução)'); return; }
+    const d = JSON.parse(raw);
+    if (d.projects)   S.projects   = d.projects;
+    if (d.inputs)     S.inputs     = d.inputs;
+    if (d.devPass)    S.devPass    = d.devPass;
+    if (d.cfg)        S.cfg        = { ...S.cfg, ...d.cfg };
+    if (d.host)       S.host       = d.host;
+    if (d.hidden)     S.hidden     = d.hidden;
+    if (d.playlist)   S.playlist   = d.playlist;
+    if (d.workspaces) S.workspaces = d.workspaces;
+    if (d.activeWs)   S.activeWs   = d.activeWs;
+    if (d.pcName)     S.pcName     = d.pcName;
+    if (d._pcReverted) S._pcReverted = d._pcReverted;
+    // Restaurar projeto ativo via ID
+    if (d.activeProjId && S.projects.length) {
+      S.activeProj = S.projects.find(p => p.id === d.activeProjId) || null;
+    }
+    console.log(`[loadSt] Restaurado: ${S.projects.length} projetos, playlist ${S.playlist?.length||0}, PC ${S.pcName||'-'}`);
+  } catch(e){
+    console.error('[loadSt] FALHA ao carregar:', e);
+  }
 }
 
 
@@ -966,7 +999,11 @@ function renderProjs() {
   S.projects.forEach(p => {
     const c = document.createElement('div');
     c.className = 'proj-card' + (S.activeProj?.id===p.id?' sel':'');
-    c.innerHTML = `<div class="proj-nm">${p.name}</div><div class="proj-mt">${p.pngs.length} multitela${p.pngs.length!==1?'s':''}</div>`;
+    c.innerHTML = `
+      <button class="proj-del" title="Excluir competição" onclick="event.stopPropagation();rmProj('${p.id}')">✕</button>
+      <div class="proj-nm">${p.name}</div>
+      <div class="proj-mt">${p.pngs.length} multitela${p.pngs.length!==1?'s':''}</div>
+    `;
     c.onclick = () => selProj(p.id);
     g.appendChild(c);
   });
@@ -974,6 +1011,28 @@ function renderProjs() {
   a.className='proj-card proj-new'; a.textContent='+';
   a.onclick = () => om('m-proj');
   g.appendChild(a);
+}
+
+function rmProj(id) {
+  const p = S.projects.find(x => x.id === id);
+  if (!p) return;
+  if (!confirm(`Excluir a competição "${p.name}"?\nEsta ação não pode ser desfeita.`)) return;
+  S.projects = S.projects.filter(x => x.id !== id);
+  // Se o projeto ativo era esse, limpar
+  if (S.activeProj?.id === id) {
+    S.activeProj = S.projects[0] || null;
+  }
+  // Limpar playlist se estava usando esse projeto
+  if (S.playlist && S.playlist.length && S.playlist[0].projId === id) {
+    S.playlist = [];
+    S.workspaces = { w1: null, w2: null };
+  }
+  save();
+  renderProjs();
+  renderPngs();
+  renderPkg();
+  updFt();
+  toast('Competição excluída', 'ok');
 }
 function saveProj() {
   const n = document.getElementById('np-name').value.trim();
