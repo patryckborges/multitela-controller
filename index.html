@@ -704,13 +704,7 @@ function loadDevCfg() {
 
 // Compat: nomes antigos chamando os novos
 function saveDevTransp() { saveDevCfg(); }
-function loadDevTransp() { loadDevCfg();
-// Bind dos botões PC do modal
-document.querySelectorAll('.pc-btn').forEach(btn => {
-  btn.addEventListener('click', () => selectPc(btn.dataset.pc));
-});
-updatePcBadge();
-ensurePcSelected(); }
+function loadDevTransp() { loadDevCfg(); }
 
 function loadCfgFields(){
   document.getElementById('vmix-host').value = S.host;
@@ -1141,8 +1135,13 @@ function updatePcBadge() {
 }
 
 function ensurePcSelected() {
-  // Se ainda não definiu, mostra modal de boas-vindas
-  if (!S.pcName) {
+  // Valida: precisa ser PD2-PD6 (formato esperado)
+  const valid = /^PD[2-6]$/.test(S.pcName || '');
+  if (!valid) {
+    if (S.pcName) {
+      console.log('[ensurePcSelected] PC inválido:', S.pcName, '— forçando modal');
+      S.pcName = ''; // limpa lixo
+    }
     setTimeout(() => openPcSelect(), 100);
   }
 }
