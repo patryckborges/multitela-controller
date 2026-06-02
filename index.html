@@ -1046,7 +1046,7 @@ function selectPc(pc) {
   closePcSelect();
   // Auto-conectar no vMix do PC selecionado
   if (newHost) {
-    setTimeout(() => { if (typeof connect === 'function') connect(); }, 200);
+    setTimeout(() => { if (typeof doConnect === 'function') doConnect(); }, 200);
   }
   toast('PC: ' + pc + ' → ' + newHost, 'ok');
 }
