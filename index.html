@@ -1827,23 +1827,28 @@ if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem 
 if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX {PC}\\'; // {PC} é substituído pelo PC atual
 if (!S.pcName)       S.pcName       = '';   // PD2/PD3/PD4/PD5/PD6 — definido pelo operador
 
-// Migração: se temos paths salvos com PD\d específico, substituir por {PC}
-// (executa apenas uma vez)
-if (!S._pcMigrated) {
+// Migração: paths com PD\d (PD3, PD5...) OU PDS (default antigo) → {PC}
+// Roda sempre que detectar algum (não usa flag, pra cobrir casos novos)
+{
+  const pcPat = /PD(S|\d+)/g;
   let migrated = 0;
   (S.projects || []).forEach(proj => {
-    if (proj.folderPath && /PD\d+/.test(proj.folderPath)) {
-      proj.folderPath = proj.folderPath.replace(/PD\d+/g, '{PC}');
+    if (proj.folderPath && pcPat.test(proj.folderPath)) {
+      proj.folderPath = proj.folderPath.replace(/PD(S|\d+)/g, '{PC}');
       migrated++;
     }
     (proj.pngs || []).forEach(png => {
-      if (png.path && /PD\d+/.test(png.path)) {
-        png.path = png.path.replace(/PD\d+/g, '{PC}');
+      if (png.path && pcPat.test(png.path)) {
+        png.path = png.path.replace(/PD(S|\d+)/g, '{PC}');
         migrated++;
       }
     });
   });
-  S._pcMigrated = true;
+  // Migrar também o cfg.rootPath
+  if (S.cfg && S.cfg.rootPath && pcPat.test(S.cfg.rootPath)) {
+    S.cfg.rootPath = S.cfg.rootPath.replace(/PD(S|\d+)/g, '{PC}');
+    migrated++;
+  }
   if (migrated > 0) {
     console.log(`[Migração] ${migrated} caminhos atualizados para usar {PC}`);
     save();
