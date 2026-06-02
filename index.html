@@ -294,6 +294,19 @@ select{cursor:pointer}
 .pip-rect .pip-del{position:absolute;top:2px;right:4px;font-size:14px;color:var(--pgm);cursor:pointer;pointer-events:all}
 #pip-editor-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 #pip-editor-hint{font-size:12px;color:var(--fg3)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.pc-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px}
+.pc-btn{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s;color:var(--text)}
+.pc-btn:hover{border-color:var(--accent);background:var(--s3);transform:translateY(-1px)}
+.pc-btn-name{font:700 14px var(--sans);color:var(--accent)}
+.pc-btn-ip{font:11px var(--mono);color:var(--text3)}
+.pc-btn{padding:14px;background:var(--s2);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.pc-btn:hover{border-color:var(--accent);background:var(--s3);color:var(--accent)}
+.pc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--s2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--accent);transition:all .15s}
+.pc-badge:hover{border-color:var(--accent)}
+
 </style>
 </head>
 <body>
@@ -352,6 +365,7 @@ select{cursor:pointer}
   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
     <span class="clbl">Transp:</span>
     <code style="font-family:var(--mono);font-size:11px;color:var(--fg2);padding:3px 8px;background:var(--s2);border-radius:4px" title="Nome base dos inputs transparentes no vMix. Configure em Dev se quiser alterar.">Colour</code>
+    <span class="pc-badge" id="pc-badge" onclick="openPcSelect()" title="Clique para trocar o PC">🖥️ <span id="pc-name">—</span></span>
   </div>
   
 </div>
@@ -459,7 +473,7 @@ select{cursor:pointer}
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="clbl" style="min-width:120px">Pasta raiz:</span>
-              <input type="text" id="dev-rootpath" style="width:300px" placeholder="D:\\PROJETOS VMIX PDS\\"/>
+              <input type="text" id="dev-rootpath" style="width:300px" placeholder="D:\\PROJETOS VMIX {PC}\\"/>
               <span style="font-size:11px;color:var(--text3)">→ caminho fixo desta máquina</span>
             </div>
             <div style="display:flex;justify-content:flex-end">
@@ -634,12 +648,18 @@ function loadDevCfg() {
   if (t) t.value = (S.cfg && S.cfg.transp)   || 'Colour';
   if (g) g.value = (S.cfg && S.cfg.gtBase)   || 'Multitela.gtzip';
   if (f) f.value = (S.cfg && S.cfg.gtField)  || 'Image1.Source';
-  if (r) r.value = (S.cfg && S.cfg.rootPath) || 'D:\\PROJETOS VMIX PDS\\';
+  if (r) r.value = (S.cfg && S.cfg.rootPath) || 'D:\\PROJETOS VMIX {PC}\\';
 }
 
 // Compat: nomes antigos chamando os novos
 function saveDevTransp() { saveDevCfg(); }
-function loadDevTransp() { loadDevCfg(); }
+function loadDevTransp() { loadDevCfg();
+// Bind dos botões PC do modal
+document.querySelectorAll('.pc-btn').forEach(btn => {
+  btn.addEventListener('click', () => selectPc(btn.dataset.pc));
+});
+updatePcBadge();
+ensurePcSelected(); }
 
 function loadCfgFields(){
   document.getElementById('vmix-host').value = S.host;
@@ -1003,6 +1023,53 @@ function renderPngs() {
   });
   updFt();
 }
+// ═══ Seleção de PC ═══
+function openPcSelect() {
+  document.getElementById('pc-select-overlay').style.display = 'flex';
+}
+
+function closePcSelect() {
+  document.getElementById('pc-select-overlay').style.display = 'none';
+}
+
+function selectPc(pc) {
+  S.pcName = pc;
+  // Auto-setar IP do vMix correspondente
+  const newHost = pcToVmixHost(pc);
+  if (newHost) {
+    S.host = newHost;
+    const hostInput = document.getElementById('vmix-host');
+    if (hostInput) hostInput.value = newHost;
+  }
+  save();
+  updatePcBadge();
+  closePcSelect();
+  // Auto-conectar no vMix do PC selecionado
+  if (newHost) {
+    setTimeout(() => { if (typeof connect === 'function') connect(); }, 200);
+  }
+  toast('PC: ' + pc + ' → ' + newHost, 'ok');
+}
+
+function updatePcBadge() {
+  const el = document.getElementById('pc-name');
+  if (el) el.textContent = S.pcName || 'definir';
+  const badge = document.getElementById('pc-badge');
+  if (badge) {
+    badge.style.borderColor = S.pcName ? '' : 'var(--accent)';
+    badge.title = S.pcName
+      ? `${S.pcName} → vMix ${pcToVmixHost(S.pcName)}\nClique para trocar`
+      : 'Definir computador';
+  }
+}
+
+function ensurePcSelected() {
+  // Se ainda não definiu, mostra modal de boas-vindas
+  if (!S.pcName) {
+    setTimeout(() => openPcSelect(), 100);
+  }
+}
+
 async function testPngPath(pngId) {
   if (!S.connected) { alert('Conecte ao vMix primeiro'); return; }
   if (!S.activeProj) return;
@@ -1015,11 +1082,12 @@ async function testPngPath(pngId) {
   const gtIn      = baseGT + ' PVW';
 
   // Montar URL completa do request
+  const resolvedPath = resolvePath(png.path);
   const qs = new URLSearchParams({
     Function: 'SetImage',
     Input: gtIn,
     SelectedName: fieldName,
-    Value: png.path
+    Value: resolvedPath
   });
   const url = `http://${S.host}/api/?${qs}`;
 
@@ -1144,7 +1212,28 @@ async function readEntry(entry, files, prefix) {
     });
   }
 }
-// Helper: monta caminho absoluto combinando pasta do projeto + nome do arquivo
+// PC → IP do vMix (PD2 = 10.10.0.102 ... PD6 = 10.10.0.106)
+function pcToVmixHost(pc) {
+  if (!pc) return '';
+  const m = String(pc).match(/PD(\d+)/i);
+  if (!m) return '';
+  const num = parseInt(m[1], 10);
+  if (isNaN(num)) return '';
+  return `10.10.0.10${num}:8088`;
+}
+
+// Resolve o rootPath substituindo {PC} pelo nome do PC atual
+function resolveRootPath() {
+  let rp = (S.cfg && S.cfg.rootPath) || '';
+  return rp.replace(/\{PC\}/g, S.pcName || '');
+}
+
+// Resolve qualquer caminho com {PC} (ex: paths salvos com placeholder)
+function resolvePath(path) {
+  if (!path) return '';
+  return path.replace(/\{PC\}/g, S.pcName || '');
+}
+
 function buildPngPath(folder, fileName) {
   if (!folder) return '';
   // Detectar separador (Windows usa \, Unix usa /)
@@ -1644,7 +1733,7 @@ async function applyTo(item, target) {
   cmds.push(vCmd('SetImage', {
     Input: gtIn,
     SelectedName: fieldName,
-    Value: png.path
+    Value: resolvePath(png.path)
   }));
 
   // ② Limpa todas as layers 1–9 do Colour (overlay, zoom, pan, crop)
@@ -1735,9 +1824,35 @@ if (!S.cfg.transp) S.cfg.transp = 'Colour';
 // Novo: input base do GT Title (substitui o Browser Input)
 if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Multitela.gtzip';   // nome base do GT
 if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem no GT Title
-if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX PDS\\'; // raiz onde ficam todas as pastas de PNGs por máquina
+if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX {PC}\\'; // {PC} é substituído pelo PC atual
+if (!S.pcName)       S.pcName       = '';   // PD2/PD3/PD4/PD5/PD6 — definido pelo operador
+
+// Migração: se temos paths salvos com PD\d específico, substituir por {PC}
+// (executa apenas uma vez)
+if (!S._pcMigrated) {
+  let migrated = 0;
+  (S.projects || []).forEach(proj => {
+    if (proj.folderPath && /PD\d+/.test(proj.folderPath)) {
+      proj.folderPath = proj.folderPath.replace(/PD\d+/g, '{PC}');
+      migrated++;
+    }
+    (proj.pngs || []).forEach(png => {
+      if (png.path && /PD\d+/.test(png.path)) {
+        png.path = png.path.replace(/PD\d+/g, '{PC}');
+        migrated++;
+      }
+    });
+  });
+  S._pcMigrated = true;
+  if (migrated > 0) {
+    console.log(`[Migração] ${migrated} caminhos atualizados para usar {PC}`);
+    save();
+  }
+}
 loadCfgFields();
 loadDevCfg();
+updatePcBadge();
+ensurePcSelected();
 renderPkg();
 renderInps();
 updFt();
@@ -2020,5 +2135,41 @@ window.addEventListener('keydown', e => {
   if (e.key === 'Escape') pipEditorCancel();
 });
 </script>
+
+  <!-- Modal de seleção de PC -->
+  <div id="pc-select-overlay" class="modal-overlay" style="display:none">
+    <div class="modal-card">
+      <h2 style="margin:0 0 8px;font:600 16px var(--sans)">Bem-vindo!</h2>
+      <p style="margin:0 0 16px;color:var(--text2);font-size:13px">
+        Qual computador você está usando agora?
+      </p>
+      <div id="pc-select-grid" class="pc-grid">
+        <button class="pc-btn" onclick="selectPc('PD2')">
+          <span class="pc-btn-name">PD2</span>
+          <span class="pc-btn-ip">10.10.0.102</span>
+        </button>
+        <button class="pc-btn" onclick="selectPc('PD3')">
+          <span class="pc-btn-name">PD3</span>
+          <span class="pc-btn-ip">10.10.0.103</span>
+        </button>
+        <button class="pc-btn" onclick="selectPc('PD4')">
+          <span class="pc-btn-name">PD4</span>
+          <span class="pc-btn-ip">10.10.0.104</span>
+        </button>
+        <button class="pc-btn" onclick="selectPc('PD5')">
+          <span class="pc-btn-name">PD5</span>
+          <span class="pc-btn-ip">10.10.0.105</span>
+        </button>
+        <button class="pc-btn" onclick="selectPc('PD6')">
+          <span class="pc-btn-name">PD6</span>
+          <span class="pc-btn-ip">10.10.0.106</span>
+        </button>
+      </div>
+      <p style="margin:14px 0 0;color:var(--text3);font-size:11px;text-align:center">
+        Você pode trocar isso depois no canto superior da tela.
+      </p>
+    </div>
+  </div>
+
 </body>
 </html>
