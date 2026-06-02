@@ -317,6 +317,20 @@ select{cursor:pointer}
 </style>
 </head>
 <body>
+<!-- Handler de erro global -->
+<script>
+window.addEventListener('error', function(e) {
+  const errDiv = document.getElementById('global-err') || (() => {
+    const d = document.createElement('div');
+    d.id = 'global-err';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#d63031;color:#fff;padding:10px;font:12px monospace;z-index:99999;max-height:40vh;overflow:auto;white-space:pre-wrap;border-bottom:2px solid #fff';
+    document.body.appendChild(d);
+    return d;
+  })();
+  errDiv.textContent = `❌ ERRO JS: ${e.message}\nArquivo: ${e.filename}\nLinha: ${e.lineno}:${e.colno}\n\nClique para fechar`;
+  errDiv.onclick = () => errDiv.remove();
+});
+</script>
 <!-- Botão de emergência: sempre visível pra trocar PC -->
 <button onclick="openPcSelect()" style="position:fixed;top:6px;right:6px;z-index:9998;background:#fdcb6e;color:#000;border:none;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:11px;cursor:pointer;font-weight:bold">🖥️ TROCAR PC</button>
 
