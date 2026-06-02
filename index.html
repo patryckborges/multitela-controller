@@ -584,27 +584,45 @@ const S = {
 // ════════════════════════════════════════
 function save() {
   try {
+    // Limpar dataUrl dos PNGs antes de persistir (muito grande pro localStorage)
+    // O dataUrl é mantido só em memória; thumb é o que persiste pra preview
+    const projectsLite = (S.projects || []).map(p => ({
+      ...p,
+      pngs: (p.pngs || []).map(pg => {
+        const { dataUrl, ...rest } = pg;  // remove dataUrl
+        return rest;
+      })
+    }));
+    // Idem playlist (cada item carrega dataUrl pra preview ao vivo)
+    const playlistLite = (S.playlist || []).map(item => {
+      const { dataUrl, ...rest } = item;
+      return rest;
+    });
+    // Idem workspaces
+    const workspacesLite = {
+      w1: S.workspaces?.w1 ? (() => { const { dataUrl, ...r } = S.workspaces.w1; return r; })() : null,
+      w2: S.workspaces?.w2 ? (() => { const { dataUrl, ...r } = S.workspaces.w2; return r; })() : null,
+    };
+
     const payload = {
-      projects: S.projects,
+      projects: projectsLite,
       inputs: S.inputs,
       devPass: S.devPass,
       cfg: S.cfg,
       host: S.host,
       hidden: S.hidden,
-      // Estado de uso (faltava!)
-      playlist: S.playlist,
-      workspaces: S.workspaces,
+      playlist: playlistLite,
+      workspaces: workspacesLite,
       activeWs: S.activeWs,
       activeProjId: S.activeProj ? S.activeProj.id : null,
       pcName: S.pcName,
-      // Flags de migração
       _pcReverted: S._pcReverted,
     };
     const json = JSON.stringify(payload);
     localStorage.setItem('mtc_v4', json);
   } catch(e){
     console.error('[save] FALHA ao salvar:', e);
-    alert('ERRO ao salvar: ' + e.message);
+    alert('ERRO ao salvar: ' + e.message + '\n\nO localStorage tem limite de ~5MB. Tente excluir competições que não usa mais.');
   }
 }
 function loadSt() {
@@ -1065,7 +1083,7 @@ function renderPngs() {
     const pathClass  = png.path ? 'path-ok' : 'path-warn';
     const pathTitle  = png.path ? png.path : 'Defina o caminho do PNG no PC';
     c.innerHTML = `
-      <img class="png-thumb" src="${png.dataUrl}" style="cursor:pointer" onclick="openPipEditor('${png.id}')"/>
+      <img class="png-thumb" src="${png.thumb || png.dataUrl || ''}" style="cursor:pointer" onclick="openPipEditor('${png.id}')"/>
       <div class="png-info">
         <span class="png-nm">${png.name}</span>
         <span class="pip-cnt ${png.pips?'':'an'}" style="cursor:pointer" onclick="openPipEditor('${png.id}')">${pt}</span>
@@ -1337,11 +1355,19 @@ async function procPngs(files) {
     const png = {
       id:uid(),
       name:f.name.replace(/\.png$/i,''),
-      dataUrl:du,
+      dataUrl:du,    // FULL — só em memória, NÃO persistido (muito grande)
+      thumb:null,    // será preenchido logo abaixo
       pips:null,
       path: pngPath
     };
     S.activeProj.pngs.push(png); renderPngs();
+
+    // Gera thumbnail (persistido) em paralelo com a análise de pips
+    makeThumb(du).then(thumb => {
+      png.thumb = thumb;
+      save();
+      renderPngs();
+    });
     analyzePng(du).then(pips => {
       png.pips = pips;
       save(); renderPngs();
@@ -1366,6 +1392,29 @@ function rmPng(id,e) {
 }
 function rdFile(f) {
   return new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(f); });
+}
+
+// Gera thumbnail JPEG 320x180 (~10-30KB) a partir de um dataUrl PNG
+// Usado para persistir previews no localStorage sem estourar a cota
+function makeThumb(dataUrl) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const TARGET_W = 320, TARGET_H = 180;
+      const c = document.createElement('canvas');
+      c.width = TARGET_W; c.height = TARGET_H;
+      const ctx = c.getContext('2d');
+      // Fundo escuro para áreas transparentes ficarem visíveis no preview
+      ctx.fillStyle = '#1a1a1f';
+      ctx.fillRect(0, 0, TARGET_W, TARGET_H);
+      // Desenha o PNG cobrindo (fit dentro do target)
+      ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
+      // JPEG qualidade 0.75 (~15KB típico)
+      resolve(c.toDataURL('image/jpeg', 0.75));
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
 }
 
 // ════════════════════════════════════════
@@ -1441,7 +1490,9 @@ function usarPkg(){
   // Inicializa playlist com todas as multitelas do pacote na ordem atual
   S.playlist=S.activeProj.pngs.map(png=>({
     id:uid(),projId:S.activeProj.id,pngId:png.id,
-    pngName:png.name,dataUrl:png.dataUrl,
+    pngName:png.name,
+    dataUrl:png.dataUrl,    // pode estar undefined após reload — em memória só
+    thumb:png.thumb,        // persiste
     pips:(png.pips||[]).map((_,i)=>({pipIdx:i,inputName:''}))
   }));
   S.hidden=[];
@@ -1480,7 +1531,7 @@ function renderTray(){
     card.innerHTML=
       (isPgm?'<span class="badge pgm mt-badge">PGM</span>':
        isPvw?'<span class="badge pvw mt-badge">PVW</span>':'')+
-      `<img class="mt-img" src="${it.dataUrl}"/>
+      `<img class="mt-img" src="${it.thumb || it.dataUrl || \'\'}"/>
        <div class="mt-nm">${it.pngName}</div>`;
 
     // Drag para os workspaces (W1/W2)
@@ -2005,7 +2056,7 @@ function openPipEditor(pngId) {
   // (cropMode e srcAR agora são por pip — configurados no painel ao selecionar)
 
   const img = document.getElementById('pip-editor-img');
-  img.src = png.dataUrl;
+  img.src = png.dataUrl || png.thumb || '';
   document.getElementById('pip-editor-title').textContent = png.name + ' — Pips';
   document.getElementById('pip-editor-overlay').classList.add('open');
   img.onload = () => pipEditorRenderRects();
