@@ -317,7 +317,7 @@ select{cursor:pointer}
 </style>
 </head>
 <body>
-<!-- Handler de erro global -->
+<!-- Handler de erro global (mantém pra debug futuro) -->
 <script>
 window.addEventListener('error', function(e) {
   const errDiv = document.getElementById('global-err') || (() => {
@@ -331,8 +331,6 @@ window.addEventListener('error', function(e) {
   errDiv.onclick = () => errDiv.remove();
 });
 </script>
-<!-- Botão de emergência: sempre visível pra trocar PC -->
-<button onclick="openPcSelect()" style="position:fixed;top:6px;right:6px;z-index:9998;background:#fdcb6e;color:#000;border:none;padding:4px 10px;border-radius:4px;font-family:monospace;font-size:11px;cursor:pointer;font-weight:bold">🖥️ TROCAR PC</button>
 
 <div id="toast"></div>
 
