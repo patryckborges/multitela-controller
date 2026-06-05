@@ -530,6 +530,7 @@ window.addEventListener('error', function(e) {
         <span class="sec-ttl">Inputs de sinal</span>
         <button class="btn sm" onclick="om('m-inp')">+ Adicionar</button>
         <button class="btn sm" onclick="importVmix()">Importar do vMix</button>
+        <button class="btn sm ghost" onclick="restoreDefaultInputs()" title="Adiciona os 10 inputs padrão (IN 1-5, conteúdos, replays)">↺ Restaurar padrão</button>
         <button class="btn sm ghost" onclick="sortInputs()" title="Ordena: INs → VTs → Replays">↕ Reordenar</button>
       </div>
       <div class="sec-bd"><div id="inp-list"></div></div>
@@ -640,6 +641,40 @@ function save() {
     alert('ERRO ao salvar: ' + e.message + '\n\nO localStorage tem limite de ~5MB. Tente excluir competições que não usa mais.');
   }
 }
+// Lista padrão de inputs do vMix (sempre disponíveis no app)
+function getDefaultInputs() {
+  return [
+    { id: 'def-in1',   label: 'IN 1',              name: 'IN 1',         kind: 'live' },
+    { id: 'def-in2',   label: 'IN 2',              name: 'IN 2',         kind: 'live' },
+    { id: 'def-in3',   label: 'IN 3',              name: 'IN 3',         kind: 'live' },
+    { id: 'def-in4',   label: 'IN 4',              name: 'IN 4',         kind: 'live' },
+    { id: 'def-in5',   label: 'IN 5',              name: 'IN 5',         kind: 'live' },
+    { id: 'def-call1', label: 'CALL 1',            name: 'CALL 1',       kind: 'live' },
+    { id: 'def-call2', label: 'CALL 2',            name: 'CALL 2',       kind: 'live' },
+    { id: 'def-cnh',   label: 'CONTEÚDO HORIZONTAL', name: 'CONTEÚDO HOR', kind: 'vt' },
+    { id: 'def-adb',   label: 'ADBREAK MONTADO',     name: 'ADBREAK MONT', kind: 'vt' },
+    { id: 'def-cnv',   label: 'CONTEUDO VERTICAL',   name: 'CONTEUDO VER', kind: 'vt' },
+    { id: 'def-rpa',   label: 'replay - A',          name: 'replay',       kind: 'replay' },
+    { id: 'def-rpb',   label: 'replay - B',          name: 'replay - B',   kind: 'replay' },
+  ];
+}
+
+function restoreDefaultInputs() {
+  if (!confirm('Restaurar inputs padrão?\nIsso vai adicionar os 10 inputs padrão. Inputs já existentes com os mesmos nomes serão mantidos.')) return;
+  const defaults = getDefaultInputs();
+  const existingNames = new Set((S.inputs || []).map(i => (i.label || i.name || '').toLowerCase()));
+  let added = 0;
+  for (const def of defaults) {
+    if (!existingNames.has(def.label.toLowerCase())) {
+      S.inputs.push(def);
+      added++;
+    }
+  }
+  save();
+  renderInps();
+  toast(`${added} input${added !== 1 ? 's' : ''} padrão adicionado${added !== 1 ? 's' : ''}`, 'ok');
+}
+
 function loadSt() {
   try {
     const raw = localStorage.getItem('mtc_v4');
@@ -647,6 +682,10 @@ function loadSt() {
     const d = JSON.parse(raw);
     if (d.projects)   S.projects   = d.projects;
     if (d.inputs)     S.inputs     = d.inputs;
+    // Se inputs vazio (primeira vez ou foi limpo), pré-popular com os padrões
+    if (!S.inputs || !S.inputs.length) {
+      S.inputs = getDefaultInputs();
+    }
     if (d.devPass)    S.devPass    = d.devPass;
     if (d.cfg)        S.cfg        = { ...S.cfg, ...d.cfg };
     if (d.host)       S.host       = d.host;
@@ -1692,7 +1731,7 @@ function updMons(){
 
   // Workspace view: preview, chips e botões IN
   const prev = document.getElementById('ws-prev');
-  if (prev) prev.src = ws ? ws.dataUrl : '';
+  if (prev) prev.src = ws ? (ws.dataUrl || ws.thumb || '') : '';
   renderChips('ws-ov', ws, 'ws-prev');
   renderPvwBtns(ws);
 
