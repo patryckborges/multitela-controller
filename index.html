@@ -660,19 +660,12 @@ function getDefaultInputs() {
 }
 
 function restoreDefaultInputs() {
-  if (!confirm('Restaurar inputs padrão?\nIsso vai adicionar os 10 inputs padrão. Inputs já existentes com os mesmos nomes serão mantidos.')) return;
-  const defaults = getDefaultInputs();
-  const existingNames = new Set((S.inputs || []).map(i => (i.label || i.name || '').toLowerCase()));
-  let added = 0;
-  for (const def of defaults) {
-    if (!existingNames.has(def.label.toLowerCase())) {
-      S.inputs.push(def);
-      added++;
-    }
-  }
+  const currentCount = (S.inputs || []).length;
+  if (!confirm(`Substituir TODOS os inputs?\n\nSerão apagados os ${currentCount} inputs atuais e adicionados os 12 padrões (IN 1-5, CALL 1-2, conteúdos, replays).\n\nIsso NÃO afeta as multitelas, apenas a lista de inputs disponíveis.`)) return;
+  S.inputs = getDefaultInputs();
   save();
   renderInps();
-  toast(`${added} input${added !== 1 ? 's' : ''} padrão adicionado${added !== 1 ? 's' : ''}`, 'ok');
+  toast('12 inputs padrão restaurados', 'ok');
 }
 
 function loadSt() {
