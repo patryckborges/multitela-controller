@@ -1571,7 +1571,7 @@ function renderTray(){
     card.innerHTML=
       (isPgm?'<span class="badge pgm mt-badge">PGM</span>':
        isPvw?'<span class="badge pvw mt-badge">PVW</span>':'')+
-      `<img class="mt-img" src="${it.thumb || it.dataUrl || \'\'}"/>
+      `<img class="mt-img" src="${it.thumb || it.dataUrl || ''}"/>
        <div class="mt-nm">${it.pngName}</div>`;
 
     // Drag para os workspaces (W1/W2)
