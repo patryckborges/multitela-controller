@@ -779,7 +779,7 @@ async function doConnect() {
     setDot('on', 'Conectado');
     document.getElementById('ft-vmix').textContent = 'vMix: ' + S.host;
     save(); toast('vMix conectado', 'ok');
-    await importVmix(true);
+    // Importação removida do auto-connect — usar botão manual no Dev se necessário
   } catch(e) {
     setDot('err', 'Erro');
     toast('Não foi possível conectar ao vMix', 'err');
@@ -810,6 +810,13 @@ async function vMulti(cmds) {
   await Promise.all(cmds.map(c => vExec(c)));
 }
 async function importVmix(silent=false) {
+  // Se não é silent (chamada manual pelo botão), perguntar antes
+  if (!silent) {
+    const currentCount = (S.inputs || []).length;
+    if (currentCount > 0) {
+      if (!confirm(`Importar inputs do vMix?\n\nOs ${currentCount} inputs atuais serão SUBSTITUÍDOS pelos inputs que estão no vMix agora.\n\nTem certeza?`)) return;
+    }
+  }
   if (!S.connected) { if (!silent) toast('Conecte ao vMix primeiro', 'warn'); return; }
   try {
     const r   = await fetch(`http://${S.host}/api`, { cache: 'no-store' });
