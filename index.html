@@ -922,6 +922,9 @@ function makeThumb(img) {
 
 /* ═══════════════════ DROP DA PASTA (webkitGetAsEntry) ═══════════════════ */
 function walkEntry(entry, base) {
+  /* base = caminho relativo ATÉ o pai desta entry.
+     Diretórios adicionam o próprio nome ao base dos filhos,
+     preservando toda a estrutura de subpastas no caminho final. */
   return new Promise(resolve => {
     if (entry.isFile) {
       entry.file(file => {
@@ -930,33 +933,19 @@ function walkEntry(entry, base) {
       }, () => resolve([]));
     } else if (entry.isDirectory) {
       const reader = entry.createReader();
-      const all = [];
+      const jobs = [];
       const readBatch = () => {
         reader.readEntries(async entries => {
           if (!entries.length) {
-            const results = await Promise.all(all);
+            const results = await Promise.all(jobs);
             resolve(results.flat());
             return;
           }
-          entries.forEach(e => all.push(walkEntry(e, base + entry.name + '\\')));
+          entries.forEach(e => jobs.push(walkEntry(e, base + entry.name + '\\')));
           readBatch();   /* readEntries retorna em lotes de 100 */
         }, () => resolve([]));
       };
-      /* base já inclui o caminho até aqui; o nome desta pasta entra no rel dos filhos */
-      const fix = [];
-      const r2 = entry.createReader();
-      const collect = () => {
-        r2.readEntries(async entries => {
-          if (!entries.length) {
-            const results = await Promise.all(fix);
-            resolve(results.flat());
-            return;
-          }
-          entries.forEach(e => fix.push(walkEntry(e, base)));
-          collect();
-        }, () => resolve([]));
-      };
-      collect();
+      readBatch();
     } else resolve([]);
   });
 }
@@ -969,8 +958,7 @@ async function handleFolderDrop(e) {
   for (const it of items) {
     const entry = it.webkitGetAsEntry?.();
     if (!entry) continue;
-    if (entry.isDirectory) jobs.push(walkEntry(entry, entry.name + '\\'));
-    else jobs.push(walkEntry(entry, ''));
+    jobs.push(walkEntry(entry, ''));
   }
   const files = (await Promise.all(jobs)).flat();
   if (!files.length) { toast('Nenhum PNG encontrado na pasta', true); return; }
@@ -988,7 +976,8 @@ async function handleFolderDrop(e) {
           const pips = detectPips(img);
           const name = file.name.replace(/\.png$/i, '');
           const path = cfg.root.replace(/\\+$/, '') + '\\' + rel;
-          const existing = pk.mts.find(m => m.path === path);
+          /* casa por NOME: re-arrastar a pasta corrige caminhos sem duplicar */
+          const existing = pk.mts.find(m => m.name === name) || pk.mts.find(m => m.path === path);
           const mtObj = {
             id: existing?.id || 'mt' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
             name, path, pips,
