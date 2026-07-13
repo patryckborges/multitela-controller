@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mesa de Corte — MultiTela CazeTV</title>
+<title>MultiTela Controller — CazeTV</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
 
@@ -37,6 +37,8 @@ html, body { background: var(--bg); color: var(--text); font-family: var(--sans)
 body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
 
 .app { width: 100%; max-width: 1240px; padding: 14px 18px 30px; }
+.scr { display: none; }
+.scr.on { display: block; }
 
 /* ── HEADER ─────────────────────────────── */
 header {
@@ -53,44 +55,33 @@ header {
   border: 1px solid var(--border); border-radius: var(--r); cursor: pointer;
 }
 .pc-btn.on { background: var(--acc-dim); color: var(--accent); border-color: var(--accent); }
+.pc-btn.dev-btn.on { background: var(--pgm-dim); color: #ff7675; border-color: var(--pgm); }
 .status { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text2); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); }
 .dot.ok  { background: var(--pvw); box-shadow: 0 0 8px var(--pvw-glow); }
 .dot.err { background: var(--pgm); box-shadow: 0 0 8px var(--pgm-glow); }
+.back {
+  font-family: var(--mono); font-size: 11px; padding: 5px 12px;
+  background: var(--s2); color: var(--text2);
+  border: 1px solid var(--border); border-radius: var(--r); cursor: pointer;
+}
+.back:hover { color: var(--text); border-color: var(--border2); }
 
-/* ── PAINEL DEV ─────────────────────────── */
-.dev-btn.on { background: var(--pgm-dim); color: #ff7675; border-color: var(--pgm); }
-.dev-panel {
-  display: none; margin-bottom: 14px; padding: 12px 14px;
+/* ── TELA: PACOTES ──────────────────────── */
+.home-title { font-family: var(--mono); font-size: 12px; letter-spacing: 3px; color: var(--text2); margin: 26px 0 18px; text-align: center; }
+.pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.pack-card {
   background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 26px 20px; cursor: pointer; text-align: center;
+  transition: border-color .1s, transform .1s;
 }
-.dev-panel.open { display: block; }
-.dev-title { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text2); margin-bottom: 10px; }
-.dev-hint { letter-spacing: 0; color: var(--text3); margin-left: 8px; text-transform: none; }
-.dev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.dev-row .dev-pc {
-  font-family: var(--mono); font-size: 11px; color: var(--text);
-  flex: 0 0 44px;
-}
-.dev-row input {
-  font-family: var(--mono); font-size: 12px; color: var(--text);
-  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
-  padding: 6px 10px; width: 180px; outline: none;
-}
-.dev-row input:focus { border-color: var(--accent); }
-.dev-row input.mod { border-color: var(--accent); color: var(--accent); }
-.dev-reset {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
-  background: none; border: 1px solid var(--border); border-radius: 3px;
-  color: var(--text3); padding: 4px 8px; cursor: pointer; visibility: hidden;
-}
-.dev-row .dev-reset.show { visibility: visible; }
-.dev-reset:hover { color: var(--pgm); border-color: var(--pgm); }
-.dev-def { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.pack-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.pack-card .pk-name { font-family: var(--sans); font-weight: 700; font-size: 17px; margin-bottom: 8px; }
+.pack-card .pk-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 1px; }
+.pack-empty { text-align: center; color: var(--text3); font-family: var(--mono); font-size: 12px; padding: 60px 0; line-height: 2; }
 
 /* ── PVW + HISTÓRICO ────────────────────── */
 .stage { display: flex; gap: 14px; margin-bottom: 16px; align-items: stretch; }
-
 .hist {
   flex: 0 0 220px; display: flex; flex-direction: column;
   background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
@@ -101,10 +92,7 @@ header {
   padding: 8px 12px; border-bottom: 1px solid var(--border);
   font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text2);
 }
-.hist-clear {
-  font-family: var(--mono); font-size: 9px; color: var(--text3);
-  background: none; border: none; cursor: pointer; letter-spacing: 1px;
-}
+.hist-clear { font-family: var(--mono); font-size: 9px; color: var(--text3); background: none; border: none; cursor: pointer; letter-spacing: 1px; }
 .hist-clear:hover { color: var(--pgm); }
 .hist-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
 .hist-empty {
@@ -112,26 +100,16 @@ header {
   text-align: center; font-family: var(--mono); font-size: 10px; color: var(--text3);
   line-height: 1.8; pointer-events: none;
 }
-.h-item {
-  padding: 8px 10px; border-bottom: 1px solid var(--border);
-  cursor: pointer; position: relative;
-}
+.h-item { padding: 8px 10px; border-bottom: 1px solid var(--border); cursor: pointer; position: relative; }
 .h-item:hover { background: var(--s2); }
 .h-top { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-.h-badge {
-  font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
-  padding: 2px 6px; border-radius: 3px;
-}
+.h-badge { font-family: var(--mono); font-size: 8px; letter-spacing: 1px; padding: 2px 6px; border-radius: 3px; }
 .h-badge.ar { background: var(--pgm-dim); color: #ff7675; border: 1px solid rgba(214,48,49,.4); }
 .h-badge.pl { background: var(--acc-dim); color: var(--accent); border: 1px solid rgba(253,203,110,.35); }
 .h-mt { font-family: var(--mono); font-size: 11px; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .h-time { font-family: var(--mono); font-size: 9px; color: var(--text3); }
 .h-pips { font-family: var(--mono); font-size: 9px; color: var(--text2); line-height: 1.5; }
-.h-del {
-  position: absolute; top: 6px; right: 8px;
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-  background: none; border: none; cursor: pointer; display: none;
-}
+.h-del { position: absolute; top: 6px; right: 8px; font-family: var(--mono); font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; display: none; }
 .h-item:hover .h-del { display: block; }
 .h-del:hover { color: var(--pgm); }
 
@@ -159,22 +137,15 @@ header {
   border-radius: 3px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 3px; overflow: hidden;
 }
-.box.pip { cursor: default; }
 .box.pip.filled { border-color: var(--accent); background: linear-gradient(160deg, #17150e, #0d0c08); }
-.box .n {
-  font-family: var(--mono); font-size: 10px; color: var(--text3);
-  position: absolute; top: 4px; left: 6px;
-}
+.box .n { font-family: var(--mono); font-size: 10px; color: var(--text3); position: absolute; top: 4px; left: 6px; }
 .box.filled .n { color: var(--accent); }
 .box .lbl { font-family: var(--mono); font-size: clamp(9px, 1.4vw, 13px); color: var(--text2); text-align: center; padding: 0 4px; }
 .box.filled .lbl { color: var(--text); }
 .box.sinal { border-style: dashed; border-color: var(--border); }
 .box.sinal .lbl { color: var(--text3); letter-spacing: 1px; font-size: 11px; }
 
-.pvw-bar {
-  width: 100%; max-width: 780px;
-  display: flex; align-items: center; gap: 12px; margin-top: 8px;
-}
+.pvw-bar { width: 100%; max-width: 780px; display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .mt-name { font-family: var(--mono); font-size: 13px; color: var(--pvw); flex: 1; letter-spacing: .5px; }
 .take {
   font-family: var(--sans); font-weight: 700; font-size: 14px; letter-spacing: 2px;
@@ -194,12 +165,6 @@ header {
 .plist:hover { background: var(--accent); color: #16130a; }
 .plist:active { transform: scale(.97); }
 .plist:disabled { opacity: .3; cursor: not-allowed; }
-
-@media (max-width: 900px) {
-  .stage { flex-direction: column; }
-  .hist { flex: 0 0 auto; max-height: 180px; }
-  .hist-empty { inset: 40px 0 0 0; }
-}
 
 /* ── LINHAS DE BOTÕES ───────────────────── */
 .row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
@@ -238,14 +203,92 @@ header {
 }
 .btn:hover { border-color: var(--border2); color: var(--text); }
 .btn:active { transform: scale(.97); }
-
-/* multitela selecionada = verde pvw */
 .btn.sel-mt { background: var(--pvw-dim); color: var(--pvw); border-color: var(--pvw); box-shadow: 0 0 10px rgba(0,184,148,.2); }
-/* input cortado no pip = vermelho pgm */
 .btn.sel-in { background: var(--pgm-dim); color: #ff6b6b; border-color: var(--pgm); box-shadow: 0 0 10px rgba(214,48,49,.25); }
-
 .btn .sub { display: block; font-size: 9px; color: var(--text3); margin-top: 3px; letter-spacing: .5px; }
 .btn.sel-mt .sub { color: rgba(0,184,148,.7); }
+
+/* ── DEV ────────────────────────────────── */
+.gate {
+  max-width: 320px; margin: 90px auto; text-align: center;
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 30px 26px;
+}
+.gate h2 { font-family: var(--mono); font-size: 13px; letter-spacing: 3px; color: var(--text2); margin-bottom: 18px; }
+.gate input {
+  width: 100%; font-family: var(--mono); font-size: 14px; text-align: center;
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  color: var(--text); padding: 10px; outline: none; margin-bottom: 12px;
+}
+.gate input:focus { border-color: var(--accent); }
+.gate button {
+  width: 100%; font-family: var(--sans); font-weight: 700; font-size: 13px; letter-spacing: 1px;
+  padding: 10px; border-radius: var(--r); cursor: pointer;
+  background: var(--acc-dim); color: var(--accent); border: 1px solid var(--accent);
+}
+.gate .gate-err { font-family: var(--mono); font-size: 10px; color: #ff7675; margin-top: 10px; min-height: 14px; }
+
+.sec {
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
+  margin-bottom: 14px; overflow: hidden;
+}
+.sec-hd {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+}
+.sec-ttl { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text2); }
+.sec-bd { padding: 12px 14px; }
+.sm-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1px; padding: 5px 12px;
+  background: var(--s3); color: var(--text2); border: 1px solid var(--border2);
+  border-radius: var(--r); cursor: pointer;
+}
+.sm-btn:hover { color: var(--text); }
+.sm-btn.acc { background: var(--acc-dim); color: var(--accent); border-color: var(--accent); }
+.sm-btn.red { color: #ff7675; border-color: var(--pgm); background: var(--pgm-dim); }
+
+.dev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+.dev-row .dev-pc { font-family: var(--mono); font-size: 11px; color: var(--text); flex: 0 0 44px; }
+.dev-row input, .dev-row select {
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 6px 10px; outline: none;
+}
+.dev-row input:focus { border-color: var(--accent); }
+.dev-row input.mod { border-color: var(--accent); color: var(--accent); }
+.dev-reset {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  background: none; border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text3); padding: 4px 8px; cursor: pointer; visibility: hidden;
+}
+.dev-reset.show { visibility: visible; }
+.dev-reset:hover { color: var(--pgm); border-color: var(--pgm); }
+.dev-def { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.dev-hint { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0; }
+
+.pk-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.pk-tab {
+  font-family: var(--mono); font-size: 11px; padding: 6px 14px;
+  background: var(--s2); color: var(--text2); border: 1px solid var(--border);
+  border-radius: var(--r); cursor: pointer;
+}
+.pk-tab.on { background: var(--acc-dim); color: var(--accent); border-color: var(--accent); }
+
+table.cfg { width: 100%; border-collapse: collapse; }
+table.cfg th {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px; color: var(--text3);
+  text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border);
+}
+table.cfg td { padding: 4px 6px; border-bottom: 1px solid var(--border); }
+table.cfg input[type=text] {
+  width: 100%; font-family: var(--mono); font-size: 11px; color: var(--text);
+  background: var(--s2); border: 1px solid var(--border); border-radius: 3px;
+  padding: 5px 8px; outline: none;
+}
+table.cfg input[type=text]:focus { border-color: var(--accent); }
+table.cfg input[type=checkbox] { accent-color: var(--accent); }
+.tdel { font-family: var(--mono); font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; }
+.tdel:hover { color: var(--pgm); }
 
 /* toast */
 #toast {
@@ -257,6 +300,10 @@ header {
 #toast.show { opacity: 1; }
 #toast.err { border-color: var(--pgm); color: #ff8a8a; }
 
+@media (max-width: 900px) {
+  .stage { flex-direction: column; }
+  .hist { flex: 0 0 auto; max-height: 180px; }
+}
 @media (max-width: 700px) {
   .row-tag { flex: 0 0 64px; font-size: 9px; }
   .btn { min-width: 76px; font-size: 11px; padding: 10px 8px; }
@@ -266,22 +313,31 @@ header {
 <body>
 <div class="app">
 
+<!-- ═══════════ TELA 1: PACOTE GRÁFICO ═══════════ -->
+<div class="scr on" id="scr-home">
   <header>
-    <div class="logo">MESA DE CORTE <b>MULTITELA</b> — CazeTV</div>
-    <div class="pcs" id="pcs"></div>
-    <button class="pc-btn dev-btn" id="dev-btn">DEV</button>
-    <div class="status"><div class="dot" id="dot"></div><span id="st-txt">sem conexão</span></div>
+    <div class="logo">MULTITELA <b>CONTROLLER</b> — CazeTV</div>
+    <div class="pcs" id="pcs-home"></div>
+    <button class="pc-btn dev-btn" id="go-dev">DEV</button>
+    <div class="status"><div class="dot" id="dot-home"></div><span id="st-home">—</span></div>
+  </header>
+  <div class="home-title">SELECIONE O PACOTE GRÁFICO</div>
+  <div class="pack-grid" id="pack-grid"></div>
+  <div class="pack-empty" id="pack-empty" style="display:none">
+    Nenhum pacote cadastrado.<br>Entre no DEV para criar o primeiro.
+  </div>
+</div>
+
+<!-- ═══════════ TELA 2: MESA DE CORTE ═══════════ -->
+<div class="scr" id="scr-mesa">
+  <header>
+    <button class="back" id="go-home">◂ PACOTES</button>
+    <div class="logo">MESA DE CORTE <b id="mesa-pack">—</b></div>
+    <div class="pcs" id="pcs-mesa"></div>
+    <div class="status"><div class="dot" id="dot-mesa"></div><span id="st-mesa">—</span></div>
   </header>
 
-  <!-- PAINEL DEV: edição de IPs -->
-  <div class="dev-panel" id="dev-panel">
-    <div class="dev-title">IP DAS MÁQUINAS <span class="dev-hint">edite pra testar em outro computador — presets continuam salvos</span></div>
-    <div id="dev-rows"></div>
-  </div>
-
-  <!-- PVW + HISTÓRICO -->
   <div class="stage">
-
     <aside class="hist">
       <div class="hist-head">
         <span>HISTÓRICO</span>
@@ -302,28 +358,20 @@ header {
         <button class="take" id="take" disabled>CORTAR</button>
       </div>
     </div>
-
   </div>
 
-  <!-- LINHA 1: MULTITELAS -->
   <div class="row">
     <div class="row-tag mt-tag"><span>LINHA 1</span><span class="big">MTELAS</span></div>
     <div class="strip" id="strip-mt"></div>
   </div>
-
-  <!-- LINHA 2: PIP 1 -->
   <div class="row">
     <div class="row-tag"><span>LINHA 2</span><span class="big">PIP 1</span></div>
     <div class="strip" id="strip-p1"></div>
   </div>
-
-  <!-- LINHA 3: PIP 2 -->
   <div class="row">
     <div class="row-tag"><span>LINHA 3</span><span class="big">PIP 2</span></div>
     <div class="strip" id="strip-p2"></div>
   </div>
-
-  <!-- LINHA 4: PIP 3 (com SHIFT -> PIP 4 / PIP 5) -->
   <div class="row">
     <div class="row-tag">
       <span>LINHA 4</span><span class="big" id="p3-lbl">PIP 3</span>
@@ -331,97 +379,220 @@ header {
     </div>
     <div class="strip" id="strip-p3"></div>
   </div>
-
 </div>
 
+<!-- ═══════════ TELA 3: DEV ═══════════ -->
+<div class="scr" id="scr-dev">
+  <header>
+    <button class="back" id="dev-home">◂ VOLTAR</button>
+    <div class="logo">ÁREA <b>DEV</b></div>
+  </header>
+
+  <!-- senha -->
+  <div class="gate" id="gate">
+    <h2>ACESSO DEV</h2>
+    <input type="password" id="gate-pw" placeholder="senha">
+    <button id="gate-go">ENTRAR</button>
+    <div class="gate-err" id="gate-err"></div>
+  </div>
+
+  <!-- conteúdo dev -->
+  <div id="dev-content" style="display:none">
+
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-ttl">MÁQUINAS / IP</span>
+        <span class="dev-hint">edite pra testar em outro computador — presets continuam salvos</span>
+      </div>
+      <div class="sec-bd" id="dev-rows"></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-ttl">PACOTES GRÁFICOS</span>
+        <button class="sm-btn acc" id="pk-add">+ NOVO PACOTE</button>
+      </div>
+      <div class="sec-bd">
+        <div class="pk-tabs" id="pk-tabs"></div>
+        <div class="dev-row" id="pk-actions" style="margin-top:10px; display:none">
+          <input type="text" id="pk-name" style="width:240px" placeholder="Nome do pacote">
+          <button class="sm-btn" id="pk-rename">RENOMEAR</button>
+          <button class="sm-btn red" id="pk-del">EXCLUIR PACOTE</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-mts" style="display:none">
+      <div class="sec-hd">
+        <span class="sec-ttl">MULTITELAS DO PACOTE</span>
+        <button class="sm-btn acc" id="mt-add">+ MULTITELA</button>
+      </div>
+      <div class="sec-bd">
+        <table class="cfg">
+          <thead><tr>
+            <th style="width:16%">BOTÃO</th>
+            <th style="width:34%">INPUT NO VMIX (nome exato)</th>
+            <th style="width:22%">LAYERS DOS PIPS (ex: 5,6,7,8)</th>
+            <th style="width:10%">SINAL CENTRAL</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="mt-tbody"></tbody>
+        </table>
+        <div class="dev-hint" style="margin-top:8px">
+          Layers em ordem de leitura dos pips (esquerda→direita, cima→baixo). O app converte pro índice 1-10 da API sozinho.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec" id="sec-inps" style="display:none">
+      <div class="sec-hd">
+        <span class="sec-ttl">INPUTS DE SINAL DO PACOTE</span>
+        <div>
+          <button class="sm-btn" id="in-default">RESTAURAR PADRÃO</button>
+          <button class="sm-btn acc" id="in-add">+ INPUT</button>
+        </div>
+      </div>
+      <div class="sec-bd">
+        <table class="cfg">
+          <thead><tr>
+            <th style="width:28%">BOTÃO (nome curto)</th>
+            <th style="width:52%">INPUT NO VMIX (nome exato)</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="in-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-ttl">SENHA DE ACESSO DEV</span></div>
+      <div class="sec-bd dev-row">
+        <input type="password" id="new-pw" placeholder="Nova senha" style="width:200px">
+        <button class="sm-btn acc" id="save-pw">SALVAR</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════ CONFIG ═══════════════════
-   Edite aqui se mudar nomes, layers ou ordem dos pips.
-   - "title"  : nome EXATO do input no vMix (cuidado com espaços no final!)
-   - "layers" : layers XML dos pips (Overlay5..8 no arquivo .vmix).
-                A API do vMix usa índice 1-10, então o app soma +1 sozinho.
-   - "pips"   : geometria normalizada [x,y,w,h] em ordem de leitura
-                (esquerda→direita, cima→baixo). pips[i] usa layers[i].
-   - "sinal"  : área central fixa (não cortável), só desenho.            */
-
+/* ═══════════════════ PRESETS FIXOS ═══════════════════ */
 const PCS = {
   'PD2': '10.10.0.102', 'PD3': '10.10.0.103', 'PD4': '10.10.0.104',
   'PD5': '10.10.0.105', 'PD6': '10.10.0.106',
 };
 
-const MULTITELAS = [
-  { title: '50:50 COPA MONTADO', label: '50:50', layers: [7,8],
-    pips: [[.010,.260,.485,.480],[.505,.260,.485,.480]] },
-
-  { title: '80:20 COPA MONTADO', label: '80:20', layers: [7,8],
-    pips: [[.010,.110,.760,.780],[.780,.560,.210,.330]] },
-
-  { title: '60:40 COPA MONTADO', label: '60:40', layers: [7,8],
-    pips: [[.010,.230,.580,.540],[.600,.230,.390,.540]] },
-
-  { title: '60:40+1 COPA MONTADO ', label: '60:40 +1', layers: [6,7,8],
-    pips: [[.010,.160,.580,.680],[.600,.160,.390,.400],[.600,.580,.390,.260]] },
-
-  { title: '60:40+2 COPA MONTADO ', label: '60:40 +2', layers: [5,6,7,8],
-    pips: [[.010,.160,.580,.680],[.600,.160,.390,.380],[.600,.560,.188,.280],[.800,.560,.190,.280]] },
-
-  { title: '60:40 +1 VERTICAL MONTADO', label: '60:40 +1 VERT', layers: [6,7,8],
-    pips: [[.010,.160,.560,.680],[.585,.160,.260,.680],[.860,.160,.130,.680]] },
-
-  { title: '2+ SINAL +2 MONTADO', label: '2+ SINAL +2', layers: [5,6,7,8],
-    sinal: [.200,.195,.600,.575],
-    pips: [[.010,.195,.180,.280],[.810,.195,.180,.280],[.010,.490,.180,.280],[.810,.490,.180,.280]] },
-
-  { title: '1+ SINAL +1 MONTADO', label: '1+ SINAL +1', layers: [7,8],
-    sinal: [.200,.195,.600,.575],
-    pips: [[.010,.195,.180,.575],[.810,.195,.180,.575]] },
-
-  { title: '3+ SINAL +1 MONTADO', label: '3+ SINAL +1', layers: [5,6,7,8],
-    sinal: [.200,.195,.600,.575],
-    pips: [[.010,.195,.180,.180],[.810,.195,.180,.575],[.010,.393,.180,.180],[.010,.590,.180,.180]] },
-
-  { title: '2+ SINAL +1 MONTADO', label: '2+ SINAL +1', layers: [6,7,8],
-    sinal: [.200,.195,.600,.575],
-    pips: [[.010,.195,.180,.280],[.810,.195,.180,.575],[.010,.490,.180,.280]] },
+const DEFAULT_INPUTS = [
+  { title: 'IN 1',                label: 'IN 1' },
+  { title: 'IN 2',                label: 'IN 2' },
+  { title: 'IN 3',                label: 'IN 3' },
+  { title: 'IN 4',                label: 'IN 4' },
+  { title: 'IN 5',                label: 'IN 5' },
+  { title: 'CALL 1',              label: 'CALL 1' },
+  { title: 'CALL 2',              label: 'CALL 2' },
+  { title: 'CONTEÚDO HORIZONTAL', label: 'CONT HOR' },
+  { title: 'ADBREAK MONTADO',     label: 'ADBREAK' },
+  { title: 'CONTEUDO VERTICAL',   label: 'CONT VER' },
+  { title: 'replay',              label: 'REPLAY A' },
+  { title: 'replay - B',          label: 'REPLAY B' },
 ];
 
-const INPUTS = [
-  { title: 'IN 1',                 label: 'IN 1' },
-  { title: 'IN 2',                 label: 'IN 2' },
-  { title: 'IN 3',                 label: 'IN 3' },
-  { title: 'IN 4',                 label: 'IN 4' },
-  { title: 'IN 5',                 label: 'IN 5' },
-  { title: 'CALL 1',               label: 'CALL 1' },
-  { title: 'CALL 2',               label: 'CALL 2' },
-  { title: 'CONTEÚDO HORIZONTAL',  label: 'CONT HOR' },
-  { title: 'ADBREAK MONTADO',      label: 'ADBREAK' },
-  { title: 'CONTEUDO VERTICAL',    label: 'CONT VER' },
-  { title: 'replay',               label: 'REPLAY A' },
-  { title: 'replay - B',           label: 'REPLAY B' },
+/* geometria feita à mão pros layouts conhecidos (chave = label) */
+const GEO_PRESETS = {
+  '50:50':          { pips: [[.010,.260,.485,.480],[.505,.260,.485,.480]] },
+  '80:20':          { pips: [[.010,.110,.760,.780],[.780,.560,.210,.330]] },
+  '60:40':          { pips: [[.010,.230,.580,.540],[.600,.230,.390,.540]] },
+  '60:40 +1':       { pips: [[.010,.160,.580,.680],[.600,.160,.390,.400],[.600,.580,.390,.260]] },
+  '60:40 +2':       { pips: [[.010,.160,.580,.680],[.600,.160,.390,.380],[.600,.560,.188,.280],[.800,.560,.190,.280]] },
+  '60:40 +1 VERT':  { pips: [[.010,.160,.560,.680],[.585,.160,.260,.680],[.860,.160,.130,.680]] },
+  '2+ SINAL +2':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.280],[.810,.195,.180,.280],[.010,.490,.180,.280],[.810,.490,.180,.280]] },
+  '1+ SINAL +1':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.575],[.810,.195,.180,.575]] },
+  '3+ SINAL +1':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.180],[.810,.195,.180,.575],[.010,.393,.180,.180],[.010,.590,.180,.180]] },
+  '2+ SINAL +1':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.280],[.810,.195,.180,.575],[.010,.490,.180,.280]] },
+};
+
+const SEED_MTS = [
+  { label: '50:50',         title: '50:50 COPA MONTADO',        layers: [7,8],     sinal: false },
+  { label: '80:20',         title: '80:20 COPA MONTADO',        layers: [7,8],     sinal: false },
+  { label: '60:40',         title: '60:40 COPA MONTADO',        layers: [7,8],     sinal: false },
+  { label: '60:40 +1',      title: '60:40+1 COPA MONTADO ',     layers: [6,7,8],   sinal: false },
+  { label: '60:40 +2',      title: '60:40+2 COPA MONTADO ',     layers: [5,6,7,8], sinal: false },
+  { label: '60:40 +1 VERT', title: '60:40 +1 VERTICAL MONTADO', layers: [6,7,8],   sinal: false },
+  { label: '2+ SINAL +2',   title: '2+ SINAL +2 MONTADO',       layers: [5,6,7,8], sinal: true },
+  { label: '1+ SINAL +1',   title: '1+ SINAL +1 MONTADO',       layers: [7,8],     sinal: true },
+  { label: '3+ SINAL +1',   title: '3+ SINAL +1 MONTADO',       layers: [5,6,7,8], sinal: true },
+  { label: '2+ SINAL +1',   title: '2+ SINAL +1 MONTADO',       layers: [6,7,8],   sinal: true },
 ];
 
 /* ═══════════════════ STATE ═══════════════════ */
-let pc       = localStorage.getItem('mc_pc') || 'PD2';
-let selMT    = null;                       // index em MULTITELAS
-let shiftPos = 0;                          // 0=PIP3  1=PIP4  2=PIP5
-let assign   = {};                         // { mtIndex: { pipNum: inputTitle } }
-try { assign = JSON.parse(localStorage.getItem('mc_assign') || '{}'); } catch(e) {}
-let history  = [];                         // [{kind:'ar'|'pl', mt:index, pips:{...}, time:'HH:MM:SS'}]
-try { history = JSON.parse(localStorage.getItem('mc_hist') || '[]'); } catch(e) {}
-let ipOver   = {};                         // { 'PD2': '192.168.0.50', ... } — overrides dos presets
-try { ipOver = JSON.parse(localStorage.getItem('mc_ips') || '{}'); } catch(e) {}
+function loadJ(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? fb; } catch(e) { return fb; } }
+
+let pc      = localStorage.getItem('mc_pc') || 'PD2';
+let ipOver  = loadJ('mc_ips', {});
+let devPw   = localStorage.getItem('mc_pw') || '1234';
+let packs   = loadJ('mc_packs', null);
+let history = loadJ('mc_hist', []);
+let assign  = loadJ('mc_assign', {});          // { mtTitle: { pipNum: inputTitle } }
+
+if (!packs) {
+  packs = [{ id: 'pk' + Date.now(), name: 'MULTITELA COPA 2026', mts: SEED_MTS, inputs: DEFAULT_INPUTS.map(i => ({...i})) }];
+  savePacks();
+}
+
+let activePk  = null;   // pacote aberto na mesa
+let devPk     = packs[0]?.id || null;  // pacote selecionado no dev
+let devOpen   = false;  // gate liberado nesta sessão
+let selMT     = null;   // index dentro de activePk.mts
+let shiftPos  = 0;
 
 const $ = id => document.getElementById(id);
 const ipOf = k => ipOver[k] || PCS[k];
 const api = () => `http://${ipOf(pc)}:8088/api/?`;
+function savePacks()  { localStorage.setItem('mc_packs', JSON.stringify(packs)); }
+function saveAssign() { localStorage.setItem('mc_assign', JSON.stringify(assign)); }
+function saveHist()   { localStorage.setItem('mc_hist', JSON.stringify(history)); }
+const pkById = id => packs.find(p => p.id === id);
+
+/* geometria: preset conhecido pelo label, senão automática */
+function geoOf(mt) {
+  if (GEO_PRESETS[mt.label]) return GEO_PRESETS[mt.label];
+  const n = mt.layers.length;
+  if (mt.sinal) {
+    /* lados alternados em volta do sinal central */
+    const left = [], right = [];
+    for (let i = 0; i < n; i++) (i % 2 === 0 ? left : right).push(i);
+    const col = (list, x) => list.map((_, j) => {
+      const h = .575 / list.length - .02;
+      return [x, .195 + j * (.575 / list.length), .180, h];
+    });
+    const boxes = new Array(n);
+    col(left, .010).forEach((b, j) => boxes[left[j]] = b);
+    col(right, .810).forEach((b, j) => boxes[right[j]] = b);
+    return { sinal: [.200,.195,.600,.575], pips: boxes };
+  }
+  /* grade simples */
+  const cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
+  const pips = [];
+  for (let i = 0; i < n; i++) {
+    const c = i % cols, r = Math.floor(i / cols);
+    pips.push([.01 + c * (.98/cols), .10 + r * (.8/rows), .98/cols - .012, .8/rows - .02]);
+  }
+  return { pips };
+}
+
+/* ═══════════════════ NAVEGAÇÃO ═══════════════════ */
+function show(scr) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  $(scr).classList.add('on');
+}
 
 /* ═══════════════════ vMIX ═══════════════════ */
 async function vmix(params) {
-  const url = api() + params;
   try {
-    await fetch(url, { mode: 'no-cors' });
+    await fetch(api() + params, { mode: 'no-cors' });
     setStatus(true);
     return true;
   } catch(e) {
@@ -432,119 +603,71 @@ async function vmix(params) {
 }
 
 function setStatus(ok) {
-  $('dot').className = 'dot ' + (ok ? 'ok' : 'err');
-  $('st-txt').textContent = ok ? pc + ' · ' + ipOf(pc) : 'sem conexão';
+  ['home', 'mesa'].forEach(s => {
+    const d = $('dot-' + s), t = $('st-' + s);
+    if (!d) return;
+    d.className = 'dot ' + (ok ? 'ok' : 'err');
+    t.textContent = ok ? pc + ' · ' + ipOf(pc) : 'sem conexão';
+  });
 }
 
-/* corta input num pip: SetMultiViewOverlay usa índice 1-10 (XML é 0-9) */
+/* ═══════════════════ MESA DE CORTE ═══════════════════ */
 function cutPip(pipNum, inputTitle) {
   if (selMT === null) { toast('Selecione uma multitela primeiro', true); return; }
-  const mt = MULTITELAS[selMT];
+  const mt = activePk.mts[selMT];
   if (pipNum > mt.layers.length) {
-    toast(`${mt.label} só tem ${mt.layers.length} pip${mt.layers.length>1?'s':''}`, true);
+    toast(`${mt.label} só tem ${mt.layers.length} pip${mt.layers.length > 1 ? 's' : ''}`, true);
     return;
   }
-  const apiLayer = mt.layers[pipNum - 1] + 1;
+  const apiLayer = mt.layers[pipNum - 1] + 1;  /* XML 0-9 → API 1-10 */
   vmix(`Function=SetMultiViewOverlay&Input=${encodeURIComponent(mt.title)}&Value=${apiLayer},${encodeURIComponent(inputTitle)}`);
-
-  if (!assign[selMT]) assign[selMT] = {};
-  assign[selMT][pipNum] = inputTitle;
-  localStorage.setItem('mc_assign', JSON.stringify(assign));
-  render();
+  if (!assign[mt.title]) assign[mt.title] = {};
+  assign[mt.title][pipNum] = inputTitle;
+  saveAssign();
+  renderMesa();
 }
 
 function selectMT(i) {
   selMT = i;
-  vmix(`Function=PreviewInput&Input=${encodeURIComponent(MULTITELAS[i].title)}`);
-  render();
+  vmix(`Function=PreviewInput&Input=${encodeURIComponent(activePk.mts[i].title)}`);
+  renderMesa();
 }
 
-/* ═══════════════════ HISTÓRICO ═══════════════════ */
 function saveEntry(kind) {
   if (selMT === null) return;
-  const now = new Date();
-  const time = now.toTimeString().slice(0, 8);
+  const mt = activePk.mts[selMT];
   history.unshift({
-    kind,                                   // 'ar' = foi ao ar | 'pl' = playlist
-    mt: selMT,
-    pips: { ...(assign[selMT] || {}) },
-    time,
+    kind, mtTitle: mt.title, mtLabel: mt.label,
+    pips: { ...(assign[mt.title] || {}) },
+    time: new Date().toTimeString().slice(0, 8),
   });
-  if (history.length > 60) history.pop();   // limite de segurança
-  localStorage.setItem('mc_hist', JSON.stringify(history));
+  if (history.length > 60) history.pop();
+  saveHist();
   renderHistory();
 }
 
 function recallEntry(idx) {
   const h = history[idx];
-  if (!h) return;
-  selMT = h.mt;
-  assign[selMT] = { ...h.pips };
-  localStorage.setItem('mc_assign', JSON.stringify(assign));
-
-  /* reaplica os cortes no vMix e joga no preview */
-  const mt = MULTITELAS[selMT];
+  if (!h || !activePk) return;
+  const i = activePk.mts.findIndex(m => m.title === h.mtTitle);
+  if (i < 0) { toast('Multitela não existe neste pacote', true); return; }
+  selMT = i;
+  const mt = activePk.mts[i];
+  assign[mt.title] = { ...h.pips };
+  saveAssign();
   Object.entries(h.pips).forEach(([pipNum, inputTitle]) => {
     const apiLayer = mt.layers[pipNum - 1] + 1;
     vmix(`Function=SetMultiViewOverlay&Input=${encodeURIComponent(mt.title)}&Value=${apiLayer},${encodeURIComponent(inputTitle)}`);
   });
   vmix(`Function=PreviewInput&Input=${encodeURIComponent(mt.title)}`);
   toast('Recuperado: ' + mt.label);
-  render();
+  renderMesa();
 }
 
-/* ═══════════════════ PAINEL DEV ═══════════════════ */
-function renderDev() {
-  $('dev-rows').innerHTML = Object.keys(PCS).map(k => {
-    const mod = !!ipOver[k];
-    return `<div class="dev-row">
-      <span class="dev-pc">${k}</span>
-      <input type="text" data-ip="${k}" value="${ipOf(k)}" class="${mod ? 'mod' : ''}" spellcheck="false">
-      <button class="dev-reset ${mod ? 'show' : ''}" data-ipreset="${k}">padrão</button>
-      <span class="dev-def">${mod ? 'preset: ' + PCS[k] : ''}</span>
-    </div>`;
-  }).join('');
-
-  $('dev-rows').querySelectorAll('input[data-ip]').forEach(inp => {
-    inp.addEventListener('change', () => {
-      const k = inp.dataset.ip;
-      const v = inp.value.trim();
-      if (!v || v === PCS[k]) delete ipOver[k];
-      else ipOver[k] = v;
-      localStorage.setItem('mc_ips', JSON.stringify(ipOver));
-      renderDev();
-      setStatus(true);
-      toast(k + ' → ' + ipOf(k));
-    });
-  });
-}
-
-function renderHistory() {
-  const list = $('hist-list');
-  $('hist-empty').style.display = history.length ? 'none' : 'flex';
-  list.innerHTML = history.map((h, i) => {
-    const mt = MULTITELAS[h.mt];
-    const pipsTxt = Object.entries(h.pips)
-      .sort((a, b) => a[0] - b[0])
-      .map(([n, t]) => `${n}·${INPUTS.find(x => x.title === t)?.label || t}`)
-      .join('  ') || 'sem pips';
-    return `<div class="h-item" data-h="${i}">
-      <div class="h-top">
-        <span class="h-badge ${h.kind}">${h.kind === 'ar' ? 'NO AR' : 'PLAYLIST'}</span>
-        <span class="h-mt">${mt.label}</span>
-        <span class="h-time">${h.time}</span>
-      </div>
-      <div class="h-pips">${pipsTxt}</div>
-      <button class="h-del" data-hdel="${i}" title="Remover">✕</button>
-    </div>`;
-  }).join('');
-}
-
-/* ═══════════════════ RENDER ═══════════════════ */
-function render() {
-  /* PCs */
-  $('pcs').innerHTML = Object.keys(PCS).map(k =>
-    `<button class="pc-btn ${k===pc?'on':''}" data-pc="${k}">${k}</button>`).join('');
+function renderMesa() {
+  if (!activePk) return;
+  $('mesa-pack').textContent = activePk.name;
+  renderPcs('pcs-mesa');
 
   /* PVW */
   const pvw = $('pvw');
@@ -556,37 +679,36 @@ function render() {
     $('plist').disabled = true;
   } else {
     $('pvw-empty').style.display = 'none';
-    const mt = MULTITELAS[selMT];
+    const mt = activePk.mts[selMT];
+    const geo = geoOf(mt);
     $('mt-name').textContent = mt.title.trim();
     $('take').disabled = false;
     $('plist').disabled = false;
 
-    if (mt.sinal) {
-      const [x,y,w,h] = mt.sinal;
+    if (geo.sinal) {
+      const [x,y,w,h] = geo.sinal;
       const d = document.createElement('div');
       d.className = 'box sinal';
       d.style.cssText = `left:${x*100}%;top:${y*100}%;width:${w*100}%;height:${h*100}%`;
       d.innerHTML = `<span class="lbl">SINAL</span>`;
       pvw.appendChild(d);
     }
-    mt.pips.forEach((p, i) => {
+    geo.pips.forEach((p, i) => {
       const [x,y,w,h] = p;
       const num = i + 1;
-      const inp = assign[selMT]?.[num];
+      const inp = assign[mt.title]?.[num];
       const d = document.createElement('div');
       d.className = 'box pip' + (inp ? ' filled' : '');
       d.style.cssText = `left:${x*100}%;top:${y*100}%;width:${w*100}%;height:${h*100}%`;
-      const lbl = inp ? (INPUTS.find(x2 => x2.title === inp)?.label || inp) : 'vazio';
+      const lbl = inp ? (activePk.inputs.find(x2 => x2.title === inp)?.label || inp) : 'vazio';
       d.innerHTML = `<span class="n">${num}</span><span class="lbl">${lbl}</span>`;
       pvw.appendChild(d);
     });
   }
 
-  /* Linha 1 — multitelas */
-  $('strip-mt').innerHTML = MULTITELAS.map((m, i) =>
-    `<button class="btn ${i===selMT?'sel-mt':''}" data-mt="${i}">${m.label}<span class="sub">${m.layers.length} pips</span></button>`).join('');
-
-  /* Linhas de inputs */
+  /* linhas */
+  $('strip-mt').innerHTML = activePk.mts.map((m, i) =>
+    `<button class="btn ${i === selMT ? 'sel-mt' : ''}" data-mt="${i}">${m.label}<span class="sub">${m.layers.length} pips</span></button>`).join('');
   renderInputStrip('strip-p1', 1);
   renderInputStrip('strip-p2', 2);
   const p3pip = 3 + shiftPos;
@@ -597,58 +719,255 @@ function render() {
 }
 
 function renderInputStrip(stripId, pipNum) {
-  const cur = selMT !== null ? assign[selMT]?.[pipNum] : null;
-  $(stripId).innerHTML = INPUTS.map(inp =>
-    `<button class="btn ${inp.title===cur?'sel-in':''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inp.title)}">${inp.label}</button>`).join('');
+  const mt = selMT !== null ? activePk.mts[selMT] : null;
+  const cur = mt ? assign[mt.title]?.[pipNum] : null;
+  $(stripId).innerHTML = activePk.inputs.map(inp =>
+    `<button class="btn ${inp.title === cur ? 'sel-in' : ''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inp.title)}">${inp.label}</button>`).join('');
+}
+
+function renderHistory() {
+  $('hist-empty').style.display = history.length ? 'none' : 'flex';
+  $('hist-list').innerHTML = history.map((h, i) => {
+    const pipsTxt = Object.entries(h.pips)
+      .sort((a, b) => a[0] - b[0])
+      .map(([n, t]) => `${n}·${activePk?.inputs.find(x => x.title === t)?.label || t}`)
+      .join('  ') || 'sem pips';
+    return `<div class="h-item" data-h="${i}">
+      <div class="h-top">
+        <span class="h-badge ${h.kind}">${h.kind === 'ar' ? 'NO AR' : 'PLAYLIST'}</span>
+        <span class="h-mt">${h.mtLabel}</span>
+        <span class="h-time">${h.time}</span>
+      </div>
+      <div class="h-pips">${pipsTxt}</div>
+      <button class="h-del" data-hdel="${i}" title="Remover">✕</button>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════ TELA PACOTES ═══════════════════ */
+function renderHome() {
+  renderPcs('pcs-home');
+  $('pack-empty').style.display = packs.length ? 'none' : 'block';
+  $('pack-grid').innerHTML = packs.map(p =>
+    `<div class="pack-card" data-pk="${p.id}">
+      <div class="pk-name">${p.name}</div>
+      <div class="pk-meta">${p.mts.length} MULTITELAS · ${p.inputs.length} INPUTS</div>
+    </div>`).join('');
+}
+
+function renderPcs(elId) {
+  $(elId).innerHTML = Object.keys(PCS).map(k =>
+    `<button class="pc-btn ${k === pc ? 'on' : ''}" data-pc="${k}">${k}</button>`).join('');
+}
+
+/* ═══════════════════ DEV ═══════════════════ */
+function renderDev() {
+  /* IPs */
+  $('dev-rows').innerHTML = Object.keys(PCS).map(k => {
+    const mod = !!ipOver[k];
+    return `<div class="dev-row">
+      <span class="dev-pc">${k}</span>
+      <input type="text" data-ip="${k}" value="${ipOf(k)}" class="${mod ? 'mod' : ''}" style="width:180px" spellcheck="false">
+      <button class="dev-reset ${mod ? 'show' : ''}" data-ipreset="${k}">padrão</button>
+      <span class="dev-def">${mod ? 'preset: ' + PCS[k] : ''}</span>
+    </div>`;
+  }).join('');
+  $('dev-rows').querySelectorAll('input[data-ip]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const k = inp.dataset.ip, v = inp.value.trim();
+      if (!v || v === PCS[k]) delete ipOver[k]; else ipOver[k] = v;
+      localStorage.setItem('mc_ips', JSON.stringify(ipOver));
+      renderDev(); setStatus(true);
+      toast(k + ' → ' + ipOf(k));
+    });
+  });
+
+  /* pacotes */
+  $('pk-tabs').innerHTML = packs.map(p =>
+    `<button class="pk-tab ${p.id === devPk ? 'on' : ''}" data-pktab="${p.id}">${p.name}</button>`).join('');
+  const pk = pkById(devPk);
+  $('pk-actions').style.display = pk ? 'flex' : 'none';
+  $('sec-mts').style.display  = pk ? 'block' : 'none';
+  $('sec-inps').style.display = pk ? 'block' : 'none';
+  if (!pk) return;
+  $('pk-name').value = pk.name;
+
+  /* multitelas */
+  $('mt-tbody').innerHTML = pk.mts.map((m, i) => `
+    <tr>
+      <td><input type="text" data-mtf="label" data-i="${i}" value="${m.label.replace(/"/g,'&quot;')}"></td>
+      <td><input type="text" data-mtf="title" data-i="${i}" value="${m.title.replace(/"/g,'&quot;')}"></td>
+      <td><input type="text" data-mtf="layers" data-i="${i}" value="${m.layers.join(',')}"></td>
+      <td style="text-align:center"><input type="checkbox" data-mtf="sinal" data-i="${i}" ${m.sinal ? 'checked' : ''}></td>
+      <td><button class="tdel" data-mtdel="${i}">✕</button></td>
+    </tr>`).join('');
+  bindCfg('#mt-tbody', pk.mts, ['label','title','layers','sinal']);
+
+  /* inputs */
+  $('in-tbody').innerHTML = pk.inputs.map((m, i) => `
+    <tr>
+      <td><input type="text" data-inf="label" data-i="${i}" value="${m.label.replace(/"/g,'&quot;')}"></td>
+      <td><input type="text" data-inf="title" data-i="${i}" value="${m.title.replace(/"/g,'&quot;')}"></td>
+      <td><button class="tdel" data-indel="${i}">✕</button></td>
+    </tr>`).join('');
+  $('in-tbody').querySelectorAll('input[data-inf]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      pk.inputs[+inp.dataset.i][inp.dataset.inf] = inp.value;
+      savePacks();
+    });
+  });
+}
+
+function bindCfg(sel, arr, fields) {
+  document.querySelector(sel).querySelectorAll('input[data-mtf]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const i = +inp.dataset.i, f = inp.dataset.mtf;
+      if (f === 'layers') {
+        arr[i].layers = inp.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 9);
+        inp.value = arr[i].layers.join(',');
+      }
+      else if (f === 'sinal') arr[i].sinal = inp.checked;
+      else arr[i][f] = inp.value;
+      savePacks();
+    });
+  });
 }
 
 /* ═══════════════════ EVENTS ═══════════════════ */
+let suppressClick = false;
+
 document.addEventListener('click', e => {
   const b = e.target.closest('button');
-  if (!b || suppressClick) return;
+  const card = e.target.closest('.pack-card');
+  if (suppressClick) return;
 
-  if (b.dataset.pc) {
+  /* abrir pacote */
+  if (card) {
+    activePk = pkById(card.dataset.pk);
+    selMT = null;
+    show('scr-mesa');
+    renderMesa(); renderHistory();
+    return;
+  }
+  if (!b) return;
+
+  /* navegação */
+  if (b.id === 'go-home')  { show('scr-home'); renderHome(); }
+  else if (b.id === 'go-dev') {
+    show('scr-dev');
+    if (devOpen) { $('gate').style.display = 'none'; $('dev-content').style.display = 'block'; renderDev(); }
+    else { $('gate').style.display = 'block'; $('dev-content').style.display = 'none'; $('gate-pw').value = ''; $('gate-err').textContent = ''; }
+  }
+  else if (b.id === 'dev-home') { show('scr-home'); renderHome(); }
+
+  /* gate */
+  else if (b.id === 'gate-go') {
+    if ($('gate-pw').value === devPw) {
+      devOpen = true;
+      $('gate').style.display = 'none';
+      $('dev-content').style.display = 'block';
+      renderDev();
+    } else $('gate-err').textContent = 'senha incorreta';
+  }
+
+  /* PCs */
+  else if (b.dataset.pc) {
     pc = b.dataset.pc;
     localStorage.setItem('mc_pc', pc);
     setStatus(true);
-    render();
+    renderPcs('pcs-home'); renderPcs('pcs-mesa');
   }
+
+  /* mesa */
   else if (b.dataset.mt !== undefined) selectMT(+b.dataset.mt);
   else if (b.dataset.in !== undefined) cutPip(+b.dataset.pip, decodeURIComponent(b.dataset.in));
-  else if (b.dataset.hdel !== undefined) {
-    history.splice(+b.dataset.hdel, 1);
-    localStorage.setItem('mc_hist', JSON.stringify(history));
-    renderHistory();
-  }
-  else if (b.dataset.h !== undefined || b.closest('.h-item')) {
-    /* clique no item do histórico (fora do X) */
-  }
-  else if (b.id === 'shift') { shiftPos = (shiftPos + 1) % 3; render(); }
+  else if (b.id === 'shift') { shiftPos = (shiftPos + 1) % 3; renderMesa(); }
   else if (b.id === 'take') {
     vmix('Function=Cut');
     saveEntry('ar');
-    toast('CORTADO → ' + MULTITELAS[selMT].title.trim());
+    toast('CORTADO → ' + activePk.mts[selMT].title.trim());
   }
   else if (b.id === 'plist') {
     saveEntry('pl');
-    toast('Salvo na playlist: ' + MULTITELAS[selMT].label);
+    toast('Salvo na playlist: ' + activePk.mts[selMT].label);
   }
-  else if (b.id === 'hist-clear') {
-    history = [];
-    localStorage.setItem('mc_hist', '[]');
-    renderHistory();
+  else if (b.id === 'hist-clear') { history = []; saveHist(); renderHistory(); }
+  else if (b.dataset.hdel !== undefined) {
+    history.splice(+b.dataset.hdel, 1);
+    saveHist(); renderHistory();
   }
-  else if (b.id === 'dev-btn') {
-    $('dev-panel').classList.toggle('open');
-    b.classList.toggle('on');
+
+  /* dev: pacotes */
+  else if (b.id === 'pk-add') {
+    const name = prompt('Nome do novo pacote:');
+    if (!name) return;
+    const p = { id: 'pk' + Date.now(), name: name.trim(), mts: [], inputs: DEFAULT_INPUTS.map(i => ({...i})) };
+    packs.push(p); devPk = p.id;
+    savePacks(); renderDev();
   }
+  else if (b.dataset.pktab) { devPk = b.dataset.pktab; renderDev(); }
+  else if (b.id === 'pk-rename') {
+    const pk = pkById(devPk);
+    pk.name = $('pk-name').value.trim() || pk.name;
+    savePacks(); renderDev();
+    toast('Pacote renomeado');
+  }
+  else if (b.id === 'pk-del') {
+    const pk = pkById(devPk);
+    if (!confirm(`Excluir o pacote "${pk.name}"?`)) return;
+    packs = packs.filter(p => p.id !== devPk);
+    devPk = packs[0]?.id || null;
+    savePacks(); renderDev();
+  }
+
+  /* dev: multitelas */
+  else if (b.id === 'mt-add') {
+    pkById(devPk).mts.push({ label: 'NOVA MT', title: '', layers: [7,8], sinal: false });
+    savePacks(); renderDev();
+  }
+  else if (b.dataset.mtdel !== undefined) {
+    pkById(devPk).mts.splice(+b.dataset.mtdel, 1);
+    savePacks(); renderDev();
+  }
+
+  /* dev: inputs */
+  else if (b.id === 'in-add') {
+    pkById(devPk).inputs.push({ label: 'NOVO', title: '' });
+    savePacks(); renderDev();
+  }
+  else if (b.dataset.indel !== undefined) {
+    pkById(devPk).inputs.splice(+b.dataset.indel, 1);
+    savePacks(); renderDev();
+  }
+  else if (b.id === 'in-default') {
+    if (!confirm('Substituir a lista de inputs pelo padrão?')) return;
+    pkById(devPk).inputs = DEFAULT_INPUTS.map(i => ({...i}));
+    savePacks(); renderDev();
+    toast('Inputs restaurados pro padrão');
+  }
+
+  /* dev: senha */
+  else if (b.id === 'save-pw') {
+    const v = $('new-pw').value.trim();
+    if (!v) { toast('Digite a nova senha', true); return; }
+    devPw = v;
+    localStorage.setItem('mc_pw', v);
+    $('new-pw').value = '';
+    toast('Senha atualizada');
+  }
+
+  /* dev: reset de IP */
   else if (b.dataset.ipreset !== undefined) {
     delete ipOver[b.dataset.ipreset];
     localStorage.setItem('mc_ips', JSON.stringify(ipOver));
-    renderDev();
-    setStatus(true);
+    renderDev(); setStatus(true);
     toast(b.dataset.ipreset + ' restaurado: ' + PCS[b.dataset.ipreset]);
   }
+});
+
+/* enter no gate */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === $('gate-pw')) $('gate-go').click();
 });
 
 /* clique no card do histórico (recall) */
@@ -660,7 +979,6 @@ document.addEventListener('click', e => {
 });
 
 /* drag-scroll nas faixas */
-let suppressClick = false;
 document.querySelectorAll('.strip').forEach(strip => {
   let down = false, startX = 0, startScroll = 0, moved = 0;
   strip.addEventListener('pointerdown', e => {
@@ -694,9 +1012,8 @@ function toast(msg, err) {
   toastT = setTimeout(() => t.className = '', 2200);
 }
 
-render();
-renderHistory();
-renderDev();
+/* init */
+renderHome();
 setStatus(true);
 </script>
 </body>
