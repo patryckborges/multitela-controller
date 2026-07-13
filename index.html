@@ -2,2374 +2,702 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>MultiTela Controller — CazeTV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa de Corte — MultiTela CazeTV</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&display=swap');
+
 :root {
-  --bg:#080809;--s1:#0f0f12;--s2:#161619;--s3:#1e1e23;
-  --border:#2a2a32;--border2:#38383f;
-  --pgm:#d63031;--pgm-dim:rgba(214,48,49,.15);--pgm-glow:rgba(214,48,49,.4);
-  --pvw:#00b894;--pvw-dim:rgba(0,184,148,.12);--pvw-glow:rgba(0,184,148,.35);
-  --accent:#fdcb6e;--acc-dim:rgba(253,203,110,.12);
-  --blue:#0984e3;--text:#e8e8ed;--text2:#8e8e9e;--text3:#4a4a5a;
-  --r:5px;--r2:8px;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;max-height:700px;display:flex;flex-direction:column;overflow:hidden;font-size:12px;max-width:720px;margin:0 auto}
-@media (min-width: 721px) { body{border-left:1px solid var(--border);border-right:1px solid var(--border)} }
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-/* HEADER */
-#hdr{display:flex;align-items:center;gap:8px;padding:0 10px;height:32px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
-.logo{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;white-space:nowrap}
-.logo span{color:var(--text3)}
-.hsep{width:1px;height:18px;background:var(--border);flex-shrink:0}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:all .3s}
-.dot.on{background:var(--pvw);box-shadow:0 0 6px var(--pvw-glow)}
-.dot.err{background:var(--pgm);box-shadow:0 0 6px var(--pgm-glow)}
-.clbl{font-family:var(--mono);font-size:10px;color:var(--text3);white-space:nowrap}
-#output-pill{display:flex;align-items:center;gap:6px;padding:4px 8px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:10px;color:var(--text2);cursor:pointer;transition:all .15s;min-width:0;max-width:200px;overflow:hidden}
-#output-pill:hover{border-color:var(--pvw);background:var(--pvw-dim)}
-#output-pill .pill-ic{font-size:13px}
-#output-pill .pill-lbl{font-family:var(--mono);font-size:10px;color:var(--text2)}
-#output-pill .pill-url{font-family:var(--mono);font-size:10px;color:var(--pvw);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#output-pill .pill-btn{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--pvw);color:#111;border:none;border-radius:12px;padding:3px 9px;cursor:pointer;white-space:nowrap}
-
-input[type=text],input[type=password],select{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;outline:none;transition:border-color .15s}
-input[type=text]:focus,input[type=password]:focus,select:focus{border-color:var(--accent)}
-select{cursor:pointer}
-
-/* BUTTONS */
-.btn{font-family:var(--sans);font-size:12px;font-weight:600;padding:4px 10px;border-radius:var(--r);border:1px solid var(--border2);background:var(--s3);color:var(--text2);cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-.btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-.btn:disabled{opacity:.35;cursor:default}
-.btn.acc{background:var(--accent);color:#111;border-color:var(--accent)}
-.btn.acc:hover:not(:disabled){background:#e6b85c}
-.btn.pgmb{background:var(--pgm);color:#fff;border-color:var(--pgm);font-size:15px;font-weight:700;padding:8px 28px;letter-spacing:.04em}
-.btn.pgmb:hover:not(:disabled){background:#bf2729}
-.btn.pvwb{background:var(--pvw);color:#111;border-color:var(--pvw);font-size:15px;font-weight:700;padding:8px 28px;letter-spacing:.04em}
-.btn.pvwb:hover:not(:disabled){background:#00a381}
-.btn.ghost{background:transparent;border-color:transparent}
-.btn.ghost:hover:not(:disabled){background:var(--s3);border-color:var(--border);color:var(--text)}
-.btn.sm{font-size:11px;padding:3px 7px}
-.btn.xs{font-size:10px;padding:2px 6px}
-
-/* TABS */
-#tabs{display:flex;align-items:flex-end;gap:1px;padding:0 10px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
-.tab{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;cursor:pointer;color:var(--text3);border:1px solid transparent;border-bottom:none;border-radius:var(--r) var(--r) 0 0;transition:all .15s;position:relative;bottom:-1px}
-.tab:hover{color:var(--text2)}
-.tab.active{color:var(--accent);background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg)}
-
-/* MAIN */
-#main{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.page{display:none;flex:1;overflow:hidden;flex-direction:column}
-.page.active{display:flex}
-.scroll{overflow-y:auto;flex:1;padding:14px}
-
-/* SECTIONS */
-.sec{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:10px;overflow:hidden}
-.sec-hd{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--s2);border-bottom:1px solid var(--border)}
-.sec-ttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:1}
-.sec-bd{padding:10px 12px}
-
-/* BADGES */
-.badge{font-family:var(--mono);font-size:9px;letter-spacing:.08em;padding:2px 6px;border-radius:3px;text-transform:uppercase}
-.badge.pgm{background:var(--pgm);color:#fff}
-.badge.pvw{background:var(--pvw);color:#111}
-.badge.idle{background:var(--s3);color:var(--text3);border:1px solid var(--border)}
-.tag{font-family:var(--mono);font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid var(--border);color:var(--text3)}
-.tag.live{border-color:var(--pgm);color:var(--pgm)}
-.tag.replay{border-color:var(--blue);color:var(--blue)}
-.tag.vt{border-color:var(--pvw);color:var(--pvw)}
-.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:32px;color:var(--text3);font-size:12px;text-align:center}
-.empty-ic{font-size:24px;opacity:.3}
-
-/* PACOTE GRAFICO */
-#screen-sel{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:24px;padding:32px}
-.sel-title{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
-.pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;width:100%;max-width:680px}
-.pkg-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:16px 14px;cursor:pointer;transition:all .15s;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
-.proj-card{position:relative}
-.proj-del{position:absolute;top:4px;right:4px;background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:3px;transition:all .15s;line-height:1}
-.proj-del:hover{background:var(--pgm);color:#fff}
-.pkg-card:hover{border-color:var(--accent);background:var(--acc-dim)}
-.pkg-card.sel{border-color:var(--accent);background:var(--acc-dim)}
-.pkg-ic{font-size:28px}
-.pkg-nm{font-weight:700;font-size:14px}
-.pkg-mt{font-family:var(--mono);font-size:10px;color:var(--text3)}
-
-/* AO VIVO */
-.live-wrap{display:grid;grid-template-rows:1fr auto;gap:6px;height:100%;overflow:hidden;padding:6px 10px 8px}
-/* ── Tabs de workspace ── */
-.ws-tabs{display:flex;align-items:stretch;gap:6px;padding:4px 6px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);flex-shrink:0}
-.ws-tab{flex:1;display:flex;align-items:center;gap:6px;padding:5px 10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);color:var(--text2);cursor:pointer;font-family:var(--sans);font-size:11px;font-weight:600;transition:all .15s;min-width:0}
-.ws-tab:hover{background:var(--s3);color:var(--text)}
-.ws-tab .ws-tab-num{font-size:14px;flex-shrink:0}
-.ws-tab .ws-tab-nm{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ws-tab.ws-tab-1.active{background:rgba(0,184,148,.15);border-color:var(--pvw);color:var(--pvw)}
-.ws-tab.ws-tab-2.active{background:rgba(214,48,49,.15);border-color:var(--pgm);color:var(--pgm)}
-.btn.ws-go{flex-shrink:0;padding:5px 18px;font-size:12px;font-weight:700;background:var(--pvw);color:#0a0a0a;border-color:var(--pvw);letter-spacing:.04em}
-.btn.ws-go.go-2{background:var(--pgm);color:#fff;border-color:var(--pgm)}
-.btn.ws-go:hover:not(:disabled){filter:brightness(1.1)}
-/* ── Workspace ativo ── */
-.live-mons{display:flex;flex-direction:column;gap:8px;overflow:hidden;min-height:0;flex:1}
-.live-mon.ws-mon{border-color:var(--pvw);box-shadow:0 0 0 1px var(--pvw),0 0 16px var(--pvw-glow);transition:border-color .15s,box-shadow .15s}
-.live-mon.ws-mon.is-w2{border-color:var(--pgm);box-shadow:0 0 0 1px var(--pgm),0 0 16px var(--pgm-glow)}
-.live-mon{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;display:flex;flex-direction:column}
-.live-mon{transition:outline .15s,background .15s;outline:2px solid transparent;outline-offset:-2px;cursor:pointer}
-.live-mon.ws-active{outline-color:var(--pvw);background:rgba(0,184,148,.05)}
-.live-mon.pgm-mon.ws-active{outline-color:var(--pgm);background:rgba(214,48,49,.05)}
-.live-mon.drag-over{outline-color:var(--pvw);outline-style:dashed;outline-width:3px;background:rgba(0,184,148,.1)}
-.mon-hd .btn{margin-left:auto}
-.live-mon.pvw-mon{border-color:var(--pvw);box-shadow:0 0 0 1px var(--pvw),0 0 16px var(--pvw-glow)}
-.live-mon.pgm-mon{border-color:var(--pgm);box-shadow:0 0 0 1px var(--pgm),0 0 16px var(--pgm-glow)}
-.mon-hd{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
-.mon-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase}
-.mon-lbl.pvw{color:var(--pvw)}
-.mon-lbl.pgm{color:var(--pgm)}
-.mon-nm{font-size:12px;font-weight:600;flex:1}
-.mon-body{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0}
-.mon-prev{width:100%;flex:1;object-fit:contain;background:repeating-conic-gradient(#0d0d10 0% 25%,#111114 0% 50%) 0 0/14px 14px;display:block;min-height:0}
-.mon-ov{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
-.pip-chip{position:absolute;background:rgba(0,0,0,.8);border:1px solid rgba(255,255,255,.2);border-radius:3px;padding:2px 5px;font-family:var(--mono);font-size:9px;color:#fff;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pvw-btns{padding:4px;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;max-height:130px;overflow-y:auto;flex-shrink:0}
-.pr-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.pr-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);width:40px;flex-shrink:0}
-.inp-btn{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--s3);color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
-.inp-btn:hover{border-color:var(--border2);color:var(--text)}
-.inp-btn.apvw{background:var(--pvw-dim);border-color:var(--pvw);color:var(--pvw)}
-
-/* FAIXA INFERIOR — multitelas arrastáveis */
-#tray-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;flex-shrink:0}
-#tray-hd{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--s2);border-bottom:1px solid var(--border)}
-#tray-hd .tray-ttl{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);flex:1}
-#tray{display:flex;gap:6px;padding:4px 6px 8px;overflow-x:auto;overflow-y:hidden;min-height:74px;max-height:74px;align-items:center;scrollbar-width:thin;scrollbar-color:var(--accent) var(--s2)}
-#tray::-webkit-scrollbar{height:8px}
-#tray::-webkit-scrollbar-track{background:var(--s2);border-radius:4px}
-#tray::-webkit-scrollbar-thumb{background:var(--accent);border-radius:4px}
-#tray::-webkit-scrollbar-thumb:hover{background:var(--accent)}
-#tray::-webkit-scrollbar{height:3px}
-
-/* CARD DA MULTITELA NA FAIXA */
-.mt-card{flex-shrink:0;width:84px;background:var(--s3);border:2px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:grab;transition:border-color .15s,opacity .15s,transform .15s;position:relative;user-select:none}
-.mt-card:hover{border-color:var(--border2)}
-.mt-card.is-pvw{border-color:var(--pvw);box-shadow:0 0 8px var(--pvw-glow)}
-.mt-card.is-pgm{border-color:var(--pgm);box-shadow:0 0 8px var(--pgm-glow)}
-.mt-card.dragging{opacity:.4;transform:scale(.95);cursor:grabbing}
-.mt-card.drag-over{border-color:var(--accent);background:var(--acc-dim)}
-.mt-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:repeating-conic-gradient(#1a1a20 0% 25%,#222228 0% 50%) 0 0/10px 10px;pointer-events:none}
-.mt-nm{font-size:10px;padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2);pointer-events:none}
-.mt-badge{position:absolute;top:3px;left:3px}
-
-/* CONTEXT MENU */
-#ctx{position:fixed;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r2);padding:4px;z-index:500;display:none;flex-direction:column;gap:1px;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
-#ctx.show{display:flex}
-.ctx-item{font-size:12px;padding:6px 10px;border-radius:var(--r);cursor:pointer;color:var(--text2);transition:all .1s}
-.ctx-item:hover{background:var(--s3);color:var(--text)}
-.ctx-item.danger:hover{background:var(--pgm-dim);color:var(--pgm)}
-
-/* CTRL BAR */
-.live-ctrl{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:8px 14px;flex-shrink:0}
-.fsep{width:1px;height:16px;background:var(--border);margin:0 4px}
-.cinfo{font-family:var(--mono);font-size:10px;color:var(--text3)}
-.cinfo span{color:var(--text2)}
-
-/* DEV */
-.dev-hd{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0}
-.dev-badge{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;background:var(--acc-dim);color:var(--accent);border:1px solid var(--accent);border-radius:3px;padding:2px 7px}
-.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
-.proj-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px}
-.proj-card:hover{border-color:var(--accent)}
-.proj-card.sel{border-color:var(--accent);background:var(--acc-dim)}
-.proj-nm{font-weight:700;font-size:13px}
-.proj-mt{font-size:11px;color:var(--text3);font-family:var(--mono)}
-.proj-new{border-style:dashed;align-items:center;justify-content:center;color:var(--text3);font-size:22px}
-.proj-new:hover{color:var(--accent);border-color:var(--accent)}
-.png-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;margin-top:8px}
-.png-card{background:var(--s3);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
-.png-thumb{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:repeating-conic-gradient(#1a1a20 0% 25%,#222228 0% 50%) 0 0/12px 12px}
-.png-info{padding:5px 7px;display:flex;align-items:center;gap:4px}
-.proj-folder-row{padding:10px 12px;display:flex;align-items:center;gap:8px;background:var(--s2);border-bottom:1px solid var(--border)}
-.proj-folder-row input{flex:1;background:var(--s3);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:3px;font:11px var(--mono);outline:none}
-.proj-folder-row input:focus{border-color:var(--accent)}
-.clbl-hint{font-size:11px;color:var(--text3);min-width:90px;text-align:right}
-.png-path-row{padding:0 7px 6px;display:flex;align-items:center;gap:4px;border-top:1px dashed transparent}
-.png-path-row.path-warn{border-top-color:var(--accent)}
-.png-path-row.path-ok{border-top-color:var(--pvw)}
-.png-path-input{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);padding:3px 6px;border-radius:3px;font:11px var(--mono);outline:none}
-.png-path-input:focus{border-color:var(--accent)}
-.png-nm{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pip-cnt{font-family:var(--mono);font-size:9px;color:var(--pvw);white-space:nowrap}
-.pip-cnt.an{color:var(--accent)}
-.drop-zone{border:1px dashed var(--border2);border-radius:var(--r);padding:20px;text-align:center;color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s;margin-top:8px}
-.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);color:var(--accent)}
-.setup-card{background:var(--s3);border:1px solid var(--border2);border-radius:var(--r2);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
-.setup-card .sc-title{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
-.setup-steps{display:flex;flex-direction:column;gap:6px}
-.setup-step{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:var(--text2);line-height:1.5}
-.step-num{font-family:var(--mono);font-size:10px;background:var(--accent);color:#111;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;margin-top:1px}
-.setup-step b{color:var(--text)}
-.url-copy-row{display:flex;align-items:center;gap:8px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px}
-.url-copy-row .uc-url{font-family:var(--mono);font-size:11px;color:var(--pvw);flex:1;word-break:break-all}
-
-/* FOOTER */
-#ftr{display:flex;align-items:center;gap:8px;padding:2px 10px;background:var(--s1);border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--text3);flex-shrink:0;height:16px}
-.fi{font-family:var(--mono);font-size:10px;color:var(--text3)}
-.fi span{color:var(--text2)}
-.ftsep{width:1px;height:12px;background:var(--border)}
-
-/* MODAL */
-.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
-.mov.show{display:flex}
-.modal{background:var(--s1);border:1px solid var(--border2);border-radius:var(--r2);padding:20px;min-width:300px;max-width:440px;width:90%}
-.modal h3{font-size:14px;font-weight:700;margin-bottom:12px}
-.mr{margin-bottom:10px}
-.mr label{display:block;font-size:11px;color:var(--text2);margin-bottom:4px;font-family:var(--mono)}
-.mr input,.mr select{width:100%}
-.ma{display:flex;gap:6px;justify-content:flex-end;margin-top:14px}
-
-/* STREAMDECK */
-.pvw-btns{padding:0;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:0;flex-shrink:0;overflow:hidden}
-.sd-pip-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--s2);flex-shrink:0}
-.sd-pip-tab{font-family:var(--mono);font-size:10px;padding:5px 10px;cursor:pointer;color:var(--text3);border-right:1px solid var(--border);transition:all .15s;white-space:nowrap}
-.sd-pip-tab:hover{color:var(--text2)}
-.sd-pip-tab.active{color:var(--accent);background:var(--bg)}
-.sd-pip-tab.has-inp{color:var(--pvw)}
-.sd-pip-tab.active.has-inp{color:var(--pvw);background:var(--bg)}
-.sd-grid{display:flex;flex-wrap:wrap;gap:5px;padding:7px;overflow-y:auto;max-height:110px}
-.sd-btn{
-  font-family:var(--mono);font-size:10px;font-weight:700;
-  padding:0;width:60px;height:42px;
-  border-radius:5px;border:2px solid transparent;
-  cursor:pointer;transition:all .12s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:2px;line-height:1.2;text-align:center;word-break:break-word;
-  letter-spacing:.02em;
-}
-.sd-btn.type-live{background:#2a1010;border-color:#5a2020;color:#e88;}
-.sd-btn.type-live:hover{background:#3a1515;border-color:var(--pgm);color:#fff}
-.sd-btn.type-live.active{background:var(--pgm);border-color:var(--pgm);color:#fff;box-shadow:0 0 8px var(--pgm-glow)}
-.sd-btn.type-vt{background:#0f1f10;border-color:#2a4a20;color:#8c8;}
-.sd-btn.type-vt:hover{background:#162a12;border-color:var(--pvw);color:#fff}
-.sd-btn.type-vt.active{background:var(--pvw);border-color:var(--pvw);color:#111;box-shadow:0 0 8px var(--pvw-glow)}
-.sd-btn.type-replay{background:#1a0f25;border-color:#4a2080;color:#c8a0ff;}
-.sd-btn.type-replay:hover{background:#251540;border-color:#8855cc;color:#fff}
-.sd-btn.type-replay.active{background:#7c3aed;border-color:#9f5cf0;color:#fff;box-shadow:0 0 8px rgba(124,58,237,.5)}
-.sd-btn.type-call{background:#1a1500;border-color:#4a3a00;color:#ffd460;}
-.sd-btn.type-call:hover{background:#2a2200;border-color:var(--accent);color:#fff}
-.sd-btn.type-call.active{background:var(--accent);border-color:var(--accent);color:#111;box-shadow:0 0 8px rgba(253,203,110,.4)}
-.sd-empty{font-size:11px;color:var(--text3);padding:16px;text-align:center;width:100%}
-
-/* DROP ZONE nos pips do PVW */
-.pip-drop-zone {
-  position: absolute;
-  border-radius: 4px;
-  border: 2px dashed transparent;
-  transition: all .15s;
-  cursor: default;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono); font-size: 11px; font-weight: 700;
-  color: transparent;
-  pointer-events: all;
-}
-.pip-drop-zone.drag-over {
-  border-color: var(--accent);
-  background: rgba(253,203,110,.18);
-  color: var(--accent);
-}
-.pip-drop-zone.has-input {
-  border-color: rgba(0,184,148,.3);
+  --bg:       #080809;
+  --s1:       #0f0f12;
+  --s2:       #161619;
+  --s3:       #1e1e23;
+  --border:   #2a2a32;
+  --border2:  #38383f;
+  --pgm:      #d63031;
+  --pgm-dim:  rgba(214,48,49,.15);
+  --pgm-glow: rgba(214,48,49,.45);
+  --pvw:      #00b894;
+  --pvw-dim:  rgba(0,184,148,.12);
+  --pvw-glow: rgba(0,184,148,.35);
+  --accent:   #fdcb6e;
+  --acc-dim:  rgba(253,203,110,.12);
+  --blue:     #0984e3;
+  --text:     #e8e8ed;
+  --text2:    #8e8e9e;
+  --text3:    #4a4a5a;
+  --r:        5px;
+  --r2:       9px;
+  --mono:     'DM Mono', monospace;
+  --sans:     'DM Sans', sans-serif;
 }
 
-/* TOAST */
-#toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--s3);border:1px solid var(--border2);border-radius:var(--r2);padding:8px 14px;font-size:12px;font-family:var(--mono);color:var(--text);opacity:0;transition:all .25s;z-index:300;pointer-events:none;white-space:nowrap}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#toast.ok{border-color:var(--pvw);color:var(--pvw)}
-#toast.err{border-color:var(--pgm);color:var(--pgm)}
-#toast.warn{border-color:var(--accent);color:var(--accent)}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); color: var(--text); font-family: var(--sans); }
+body { min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
 
-/* ── PIP EDITOR ── */
-#pip-editor-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-#pip-editor-overlay.open{display:flex}
-#pip-editor-wrap{position:relative;user-select:none;cursor:crosshair;border:2px solid var(--border2);border-radius:6px;overflow:hidden}
-#pip-editor-wrap img{display:block;max-width:88vw;max-height:72vh}
-.pip-rect{position:absolute;border:2px solid var(--pvw);background:rgba(0,184,148,.18);box-sizing:border-box;transition:border-color .15s,background .15s}
-.pip-rect.selected{border-color:#ffd700;background:rgba(255,215,0,.22);border-width:3px}
-.pip-rect .pip-lbl{position:absolute;top:4px;left:6px;font:600 12px/1 var(--font);color:var(--pvw)}
-.pip-rect .pip-del{position:absolute;top:2px;right:4px;font-size:14px;color:var(--pgm);cursor:pointer;pointer-events:all}
-#pip-editor-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
-#pip-editor-hint{font-size:12px;color:var(--fg3)}
+.app { width: 100%; max-width: 1240px; padding: 14px 18px 30px; }
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
-.modal-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:24px;max-width:380px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,.5)}
-.pc-grid{display:grid;grid-template-columns:repeat(3, 1fr);gap:8px}
-.pc-btn{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s;color:var(--text)}
-.pc-btn:hover{border-color:var(--accent);background:var(--s3);transform:translateY(-1px)}
-.pc-btn-name{font:700 14px var(--sans);color:var(--accent)}
-.pc-btn-ip{font:11px var(--mono);color:var(--text3)}
-.pc-btn{padding:14px;background:var(--s2);border:2px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
-.pc-btn:hover{border-color:var(--accent);background:var(--s3);color:var(--accent)}
-.pc-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--s2);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--accent);transition:all .15s}
-.pc-badge:hover{border-color:var(--accent)}
+/* ── HEADER ─────────────────────────────── */
+header {
+  display: flex; align-items: center; gap: 14px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+.logo { font-family: var(--mono); font-size: 15px; font-weight: 500; letter-spacing: .5px; }
+.logo b { color: var(--accent); font-weight: 500; }
+.pcs { display: flex; gap: 4px; margin-left: auto; }
+.pc-btn {
+  font-family: var(--mono); font-size: 11px; padding: 5px 10px;
+  background: var(--s2); color: var(--text2);
+  border: 1px solid var(--border); border-radius: var(--r); cursor: pointer;
+}
+.pc-btn.on { background: var(--acc-dim); color: var(--accent); border-color: var(--accent); }
+.status { display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 11px; color: var(--text2); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); }
+.dot.ok  { background: var(--pvw); box-shadow: 0 0 8px var(--pvw-glow); }
+.dot.err { background: var(--pgm); box-shadow: 0 0 8px var(--pgm-glow); }
 
+/* ── PAINEL DEV ─────────────────────────── */
+.dev-btn.on { background: var(--pgm-dim); color: #ff7675; border-color: var(--pgm); }
+.dev-panel {
+  display: none; margin-bottom: 14px; padding: 12px 14px;
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
+}
+.dev-panel.open { display: block; }
+.dev-title { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text2); margin-bottom: 10px; }
+.dev-hint { letter-spacing: 0; color: var(--text3); margin-left: 8px; text-transform: none; }
+.dev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.dev-row .dev-pc {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  flex: 0 0 44px;
+}
+.dev-row input {
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 6px 10px; width: 180px; outline: none;
+}
+.dev-row input:focus { border-color: var(--accent); }
+.dev-row input.mod { border-color: var(--accent); color: var(--accent); }
+.dev-reset {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  background: none; border: 1px solid var(--border); border-radius: 3px;
+  color: var(--text3); padding: 4px 8px; cursor: pointer; visibility: hidden;
+}
+.dev-row .dev-reset.show { visibility: visible; }
+.dev-reset:hover { color: var(--pgm); border-color: var(--pgm); }
+.dev-def { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+
+/* ── PVW + HISTÓRICO ────────────────────── */
+.stage { display: flex; gap: 14px; margin-bottom: 16px; align-items: stretch; }
+
+.hist {
+  flex: 0 0 220px; display: flex; flex-direction: column;
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r2);
+  overflow: hidden; position: relative;
+}
+.hist-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--text2);
+}
+.hist-clear {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  background: none; border: none; cursor: pointer; letter-spacing: 1px;
+}
+.hist-clear:hover { color: var(--pgm); }
+.hist-list { flex: 1; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+.hist-empty {
+  position: absolute; inset: 40px 0 0 0; display: flex; align-items: center; justify-content: center;
+  text-align: center; font-family: var(--mono); font-size: 10px; color: var(--text3);
+  line-height: 1.8; pointer-events: none;
+}
+.h-item {
+  padding: 8px 10px; border-bottom: 1px solid var(--border);
+  cursor: pointer; position: relative;
+}
+.h-item:hover { background: var(--s2); }
+.h-top { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.h-badge {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
+  padding: 2px 6px; border-radius: 3px;
+}
+.h-badge.ar { background: var(--pgm-dim); color: #ff7675; border: 1px solid rgba(214,48,49,.4); }
+.h-badge.pl { background: var(--acc-dim); color: var(--accent); border: 1px solid rgba(253,203,110,.35); }
+.h-mt { font-family: var(--mono); font-size: 11px; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-time { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.h-pips { font-family: var(--mono); font-size: 9px; color: var(--text2); line-height: 1.5; }
+.h-del {
+  position: absolute; top: 6px; right: 8px;
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  background: none; border: none; cursor: pointer; display: none;
+}
+.h-item:hover .h-del { display: block; }
+.h-del:hover { color: var(--pgm); }
+
+/* ── PVW ────────────────────────────────── */
+.pvw-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.pvw {
+  position: relative; width: 100%; max-width: 780px; aspect-ratio: 16/9;
+  background: #050506; border: 2px solid var(--pvw);
+  border-radius: var(--r2); overflow: hidden;
+  box-shadow: 0 0 24px rgba(0,184,148,.12), inset 0 0 60px rgba(0,0,0,.6);
+}
+.pvw-tag {
+  position: absolute; top: 8px; left: 10px; z-index: 5;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+  color: var(--pvw); background: rgba(0,0,0,.55);
+  padding: 3px 8px; border-radius: 3px; border: 1px solid rgba(0,184,148,.4);
+}
+.pvw-empty {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: var(--text3); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+}
+.box {
+  position: absolute; border: 1px solid var(--border2);
+  background: linear-gradient(160deg, #101014, #0a0a0d);
+  border-radius: 3px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px; overflow: hidden;
+}
+.box.pip { cursor: default; }
+.box.pip.filled { border-color: var(--accent); background: linear-gradient(160deg, #17150e, #0d0c08); }
+.box .n {
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+  position: absolute; top: 4px; left: 6px;
+}
+.box.filled .n { color: var(--accent); }
+.box .lbl { font-family: var(--mono); font-size: clamp(9px, 1.4vw, 13px); color: var(--text2); text-align: center; padding: 0 4px; }
+.box.filled .lbl { color: var(--text); }
+.box.sinal { border-style: dashed; border-color: var(--border); }
+.box.sinal .lbl { color: var(--text3); letter-spacing: 1px; font-size: 11px; }
+
+.pvw-bar {
+  width: 100%; max-width: 780px;
+  display: flex; align-items: center; gap: 12px; margin-top: 8px;
+}
+.mt-name { font-family: var(--mono); font-size: 13px; color: var(--pvw); flex: 1; letter-spacing: .5px; }
+.take {
+  font-family: var(--sans); font-weight: 700; font-size: 14px; letter-spacing: 2px;
+  padding: 10px 34px; border-radius: var(--r2); cursor: pointer;
+  background: var(--pgm-dim); color: var(--pgm); border: 2px solid var(--pgm);
+  transition: background .1s;
+}
+.take:hover { background: var(--pgm); color: #fff; box-shadow: 0 0 18px var(--pgm-glow); }
+.take:active { transform: scale(.97); }
+.take:disabled { opacity: .3; cursor: not-allowed; }
+.plist {
+  font-family: var(--sans); font-weight: 700; font-size: 12px; letter-spacing: 1px;
+  padding: 10px 18px; border-radius: var(--r2); cursor: pointer;
+  background: var(--acc-dim); color: var(--accent); border: 2px solid var(--accent);
+  transition: background .1s;
+}
+.plist:hover { background: var(--accent); color: #16130a; }
+.plist:active { transform: scale(.97); }
+.plist:disabled { opacity: .3; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .stage { flex-direction: column; }
+  .hist { flex: 0 0 auto; max-height: 180px; }
+  .hist-empty { inset: 40px 0 0 0; }
+}
+
+/* ── LINHAS DE BOTÕES ───────────────────── */
+.row { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
+.row-tag {
+  flex: 0 0 88px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r);
+  font-family: var(--mono); font-size: 11px; color: var(--text2); letter-spacing: 1px;
+  user-select: none;
+}
+.row-tag .big { font-size: 13px; color: var(--text); }
+.row-tag.mt-tag .big { color: var(--pvw); }
+.shift {
+  margin-top: 2px; font-family: var(--mono); font-size: 9px; letter-spacing: 1px;
+  padding: 3px 10px; border-radius: 3px; cursor: pointer;
+  background: var(--s3); color: var(--text2); border: 1px solid var(--border2);
+}
+.shift.on { background: var(--acc-dim); color: var(--accent); border-color: var(--accent); }
+
+.strip {
+  flex: 1; display: flex; gap: 6px; overflow-x: auto; padding: 6px;
+  background: var(--s1); border: 1px solid var(--border); border-radius: var(--r);
+  scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+  cursor: grab;
+}
+.strip.dragging { cursor: grabbing; }
+.strip::-webkit-scrollbar { height: 6px; }
+.strip::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+.btn {
+  flex: 0 0 auto; min-width: 92px; padding: 12px 10px;
+  font-family: var(--mono); font-size: 12px; text-align: center;
+  background: var(--s2); color: var(--text2);
+  border: 1px solid var(--border); border-radius: var(--r); cursor: pointer;
+  user-select: none; white-space: nowrap;
+  transition: border-color .08s, background .08s;
+}
+.btn:hover { border-color: var(--border2); color: var(--text); }
+.btn:active { transform: scale(.97); }
+
+/* multitela selecionada = verde pvw */
+.btn.sel-mt { background: var(--pvw-dim); color: var(--pvw); border-color: var(--pvw); box-shadow: 0 0 10px rgba(0,184,148,.2); }
+/* input cortado no pip = vermelho pgm */
+.btn.sel-in { background: var(--pgm-dim); color: #ff6b6b; border-color: var(--pgm); box-shadow: 0 0 10px rgba(214,48,49,.25); }
+
+.btn .sub { display: block; font-size: 9px; color: var(--text3); margin-top: 3px; letter-spacing: .5px; }
+.btn.sel-mt .sub { color: rgba(0,184,148,.7); }
+
+/* toast */
+#toast {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  font-family: var(--mono); font-size: 12px; padding: 9px 18px;
+  background: var(--s3); border: 1px solid var(--border2); border-radius: var(--r2);
+  opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 99;
+}
+#toast.show { opacity: 1; }
+#toast.err { border-color: var(--pgm); color: #ff8a8a; }
+
+@media (max-width: 700px) {
+  .row-tag { flex: 0 0 64px; font-size: 9px; }
+  .btn { min-width: 76px; font-size: 11px; padding: 10px 8px; }
+}
 </style>
 </head>
 <body>
-<!-- Handler de erro global (mantém pra debug futuro) -->
-<script>
-window.addEventListener('error', function(e) {
-  const errDiv = document.getElementById('global-err') || (() => {
-    const d = document.createElement('div');
-    d.id = 'global-err';
-    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#d63031;color:#fff;padding:10px;font:12px monospace;z-index:99999;max-height:40vh;overflow:auto;white-space:pre-wrap;border-bottom:2px solid #fff';
-    document.body.appendChild(d);
-    return d;
-  })();
-  errDiv.textContent = `❌ ERRO JS: ${e.message}\nArquivo: ${e.filename}\nLinha: ${e.lineno}:${e.colno}\n\nClique para fechar`;
-  errDiv.onclick = () => errDiv.remove();
-});
-</script>
+<div class="app">
+
+  <header>
+    <div class="logo">MESA DE CORTE <b>MULTITELA</b> — CazeTV</div>
+    <div class="pcs" id="pcs"></div>
+    <button class="pc-btn dev-btn" id="dev-btn">DEV</button>
+    <div class="status"><div class="dot" id="dot"></div><span id="st-txt">sem conexão</span></div>
+  </header>
+
+  <!-- PAINEL DEV: edição de IPs -->
+  <div class="dev-panel" id="dev-panel">
+    <div class="dev-title">IP DAS MÁQUINAS <span class="dev-hint">edite pra testar em outro computador — presets continuam salvos</span></div>
+    <div id="dev-rows"></div>
+  </div>
+
+  <!-- PVW + HISTÓRICO -->
+  <div class="stage">
+
+    <aside class="hist">
+      <div class="hist-head">
+        <span>HISTÓRICO</span>
+        <button class="hist-clear" id="hist-clear" title="Limpar tudo">limpar</button>
+      </div>
+      <div class="hist-list" id="hist-list"></div>
+      <div class="hist-empty" id="hist-empty">Cortes e playlists<br>aparecem aqui</div>
+    </aside>
+
+    <div class="pvw-wrap">
+      <div class="pvw" id="pvw">
+        <div class="pvw-tag">PVW</div>
+        <div class="pvw-empty" id="pvw-empty">SELECIONE UMA MULTITELA ABAIXO</div>
+      </div>
+      <div class="pvw-bar">
+        <div class="mt-name" id="mt-name">—</div>
+        <button class="plist" id="plist" disabled>+ PLAYLIST</button>
+        <button class="take" id="take" disabled>CORTAR</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LINHA 1: MULTITELAS -->
+  <div class="row">
+    <div class="row-tag mt-tag"><span>LINHA 1</span><span class="big">MTELAS</span></div>
+    <div class="strip" id="strip-mt"></div>
+  </div>
+
+  <!-- LINHA 2: PIP 1 -->
+  <div class="row">
+    <div class="row-tag"><span>LINHA 2</span><span class="big">PIP 1</span></div>
+    <div class="strip" id="strip-p1"></div>
+  </div>
+
+  <!-- LINHA 3: PIP 2 -->
+  <div class="row">
+    <div class="row-tag"><span>LINHA 3</span><span class="big">PIP 2</span></div>
+    <div class="strip" id="strip-p2"></div>
+  </div>
+
+  <!-- LINHA 4: PIP 3 (com SHIFT -> PIP 4 / PIP 5) -->
+  <div class="row">
+    <div class="row-tag">
+      <span>LINHA 4</span><span class="big" id="p3-lbl">PIP 3</span>
+      <button class="shift" id="shift">SHIFT ▸</button>
+    </div>
+    <div class="strip" id="strip-p3"></div>
+  </div>
+
+</div>
 
 <div id="toast"></div>
 
-<!-- CONTEXT MENU -->
-<div id="ctx">
-  <div class="ctx-item" onclick="ctxCarregarWs('w1')">↓ Carregar no Workspace 1</div>
-  <div class="ctx-item" onclick="ctxCarregarWs('w2')">↓ Carregar no Workspace 2</div>
-  <div class="ctx-item danger" onclick="ctxEsconder()">✕ Esconder da faixa</div>
-</div>
-
-<!-- MODAIS -->
-<div class="mov" id="m-proj">
-  <div class="modal">
-    <h3>Nova competição</h3>
-    <div class="mr"><label>Nome</label><input type="text" id="np-name" placeholder="Ex: Copa do Brasil 2025"/></div>
-    <div class="ma"><button class="btn ghost" onclick="cm('m-proj')">Cancelar</button><button class="btn acc" onclick="saveProj()">Criar</button></div>
-  </div>
-</div>
-<div class="mov" id="m-inp">
-  <div class="modal">
-    <h3>Adicionar input de sinal</h3>
-    <div class="mr"><label>Nome exato no vMix</label><input type="text" id="ni-name" placeholder="Ex: IN1 - Sinal Principal"/></div>
-    <div class="mr"><label>Nome curto (StreamDeck)</label><input type="text" id="ni-short" placeholder="Ex: IN1, REPLAY A, VT HOR" maxlength="12"/></div>
-    <div class="mr"><label>Tipo</label>
-      <select id="ni-type">
-        <option value="live">Ao vivo (câmera / sinal)</option>
-        <option value="vt">VT / Vídeo</option>
-        <option value="call">Call</option>
-        <option value="replay">Replay</option>
-      </select>
-    </div>
-    <div class="ma"><button class="btn ghost" onclick="cm('m-inp')">Cancelar</button><button class="btn acc" onclick="saveInp()">Adicionar</button></div>
-  </div>
-</div>
-<div class="mov" id="m-dev">
-  <div class="modal">
-    <h3>Acesso desenvolvedor</h3>
-    <div class="mr"><label>Senha</label><input type="password" id="dev-pw" placeholder="••••••" onkeydown="if(event.key==='Enter')checkDev()"/></div>
-    <div class="ma"><button class="btn ghost" onclick="cm('m-dev')">Cancelar</button><button class="btn acc" onclick="checkDev()">Entrar</button></div>
-  </div>
-</div>
-
-<!-- HEADER -->
-<div id="hdr">
-  <div class="logo">MultiTela<span>/</span>Controller</div>
-  <div class="hsep"></div>
-  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-    <div class="dot" id="dot"></div>
-    <span class="clbl" id="clbl">Desconectado</span>
-  </div>
-  <div style="flex:1"></div>
-  <span class="pc-badge" id="pc-badge" onclick="openPcSelect()" title="Clique para trocar o PC">🖥️ <span id="pc-name">—</span></span>
-  <!-- Campos ocultos mantidos pra compatibilidade com funções existentes -->
-  <input type="hidden" id="vmix-host" value="localhost:8088"/>
-  <input type="hidden" id="cfg-transp" value=""/>
-</div>
-
-<!-- TABS -->
-<div id="tabs">
-  <div class="tab active" onclick="goTab('sel')" id="tab-sel">Pacote Gráfico</div>
-  <div class="tab" onclick="goTab('live')" id="tab-live">Ao vivo</div>
-  <div class="tab" style="margin-left:auto;color:var(--text3)" onclick="om('m-dev')">⚙ Dev</div>
-</div>
-
-<div id="main">
-
-<!-- PACOTE GRÁFICO -->
-<div class="page active" id="page-sel">
-  <div id="screen-sel">
-    <div class="sel-title">Selecione o pacote gráfico</div>
-    <div class="pkg-grid" id="pkg-grid"></div>
-    <button class="btn pvwb" id="btn-usar" disabled onclick="usarPkg()">Ir ao vivo com este pacote →</button>
-  </div>
-</div>
-
-<!-- AO VIVO -->
-<div class="page" id="page-live">
-  <div class="live-wrap">
-
-    <!-- TABS DE WORKSPACE + GO -->
-    <div class="ws-tabs">
-      <button class="ws-tab ws-tab-1 active" id="ws-tab-1" onclick="setActiveWs('w1')">
-        <span class="ws-tab-num">①</span>
-        <span class="ws-tab-nm" id="ws-tab-1-nm">vazio</span>
-      </button>
-      <button class="ws-tab ws-tab-2" id="ws-tab-2" onclick="setActiveWs('w2')">
-        <span class="ws-tab-num">②</span>
-        <span class="ws-tab-nm" id="ws-tab-2-nm">vazio</span>
-      </button>
-      <button class="btn ws-go" id="ws-go-btn" onclick="applyActiveWs()">▶ GO 1</button>
-    </div>
-
-    <!-- WORKSPACE ATIVO -->
-    <div class="live-mons">
-      <div class="live-mon ws-mon ws-active" id="ws-mon"
-           ondragover="event.preventDefault();this.classList.add('drag-over')"
-           ondragleave="this.classList.remove('drag-over')"
-           ondrop="event.preventDefault();this.classList.remove('drag-over');handleActiveWsDrop(event)">
-        <div class="mon-body">
-          <img class="mon-prev" id="ws-prev" src="" alt=""/>
-          <div class="mon-ov" id="ws-ov"></div>
-          <div class="pvw-btns" id="ws-pip-btns"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FAIXA INFERIOR -->
-    <div id="tray-wrap">
-      <div id="tray-hd">
-        <span class="tray-ttl">Multitelas</span>
-        <span class="badge idle" id="tray-count">—</span>
-        <button class="btn xs ghost" id="btn-show-all" onclick="showAll()" style="display:none">Mostrar todas</button>
-        <div class="fsep"></div>
-        <button class="btn ghost sm" onclick="goTab('sel')" style="margin-left:auto">← Pacote</button>
-        
-      </div>
-      <div id="tray"></div>
-    </div>
-
-  </div>
-</div>
-
-<!-- DEV -->
-<div class="page" id="page-dev" style="display:none;flex-direction:column">
-  <div class="dev-hd">
-    <span class="dev-badge">Modo desenvolvedor</span>
-    <span style="font-size:12px;color:var(--text2)">Projetos, PNGs e configurações</span>
-    <button class="btn sm ghost" onclick="exitDev()" style="margin-left:auto">← Voltar</button>
-  </div>
-  <div class="scroll">
-    <div class="sec">
-      <div class="sec-hd"><span class="sec-ttl">📺 Setup no vMix</span></div>
-      <div class="sec-bd">
-        <div class="setup-card">
-          <div class="sc-title">Como configurar — faça isso uma vez por máquina</div>
-          <div class="setup-steps">
-            <div class="setup-step"><span class="step-num">1</span><div>No vMix, crie <b>2 inputs Colour transparentes</b> com os nomes <code>Colour PVW</code> e <code>Colour PGM</code>.</div></div>
-            <div class="setup-step"><span class="step-num">2</span><div>Crie <b>2 inputs GT Title</b> (com um único campo de imagem) e nomeie como configurado abaixo (default: <code>Multitela.gtzip PVW</code> e <code>Multitela.gtzip PGM</code>).</div></div>
-            <div class="setup-step"><span class="step-num">3</span><div>Em cada Colour, adicione o respectivo Multitela.gtzip como <b>Layer 10</b>.</div></div>
-            <div class="setup-step"><span class="step-num">4</span><div>Configure abaixo os nomes base e o campo de imagem do GT.</div></div>
-          </div>
-
-          <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--border);display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span class="clbl" style="min-width:120px">Base Colour:</span>
-              <input type="text" id="dev-transp" style="width:160px" placeholder="Colour"/>
-              <span style="font-size:11px;color:var(--text3)">→ <code>{base} PVW</code> / <code>{base} PGM</code></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span class="clbl" style="min-width:120px">Base GT Title:</span>
-              <input type="text" id="dev-gtbase" style="width:160px" placeholder="Multitela.gtzip"/>
-              <span style="font-size:11px;color:var(--text3)">→ <code>{base} PVW</code> / <code>{base} PGM</code></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span class="clbl" style="min-width:120px">Campo imagem GT:</span>
-              <input type="text" id="dev-gtfield" style="width:200px" placeholder="Image1.Source"/>
-              <span style="font-size:11px;color:var(--text3)">→ ex: <code>Image1.Source</code></span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span class="clbl" style="min-width:120px">Pasta raiz:</span>
-              <input type="text" id="dev-rootpath" style="width:300px" placeholder="D:\\PROJETOS VMIX PDS\\"/>
-              <span style="font-size:11px;color:var(--text3)">→ caminho fixo desta máquina</span>
-            </div>
-            <div style="display:flex;justify-content:flex-end">
-              <button class="btn sm" onclick="saveDevCfg()">✓ Salvar configurações</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="sec">
-      <div class="sec-hd"><span class="sec-ttl">Competições / Pacotes gráficos</span><button class="btn sm acc" onclick="om('m-proj')">+ Nova</button></div>
-      <div class="sec-bd"><div class="proj-grid" id="proj-grid"></div></div>
-    </div>
-    <div class="sec" id="sec-pngs" style="display:none">
-      <div class="sec-hd">
-        <span class="sec-ttl" id="pngs-ttl">Multitelas</span>
-        <button class="btn sm" onclick="document.getElementById('upng').click()">+ Upload PNG</button>
-        <input type="file" id="upng" accept="image/png" multiple style="display:none" onchange="hUpload(event)"/>
-      </div>
-      <div class="proj-folder-row">
-        <span class="clbl">📁 Pasta dos PNGs:</span>
-        <input type="text" id="proj-folder" placeholder="C:\\Multitelas\\TENIS\\"
-               oninput="setProjFolder(this.value)"/>
-        <span class="clbl-hint" id="proj-folder-status">—</span>
-      </div>
-      <div class="sec-bd">
-        <div class="drop-zone" id="dz"
-          ondragover="event.preventDefault();this.classList.add('drag')"
-          ondragleave="this.classList.remove('drag')"
-          ondrop="hDrop(event)">Arraste a pasta da competição ou PNGs individuais</div>
-        <div class="png-grid" id="png-grid"></div>
-      </div>
-    </div>
-    <div class="sec">
-      <div class="sec-hd">
-        <span class="sec-ttl">Inputs de sinal</span>
-        <button class="btn sm" onclick="om('m-inp')">+ Adicionar</button>
-        <button class="btn sm" onclick="importVmix()">Importar do vMix</button>
-        <button class="btn sm ghost" onclick="restoreDefaultInputs()" title="Adiciona os 10 inputs padrão (IN 1-5, conteúdos, replays)">↺ Restaurar padrão</button>
-        <button class="btn sm ghost" onclick="sortInputs()" title="Ordena: INs → VTs → Replays">↕ Reordenar</button>
-      </div>
-      <div class="sec-bd"><div id="inp-list"></div></div>
-    </div>
-    <div class="sec">
-      <div class="sec-hd"><span class="sec-ttl">Senha dev</span></div>
-      <div class="sec-bd" style="display:flex;gap:8px;align-items:center">
-        <input type="password" id="new-pw" placeholder="Nova senha" style="width:200px"/>
-        <button class="btn sm acc" onclick="savePw()">Salvar</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-</div><!-- /main -->
-
-<div id="ftr">
-  <div class="fi">Pacote: <span id="ft-proj">—</span></div>
-  <div class="ftsep"></div>
-  <div class="fi">Multitelas: <span id="ft-mts">0</span></div>
-  <div class="ftsep"></div>
-  <div class="fi">Inputs: <span id="ft-inp">0</span></div>
-  <div class="ftsep"></div>
-  <div class="fi" id="ft-vmix">vMix: desconectado</div>
-</div>
-
 <script>
-// ════════════════════════════════════════
-// NTFY — canal de sync com o output.html
-// ════════════════════════════════════════
-// Gera um canal único por instalação, salvo no localStorage
+/* ═══════════════════ CONFIG ═══════════════════
+   Edite aqui se mudar nomes, layers ou ordem dos pips.
+   - "title"  : nome EXATO do input no vMix (cuidado com espaços no final!)
+   - "layers" : layers XML dos pips (Overlay5..8 no arquivo .vmix).
+                A API do vMix usa índice 1-10, então o app soma +1 sozinho.
+   - "pips"   : geometria normalizada [x,y,w,h] em ordem de leitura
+                (esquerda→direita, cima→baixo). pips[i] usa layers[i].
+   - "sinal"  : área central fixa (não cortável), só desenho.            */
 
-// ════════════════════════════════════════
-// OUTPUT URL
-// ════════════════════════════════════════
-
-
-
-
-
-
-
-
-// ════════════════════════════════════════
-// ESTADO
-// ════════════════════════════════════════
-const S = {
-  host: 'localhost:8088',
-  connected: false,
-  projects: [],
-  inputs: [],
-  activeProj: null,
-  playlist: [],    // ordem das multitelas na faixa
-  hidden: [],      // ids de multitelas escondidas
-  liveIdx: -1,
-  // Workspaces independentes: cada um pode ter sua multitela configurada
-  // workspaces.w1 vai para o Output 1, workspaces.w2 vai para o Output 2
-  workspaces: { w1: null, w2: null },
-  // Workspace selecionado (para qual lado os botões IN apontam)
-  activeWs: 'w1',
-  devPass: 'cazetv2025',
-  cfg: { transp: 'Colour', browser: '' }
+const PCS = {
+  'PD2': '10.10.0.102', 'PD3': '10.10.0.103', 'PD4': '10.10.0.104',
+  'PD5': '10.10.0.105', 'PD6': '10.10.0.106',
 };
 
-// ════════════════════════════════════════
-// PERSISTÊNCIA
-// ════════════════════════════════════════
-function save() {
+const MULTITELAS = [
+  { title: '50:50 COPA MONTADO', label: '50:50', layers: [7,8],
+    pips: [[.010,.260,.485,.480],[.505,.260,.485,.480]] },
+
+  { title: '80:20 COPA MONTADO', label: '80:20', layers: [7,8],
+    pips: [[.010,.110,.760,.780],[.780,.560,.210,.330]] },
+
+  { title: '60:40 COPA MONTADO', label: '60:40', layers: [7,8],
+    pips: [[.010,.230,.580,.540],[.600,.230,.390,.540]] },
+
+  { title: '60:40+1 COPA MONTADO ', label: '60:40 +1', layers: [6,7,8],
+    pips: [[.010,.160,.580,.680],[.600,.160,.390,.400],[.600,.580,.390,.260]] },
+
+  { title: '60:40+2 COPA MONTADO ', label: '60:40 +2', layers: [5,6,7,8],
+    pips: [[.010,.160,.580,.680],[.600,.160,.390,.380],[.600,.560,.188,.280],[.800,.560,.190,.280]] },
+
+  { title: '60:40 +1 VERTICAL MONTADO', label: '60:40 +1 VERT', layers: [6,7,8],
+    pips: [[.010,.160,.560,.680],[.585,.160,.260,.680],[.860,.160,.130,.680]] },
+
+  { title: '2+ SINAL +2 MONTADO', label: '2+ SINAL +2', layers: [5,6,7,8],
+    sinal: [.200,.195,.600,.575],
+    pips: [[.010,.195,.180,.280],[.810,.195,.180,.280],[.010,.490,.180,.280],[.810,.490,.180,.280]] },
+
+  { title: '1+ SINAL +1 MONTADO', label: '1+ SINAL +1', layers: [7,8],
+    sinal: [.200,.195,.600,.575],
+    pips: [[.010,.195,.180,.575],[.810,.195,.180,.575]] },
+
+  { title: '3+ SINAL +1 MONTADO', label: '3+ SINAL +1', layers: [5,6,7,8],
+    sinal: [.200,.195,.600,.575],
+    pips: [[.010,.195,.180,.180],[.810,.195,.180,.575],[.010,.393,.180,.180],[.010,.590,.180,.180]] },
+
+  { title: '2+ SINAL +1 MONTADO', label: '2+ SINAL +1', layers: [6,7,8],
+    sinal: [.200,.195,.600,.575],
+    pips: [[.010,.195,.180,.280],[.810,.195,.180,.575],[.010,.490,.180,.280]] },
+];
+
+const INPUTS = [
+  { title: 'IN 1',                 label: 'IN 1' },
+  { title: 'IN 2',                 label: 'IN 2' },
+  { title: 'IN 3',                 label: 'IN 3' },
+  { title: 'IN 4',                 label: 'IN 4' },
+  { title: 'IN 5',                 label: 'IN 5' },
+  { title: 'CALL 1',               label: 'CALL 1' },
+  { title: 'CALL 2',               label: 'CALL 2' },
+  { title: 'CONTEÚDO HORIZONTAL',  label: 'CONT HOR' },
+  { title: 'ADBREAK MONTADO',      label: 'ADBREAK' },
+  { title: 'CONTEUDO VERTICAL',    label: 'CONT VER' },
+  { title: 'replay',               label: 'REPLAY A' },
+  { title: 'replay - B',           label: 'REPLAY B' },
+];
+
+/* ═══════════════════ STATE ═══════════════════ */
+let pc       = localStorage.getItem('mc_pc') || 'PD2';
+let selMT    = null;                       // index em MULTITELAS
+let shiftPos = 0;                          // 0=PIP3  1=PIP4  2=PIP5
+let assign   = {};                         // { mtIndex: { pipNum: inputTitle } }
+try { assign = JSON.parse(localStorage.getItem('mc_assign') || '{}'); } catch(e) {}
+let history  = [];                         // [{kind:'ar'|'pl', mt:index, pips:{...}, time:'HH:MM:SS'}]
+try { history = JSON.parse(localStorage.getItem('mc_hist') || '[]'); } catch(e) {}
+let ipOver   = {};                         // { 'PD2': '192.168.0.50', ... } — overrides dos presets
+try { ipOver = JSON.parse(localStorage.getItem('mc_ips') || '{}'); } catch(e) {}
+
+const $ = id => document.getElementById(id);
+const ipOf = k => ipOver[k] || PCS[k];
+const api = () => `http://${ipOf(pc)}:8088/api/?`;
+
+/* ═══════════════════ vMIX ═══════════════════ */
+async function vmix(params) {
+  const url = api() + params;
   try {
-    // Limpar dataUrl dos PNGs antes de persistir (muito grande pro localStorage)
-    // O dataUrl é mantido só em memória; thumb é o que persiste pra preview
-    const projectsLite = (S.projects || []).map(p => ({
-      ...p,
-      pngs: (p.pngs || []).map(pg => {
-        const { dataUrl, ...rest } = pg;  // remove dataUrl
-        return rest;
-      })
-    }));
-    // Idem playlist (cada item carrega dataUrl pra preview ao vivo)
-    const playlistLite = (S.playlist || []).map(item => {
-      const { dataUrl, ...rest } = item;
-      return rest;
-    });
-    // Idem workspaces
-    const workspacesLite = {
-      w1: S.workspaces?.w1 ? (() => { const { dataUrl, ...r } = S.workspaces.w1; return r; })() : null,
-      w2: S.workspaces?.w2 ? (() => { const { dataUrl, ...r } = S.workspaces.w2; return r; })() : null,
-    };
-
-    const payload = {
-      projects: projectsLite,
-      inputs: S.inputs,
-      devPass: S.devPass,
-      cfg: S.cfg,
-      host: S.host,
-      hidden: S.hidden,
-      playlist: playlistLite,
-      workspaces: workspacesLite,
-      activeWs: S.activeWs,
-      activeProjId: S.activeProj ? S.activeProj.id : null,
-      pcName: S.pcName,
-      _pcReverted: S._pcReverted,
-    };
-    const json = JSON.stringify(payload);
-    localStorage.setItem('mtc_v4', json);
-  } catch(e){
-    console.error('[save] FALHA ao salvar:', e);
-    alert('ERRO ao salvar: ' + e.message + '\n\nO localStorage tem limite de ~5MB. Tente excluir competições que não usa mais.');
-  }
-}
-// Lista padrão de inputs do vMix (sempre disponíveis no app)
-function getDefaultInputs() {
-  return [
-    { id: 'def-in1',   label: 'IN 1',              name: 'IN 1',         kind: 'live' },
-    { id: 'def-in2',   label: 'IN 2',              name: 'IN 2',         kind: 'live' },
-    { id: 'def-in3',   label: 'IN 3',              name: 'IN 3',         kind: 'live' },
-    { id: 'def-in4',   label: 'IN 4',              name: 'IN 4',         kind: 'live' },
-    { id: 'def-in5',   label: 'IN 5',              name: 'IN 5',         kind: 'live' },
-    { id: 'def-call1', label: 'CALL 1',            name: 'CALL 1',       kind: 'live' },
-    { id: 'def-call2', label: 'CALL 2',            name: 'CALL 2',       kind: 'live' },
-    { id: 'def-cnh',   label: 'CONTEÚDO HORIZONTAL', name: 'CONTEÚDO HOR', kind: 'vt' },
-    { id: 'def-adb',   label: 'ADBREAK MONTADO',     name: 'ADBREAK MONT', kind: 'vt' },
-    { id: 'def-cnv',   label: 'CONTEUDO VERTICAL',   name: 'CONTEUDO VER', kind: 'vt' },
-    { id: 'def-rpa',   label: 'replay - A',          name: 'replay',       kind: 'replay' },
-    { id: 'def-rpb',   label: 'replay - B',          name: 'replay - B',   kind: 'replay' },
-  ];
-}
-
-function restoreDefaultInputs() {
-  const currentCount = (S.inputs || []).length;
-  if (!confirm(`Substituir TODOS os inputs?\n\nSerão apagados os ${currentCount} inputs atuais e adicionados os 12 padrões (IN 1-5, CALL 1-2, conteúdos, replays).\n\nIsso NÃO afeta as multitelas, apenas a lista de inputs disponíveis.`)) return;
-  S.inputs = getDefaultInputs();
-  save();
-  renderInps();
-  toast('12 inputs padrão restaurados', 'ok');
-}
-
-function loadSt() {
-  try {
-    const raw = localStorage.getItem('mtc_v4');
-    if (!raw) { console.log('[loadSt] localStorage vazio (primeira execução)'); return; }
-    const d = JSON.parse(raw);
-    if (d.projects)   S.projects   = d.projects;
-    if (d.inputs)     S.inputs     = d.inputs;
-    // Se inputs vazio (primeira vez ou foi limpo), pré-popular com os padrões
-    if (!S.inputs || !S.inputs.length) {
-      S.inputs = getDefaultInputs();
-    }
-    if (d.devPass)    S.devPass    = d.devPass;
-    if (d.cfg)        S.cfg        = { ...S.cfg, ...d.cfg };
-    if (d.host)       S.host       = d.host;
-    if (d.hidden)     S.hidden     = d.hidden;
-    if (d.playlist)   S.playlist   = d.playlist;
-    if (d.workspaces) S.workspaces = d.workspaces;
-    if (d.activeWs)   S.activeWs   = d.activeWs;
-    if (d.pcName)     S.pcName     = d.pcName;
-    if (d._pcReverted) S._pcReverted = d._pcReverted;
-    // Restaurar projeto ativo via ID
-    if (d.activeProjId && S.projects.length) {
-      S.activeProj = S.projects.find(p => p.id === d.activeProjId) || null;
-    }
-    console.log(`[loadSt] Restaurado: ${S.projects.length} projetos, playlist ${S.playlist?.length||0}, PC ${S.pcName||'-'}`);
-  } catch(e){
-    console.error('[loadSt] FALHA ao carregar:', e);
-  }
-}
-
-
-// ════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════
-function toast(m,t='',d=2500){const el=document.getElementById('toast');el.textContent=m;el.className='show '+t;clearTimeout(el._t);el._t=setTimeout(()=>el.className='',d)}
-function om(id){document.getElementById(id).classList.add('show')}
-function cm(id){document.getElementById(id).classList.remove('show')}
-function uid(){return Math.random().toString(36).slice(2,9)}
-function tc(t){return t==='replay'?'replay':t==='vt'?'vt':t==='call'?'call':'live'}
-function delay(ms){return new Promise(r=>setTimeout(r,ms))}
-
-function goTab(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const pg=document.getElementById('page-'+name);
-  const tb=document.getElementById('tab-'+name);
-  if(pg){pg.style.display='';pg.classList.add('active')}
-  if(tb)tb.classList.add('active');
-  if(name==='live')renderLive();
-  if(name==='sel')renderPkg();
-}
-
-function saveDevCfg() {
-  S.cfg = S.cfg || {};
-  const t = document.getElementById('dev-transp');
-  const g = document.getElementById('dev-gtbase');
-  const f = document.getElementById('dev-gtfield');
-  const r = document.getElementById('dev-rootpath');
-  if (t) S.cfg.transp   = (t.value.trim() || 'Colour');
-  if (g) S.cfg.gtBase   = (g.value.trim() || 'Multitela.gtzip');
-  if (f) S.cfg.gtField  = (f.value.trim() || 'Image1.Source');
-  if (r) {
-    let rp = r.value.trim();
-    if (rp && !rp.endsWith('\\') && !rp.endsWith('/')) rp += '\\';
-    S.cfg.rootPath = rp;
-  }
-  save();
-  toast('Configurações salvas', 'ok');
-}
-
-function loadDevCfg() {
-  const t = document.getElementById('dev-transp');
-  const g = document.getElementById('dev-gtbase');
-  const f = document.getElementById('dev-gtfield');
-  const r = document.getElementById('dev-rootpath');
-  if (t) t.value = (S.cfg && S.cfg.transp)   || 'Colour';
-  if (g) g.value = (S.cfg && S.cfg.gtBase)   || 'Multitela.gtzip';
-  if (f) f.value = (S.cfg && S.cfg.gtField)  || 'Image1.Source';
-  if (r) r.value = (S.cfg && S.cfg.rootPath) || 'D:\\PROJETOS VMIX PDS\\';
-}
-
-// Compat: nomes antigos chamando os novos
-function saveDevTransp() { saveDevCfg(); }
-function loadDevTransp() { loadDevCfg(); }
-
-function loadCfgFields(){
-  document.getElementById('vmix-host').value = S.host;
-  document.getElementById('cfg-transp').value = S.cfg.transp || '';
-  const bEl = document.getElementById('cfg-browser');
-  if (bEl) bEl.value = S.cfg.browser || '';
-}
-function saveCfgInline(){
-  S.cfg.transp  = document.getElementById('cfg-transp').value.trim()  || S.cfg.transp;
-  const bEl = document.getElementById('cfg-browser');
-  if (bEl) S.cfg.browser = bEl.value.trim() || S.cfg.browser;
-  save(); toast('Configuração salva', 'ok');
-}
-
-// ════════════════════════════════════════
-// VMIX API
-// ════════════════════════════════════════
-async function doConnect() {
-  S.host = document.getElementById('vmix-host').value.trim();
-  setDot('', 'Conectando...');
-  try {
-    const r = await fetch(`http://${S.host}/api`, { cache: 'no-store' });
-    if (!r.ok) throw new Error();
-    S.connected = true;
-    setDot('on', 'Conectado');
-    document.getElementById('ft-vmix').textContent = 'vMix: ' + S.host;
-    save(); toast('vMix conectado', 'ok');
-    // Importação removida do auto-connect — usar botão manual no Dev se necessário
+    await fetch(url, { mode: 'no-cors' });
+    setStatus(true);
+    return true;
   } catch(e) {
-    setDot('err', 'Erro');
-    toast('Não foi possível conectar ao vMix', 'err');
-  }
-}
-function setDot(cls, label) {
-  document.getElementById('dot').className = 'dot ' + cls;
-  document.getElementById('clbl').textContent = label;
-}
-// vCmd: retorna o objeto descritor do comando (NÃO executa)
-// Use vMulti(cmds) para executar uma lista de comandos em sequência
-function vCmd(fn, p={}) {
-  return { fn, p };
-}
-
-// Executa um único comando direto no vMix
-async function vExec(cmd) {
-  const qs = new URLSearchParams({ Function: cmd.fn, ...cmd.p });
-  try {
-    await fetch(`http://${S.host}/api/?${qs}`, { mode: 'cors' });
-  } catch(e) { console.warn('[vExec]', cmd.fn, e); }
-}
-
-// Executa uma lista de comandos em sequência rápida
-async function vMulti(cmds) {
-  if (!Array.isArray(cmds) || !cmds.length) return;
-  // Disparar em paralelo (vMix aguenta) — mais rápido que sequencial
-  await Promise.all(cmds.map(c => vExec(c)));
-}
-async function importVmix(silent=false) {
-  // Se não é silent (chamada manual pelo botão), perguntar antes
-  if (!silent) {
-    const currentCount = (S.inputs || []).length;
-    if (currentCount > 0) {
-      if (!confirm(`Importar inputs do vMix?\n\nOs ${currentCount} inputs atuais serão SUBSTITUÍDOS pelos inputs que estão no vMix agora.\n\nTem certeza?`)) return;
-    }
-  }
-  if (!S.connected) { if (!silent) toast('Conecte ao vMix primeiro', 'warn'); return; }
-  try {
-    const r   = await fetch(`http://${S.host}/api`, { cache: 'no-store' });
-    const txt = await r.text();
-    const doc = new DOMParser().parseFromString(txt, 'text/xml');
-    let added = 0;
-
-    doc.querySelectorAll('vmix > inputs > input').forEach(n => {
-      const title = n.getAttribute('title') || '';
-      const type  = n.getAttribute('type')  || '';
-
-      // Capture  = Decklinks (IN 1-6 etc)
-      // Camera   = webcams genéricas
-      // NDI/SRT/Stream = sinais de rede
-      // VideoCall = vMix Call
-      // VideoList = listas de vídeo/adbreak
-      // Replay   = Replay A (canal principal)
-      // ReplayPreview = Replay B (canal preview)
-      const isCall   = type === 'VideoCall';
-      const isCam    = ['Capture','Camera','NDI','SRT','Stream'].includes(type);
-      const isList   = type === 'VideoList';
-      const isReplay = ['Replay','ReplayPreview'].includes(type);
-
-      if (!title || (!isCam && !isList && !isReplay && !isCall)) return;
-      if (S.inputs.find(i => i.name === title)) return;
-
-      let itype = 'live';
-      if (isReplay) itype = 'replay';
-      else if (isList) itype = 'vt';
-      else if (isCall) itype = 'call';
-
-      const short = n.getAttribute('shortTitle') || title;
-      // Limpa o shortTitle para ficar compacto no botão (máx 12 chars)
-      const shortName = short.length > 12 ? short.slice(0,12) : short;
-      S.inputs.push({ id: uid(), name: title, shortName, type: itype });
-      added++;
-    });
-
-    save(); renderInps();
-    if (!silent || added > 0) toast(added + ' inputs importados', 'ok');
-    else if (!silent) toast('Nenhum input novo encontrado', 'warn');
-  } catch(e) { if (!silent) toast('Erro ao importar', 'err'); }
-}
-
-// ════════════════════════════════════════
-// ANÁLISE PNG
-// ════════════════════════════════════════
-async function analyzePng(dataUrl, alphaThreshold = 32, minAreaPct = 0.5) {
-  // alphaThreshold: pixels com alpha < threshold são considerados transparentes
-  // minAreaPct: área mínima do pip em % da imagem (filtra ruídos)
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      // Desenhar sempre em 1920x1080 para que as coords já saiam normalizadas
-      // independente do tamanho original do PNG
-      const OUT_W = 1920, OUT_H = 1080;
-      const cvs = document.createElement('canvas');
-      cvs.width = OUT_W; cvs.height = OUT_H;
-      const ctx = cvs.getContext('2d');
-      ctx.clearRect(0, 0, OUT_W, OUT_H);
-      ctx.drawImage(img, 0, 0, OUT_W, OUT_H);
-      const data = ctx.getImageData(0, 0, OUT_W, OUT_H).data;
-
-      // Mapa de pixels transparentes
-      const tr  = new Uint8Array(OUT_W * OUT_H);
-      for (let i = 0; i < OUT_W * OUT_H; i++) {
-        tr[i] = data[i * 4 + 3] < alphaThreshold ? 1 : 0;
-      }
-
-      const vis = new Uint8Array(OUT_W * OUT_H);
-      const regs = [];
-      const minArea = (OUT_W * OUT_H) * (minAreaPct / 100);
-
-      // Flood fill 4-conectado com pilha iterativa
-      function fill(sx, sy) {
-        const stack = [sy * OUT_W + sx];
-        let minX = sx, maxX = sx, minY = sy, maxY = sy, cnt = 0;
-        while (stack.length) {
-          const idx = stack.pop();
-          if (vis[idx] || !tr[idx]) continue;
-          vis[idx] = 1; cnt++;
-          const x = idx % OUT_W, y = (idx / OUT_W) | 0;
-          if (x < minX) minX = x; if (x > maxX) maxX = x;
-          if (y < minY) minY = y; if (y > maxY) maxY = y;
-          if (x + 1 < OUT_W)  stack.push(idx + 1);
-          if (x - 1 >= 0)     stack.push(idx - 1);
-          if (y + 1 < OUT_H)  stack.push(idx + OUT_W);
-          if (y - 1 >= 0)     stack.push(idx - OUT_W);
-        }
-        return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, count: cnt };
-      }
-
-      for (let y = 0; y < OUT_H; y++) {
-        for (let x = 0; x < OUT_W; x++) {
-          const idx = y * OUT_W + x;
-          if (tr[idx] && !vis[idx]) {
-            const r = fill(x, y);
-            if (r.count >= minArea && r.w > 20 && r.h > 20) regs.push(r);
-          }
-        }
-      }
-
-      // Normalizar para 0-1 (já estão em 1920x1080)
-      const pips = regs
-        .map(r => ({ x: r.x / OUT_W, y: r.y / OUT_H, w: r.w / OUT_W, h: r.h / OUT_H }))
-        .sort((a, b) => {
-          // Ordenar: cima→baixo, esquerda→direita (em blocos de linha)
-          const rowA = Math.round(a.y * 20);
-          const rowB = Math.round(b.y * 20);
-          return rowA !== rowB ? rowA - rowB : a.x - b.x;
-        });
-
-      resolve(pips);
-    };
-    img.src = dataUrl;
-  });
-}
-// Detecta o modo padrão de um pip pela posição:
-// Pip que toca bordas da tela → cover (sinal pode vazar e gráfico não mascara fora)
-// Pip interno → fit (gráfico mascara o entorno naturalmente)
-function defaultCropMode(pip, srcAR) {
-  const EPS = 0.01;
-  const touchesEdge =
-    pip.x <= EPS ||
-    pip.y <= EPS ||
-    (pip.x + pip.w) >= (1 - EPS) ||
-    (pip.y + pip.h) >= (1 - EPS);
-  return touchesEdge ? 'cover' : 'fit';
-}
-
-function pipToVmix(pip, bleed, cropMode, srcAR) {
-  // Sistema vMix:
-  //   zoom=1 → espaço 16:9 (1920x1080) ocupa toda a tela
-  //   PanX, PanY: range -1..+1, sinal invertido em Y (cima = positivo)
-  //
-  // Como o sinal preenche o espaço (depende do AR do sinal):
-  //   srcAR >= 16/9 → sinal preenche largura: sW=zoom,        sH=zoom/srcAR
-  //   srcAR <  16/9 → sinal preenche altura:  sW=zoom*srcAR,  sH=zoom
-  //
-  // cropMode:
-  //   'fit'   → zoom NATURAL (preenche a dimensão correspondente ao AR do pip)
-  //             Pode deixar transparência ao redor (gráfico mascara).
-  //             Sem crop.
-  //   'cover' → zoom COVER REAL (preenche AMBAS dimensões do pip,
-  //             cortando o excedente). Use quando o pip toca as bordas
-  //             da tela e o sinal pode vazar pra fora dela.
-
-  const CANVAS_AR = 16 / 9;
-  const SRC_AR    = (typeof srcAR === 'number' && srcAR > 0) ? srcAR : CANVAS_AR;
-  const BLEED     = (typeof bleed === 'number' && bleed >= 1) ? bleed : 1.04;
-  const mode      = cropMode === 'cover' ? 'cover' : 'fit';
-
-  // Como o sinal preenche o espaço
-  let sW_per_zoom, sH_per_zoom;
-  if (SRC_AR >= CANVAS_AR) {
-    sW_per_zoom = 1;
-    sH_per_zoom = 1 / SRC_AR;
-  } else {
-    sH_per_zoom = 1;
-    sW_per_zoom = SRC_AR;
-  }
-
-  // Cálculo do zoom
-  let zoom;
-  if (mode === 'cover') {
-    // COVER: o sinal cobre 100% do pip (ambas dimensões)
-    const zoomByW = pip.w / sW_per_zoom;
-    const zoomByH = pip.h / sH_per_zoom;
-    zoom = Math.max(zoomByW, zoomByH) * BLEED;
-  } else {
-    // FIT: zoom natural (preenche só a dimensão "natural" do AR do sinal)
-    if (SRC_AR >= CANVAS_AR) zoom = pip.w * BLEED;
-    else                     zoom = pip.h * BLEED;
-  }
-
-  const sinalW = zoom * sW_per_zoom;
-  const sinalH = zoom * sH_per_zoom;
-
-  // Crop apenas em modo cover, e só nas dimensões onde o sinal excede o pip
-  let cropFracX = 0, cropFracY = 0;
-  if (mode === 'cover') {
-    if (sinalW > pip.w) cropFracX = (sinalW - pip.w) / (2 * sinalW);
-    if (sinalH > pip.h) cropFracY = (sinalH - pip.h) / (2 * sinalH);
-  }
-
-  // Centro do pip → coordenadas Pan vMix
-  const cx   = pip.x + pip.w / 2;
-  const cy   = pip.y + pip.h / 2;
-  const panX = (cx - 0.5) * 2;
-  const panY = (0.5 - cy) * 2;
-
-  const r4 = v => Math.round(v * 10000) / 10000;
-  return {
-    zoom:   r4(zoom),
-    panX:   r4(panX),
-    panY:   r4(panY),
-    cropX1: r4(cropFracX),
-    cropX2: r4(1 - cropFracX),
-    cropY1: r4(cropFracY),
-    cropY2: r4(1 - cropFracY)
-  };
-}
-
-
-// Pre-comprime WebP no upload — no CUT ja esta pronto, zero espera de compressao
-
-
-
-
-
-
-
-
-
-
-// ════════════════════════════════════════
-// DEV
-// ════════════════════════════════════════
-function checkDev() {
-  if (document.getElementById('dev-pw').value === S.devPass) {
-    cm('m-dev'); document.getElementById('dev-pw').value = '';
-    enterDev();
-  } else toast('Senha incorreta', 'err');
-}
-function enterDev() {
-  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display='none'; });
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  const pg = document.getElementById('page-dev');
-  pg.style.display='flex'; pg.classList.add('active');
-  renderProjs(); renderInps(); 
-}
-function exitDev() { document.getElementById('page-dev').style.display='none'; goTab('sel'); }
-function savePw() {
-  const pw = document.getElementById('new-pw').value.trim();
-  if (!pw) { toast('Informe a senha','warn'); return; }
-  S.devPass = pw; save(); document.getElementById('new-pw').value='';
-  toast('Senha atualizada','ok');
-}
-
-// ════════════════════════════════════════
-// PROJETOS
-// ════════════════════════════════════════
-function renderProjs() {
-  const g = document.getElementById('proj-grid');
-  g.innerHTML = '';
-  S.projects.forEach(p => {
-    const c = document.createElement('div');
-    c.className = 'proj-card' + (S.activeProj?.id===p.id?' sel':'');
-    c.innerHTML = `
-      <button class="proj-del" title="Excluir competição" onclick="event.stopPropagation();rmProj('${p.id}')">✕</button>
-      <div class="proj-nm">${p.name}</div>
-      <div class="proj-mt">${p.pngs.length} multitela${p.pngs.length!==1?'s':''}</div>
-    `;
-    c.onclick = () => selProj(p.id);
-    g.appendChild(c);
-  });
-  const a = document.createElement('div');
-  a.className='proj-card proj-new'; a.textContent='+';
-  a.onclick = () => om('m-proj');
-  g.appendChild(a);
-}
-
-function rmProj(id) {
-  const p = S.projects.find(x => x.id === id);
-  if (!p) return;
-  if (!confirm(`Excluir a competição "${p.name}"?\nEsta ação não pode ser desfeita.`)) return;
-  S.projects = S.projects.filter(x => x.id !== id);
-  // Se o projeto ativo era esse, limpar
-  if (S.activeProj?.id === id) {
-    S.activeProj = S.projects[0] || null;
-  }
-  // Limpar playlist se estava usando esse projeto
-  if (S.playlist && S.playlist.length && S.playlist[0].projId === id) {
-    S.playlist = [];
-    S.workspaces = { w1: null, w2: null };
-  }
-  save();
-  renderProjs();
-  renderPngs();
-  renderPkg();
-  updFt();
-  toast('Competição excluída', 'ok');
-}
-function saveProj() {
-  const n = document.getElementById('np-name').value.trim();
-  if (!n) { toast('Informe o nome','warn'); return; }
-  const p = { id:uid(), name:n, pngs:[] };
-  S.projects.push(p); save();
-  cm('m-proj'); document.getElementById('np-name').value='';
-  renderProjs(); selProj(p.id);
-}
-function selProj(id) {
-  S.activeProj = S.projects.find(p=>p.id===id);
-  renderProjs();
-  document.getElementById('sec-pngs').style.display='';
-  document.getElementById('pngs-ttl').textContent='Multitelas — '+S.activeProj.name;
-  renderPngs(); updFt();
-}
-
-// ════════════════════════════════════════
-// PNGs
-// ════════════════════════════════════════
-function renderPngs() {
-  loadProjFolder();
-  const g = document.getElementById('png-grid');
-  g.innerHTML = '';
-  if (!S.activeProj) return;
-  S.activeProj.pngs.forEach(png => {
-    const c = document.createElement('div');
-    c.className = 'png-card';
-    const pt = png.pips ? `${png.pips.length} pip${png.pips.length!==1?'s':''}` : 'Analisando...';
-    const pathClass  = png.path ? 'path-ok' : 'path-warn';
-    const pathTitle  = png.path ? png.path : 'Defina o caminho do PNG no PC';
-    c.innerHTML = `
-      <img class="png-thumb" src="${png.thumb || png.dataUrl || ''}" style="cursor:pointer" onclick="openPipEditor('${png.id}')"/>
-      <div class="png-info">
-        <span class="png-nm">${png.name}</span>
-        <span class="pip-cnt ${png.pips?'':'an'}" style="cursor:pointer" onclick="openPipEditor('${png.id}')">${pt}</span>
-        <button class="btn xs ghost" title="Editar pips manualmente" onclick="openPipEditor('${png.id}')">✎</button>
-        <button class="btn xs ghost" onclick="rmPng('${png.id}',event)">✕</button>
-      </div>
-      <div class="png-path-row ${pathClass}" title="${pathTitle}">
-        <input type="text" class="png-path-input" value="${(png.path||'').replace(/"/g,'&quot;')}"
-               placeholder="C:\\caminho\\multitela.png"
-               oninput="setPngPath('${png.id}', this.value)"/>
-        <button class="btn xs" onclick="testPngPath('${png.id}')" title="Testar caminho no vMix (envia SetImage no PVW)">▶ testar</button>
-      </div>`;
-    g.appendChild(c);
-  });
-  updFt();
-}
-// ═══ Seleção de PC ═══
-function openPcSelect() {
-  const ov = document.getElementById('pc-select-overlay');
-  if (!ov) { console.error('[openPcSelect] elemento pc-select-overlay NÃO ENCONTRADO'); alert('Erro: modal de PC não existe no HTML'); return; }
-  ov.style.display = 'flex';
-  ov.style.position = 'fixed';
-  ov.style.top = '0';
-  ov.style.left = '0';
-  ov.style.width = '100vw';
-  ov.style.height = '100vh';
-  ov.style.zIndex = '99999';
-  ov.style.background = 'rgba(0,0,0,0.8)';
-  ov.style.alignItems = 'center';
-  ov.style.justifyContent = 'center';
-  console.log('[openPcSelect] Modal aberto');
-}
-
-function closePcSelect() {
-  document.getElementById('pc-select-overlay').style.display = 'none';
-}
-
-function selectPc(pc) {
-  S.pcName = pc;
-  // Auto-setar IP do vMix correspondente
-  const newHost = pcToVmixHost(pc);
-  if (newHost) {
-    S.host = newHost;
-    const hostInput = document.getElementById('vmix-host');
-    if (hostInput) hostInput.value = newHost;
-  }
-  save();
-  updatePcBadge();
-  closePcSelect();
-  // Auto-conectar no vMix do PC selecionado
-  if (newHost) {
-    setTimeout(() => { if (typeof doConnect === 'function') doConnect(); }, 200);
-  }
-  toast('PC: ' + pc + ' → ' + newHost, 'ok');
-}
-
-function updatePcBadge() {
-  const el = document.getElementById('pc-name');
-  if (el) el.textContent = S.pcName || 'definir';
-  const badge = document.getElementById('pc-badge');
-  if (badge) {
-    badge.style.borderColor = S.pcName ? '' : 'var(--accent)';
-    badge.title = S.pcName
-      ? `${S.pcName} → vMix ${pcToVmixHost(S.pcName)}\nClique para trocar`
-      : 'Definir computador';
+    setStatus(false);
+    toast('Falha ao falar com o vMix (' + pc + ')', true);
+    return false;
   }
 }
 
-function ensurePcSelected() {
-  // Valida: precisa ser PD2-PD6 (formato esperado)
-  const valid = /^PD[2-6]$/.test(S.pcName || '');
-  console.log('[ensurePcSelected] S.pcName atual:', S.pcName, 'valid:', valid);
-  if (!valid) {
-    if (S.pcName) {
-      console.log('[ensurePcSelected] PC inválido:', S.pcName, '— forçando modal');
-      S.pcName = '';
-    }
-    setTimeout(() => {
-      console.log('[ensurePcSelected] Chamando openPcSelect()');
-      openPcSelect();
-    }, 200);
-  }
-}
-// Expor globalmente para chamar do console
-window.openPcSelect = openPcSelect;
-window.forceReset = function() {
-  if (confirm('Apagar TUDO e recomeçar?')) {
-    localStorage.clear();
-    location.reload();
-  }
-};
-
-async function testPngPath(pngId) {
-  if (!S.connected) { alert('Conecte ao vMix primeiro'); return; }
-  if (!S.activeProj) return;
-  const png = S.activeProj.pngs.find(p => p.id === pngId);
-  if (!png) return;
-  if (!png.path) { alert('Caminho vazio'); return; }
-
-  const baseGT    = (S.cfg.gtBase || 'Multitela.gtzip').trim();
-  const fieldName = (S.cfg.gtField || 'Image1.Source').trim();
-  const gtIn      = baseGT + ' PVW';
-
-  // Montar URL completa do request
-  const resolvedPath = resolvePath(png.path);
-  const qs = new URLSearchParams({
-    Function: 'SetImage',
-    Input: gtIn,
-    SelectedName: fieldName,
-    Value: resolvedPath
-  });
-  const url = `http://${S.host}/api/?${qs}`;
-
-  // Fazer fetch e capturar resposta
-  let status = 'erro de conexão';
-  let respText = '';
-  try {
-    const r = await fetch(url, { mode: 'cors' });
-    status = r.status + ' ' + r.statusText;
-    respText = await r.text();
-  } catch(e) {
-    status = 'fetch error: ' + e.message;
-  }
-
-  // Mostrar tudo num alert
-  alert(
-    '═══ TESTE DE CAMINHO ═══\n\n' +
-    'INPUT vMix:\n' + gtIn + '\n\n' +
-    'CAMPO:\n' + fieldName + '\n\n' +
-    'CAMINHO DO PNG:\n' + png.path + '\n\n' +
-    'STATUS HTTP:\n' + status + '\n\n' +
-    'RESPOSTA:\n' + (respText.substring(0, 500) || '(vazio)') + '\n\n' +
-    'URL COMPLETA:\n' + url
-  );
+function setStatus(ok) {
+  $('dot').className = 'dot ' + (ok ? 'ok' : 'err');
+  $('st-txt').textContent = ok ? pc + ' · ' + ipOf(pc) : 'sem conexão';
 }
 
-function setProjFolder(folder) {
-  if (!S.activeProj) return;
-  S.activeProj.folderPath = folder.trim();
-  // Atualizar caminhos dos PNGs que estão usando o folder atual
-  // (apenas os que não foram editados manualmente, ou seja, que seguem o padrão antigo)
-  const oldFolder = S.activeProj._lastFolder || '';
-  S.activeProj.pngs.forEach(png => {
-    // Re-gera path se ele segue o padrão do folder antigo
-    const expectedOld = buildPngPath(oldFolder, png.name + '.png');
-    const expectedNew = buildPngPath(folder, png.name + '.png');
-    if (!png.path || png.path === expectedOld) {
-      png.path = expectedNew;
-    }
-  });
-  S.activeProj._lastFolder = folder.trim();
-  save();
-  renderPngs();
-  // Status visual
-  const st = document.getElementById('proj-folder-status');
-  if (st) st.textContent = folder.trim() ? '✓ aplicado' : '';
-}
-
-function loadProjFolder() {
-  const el = document.getElementById('proj-folder');
-  if (!el) return;
-  el.value = (S.activeProj && S.activeProj.folderPath) || '';
-  const st = document.getElementById('proj-folder-status');
-  if (st) st.textContent = el.value ? '✓ aplicado' : '';
-}
-
-function setPngPath(pngId, path) {
-  const proj = S.activeProj;
-  if (!proj) return;
-  const png = proj.pngs.find(p => p.id === pngId);
-  if (!png) return;
-  png.path = path.trim();
-  save();
-  // Atualiza visual do card sem re-render completo
-  const card = document.querySelector(`[data-png-id="${pngId}"]`);
-  // Simples: re-render
-  // (mantemos foco no input se possível)
-}
-
-async function hUpload(e) { await procPngs(Array.from(e.target.files)); e.target.value=''; }
-async function hDrop(e) {
-  e.preventDefault(); document.getElementById('dz').classList.remove('drag');
-
-  // Tenta usar DataTransferItem para arrastar PASTAS (entrega webkitRelativePath)
-  const items = e.dataTransfer.items;
-  const allFiles = [];
-  if (items && items.length && items[0].webkitGetAsEntry) {
-    // Drag&drop suporta entries (arquivos OU pastas)
-    const promises = [];
-    for (const item of items) {
-      const entry = item.webkitGetAsEntry && item.webkitGetAsEntry();
-      if (entry) promises.push(readEntry(entry, allFiles, ''));
-    }
-    await Promise.all(promises);
-  }
-  // Se nada foi resolvido via entries, cai pro modo simples
-  const files = allFiles.length ? allFiles : Array.from(e.dataTransfer.files);
-  await procPngs(files.filter(f => f.type === 'image/png' || /\.png$/i.test(f.name)));
-}
-
-// Lê um FileSystemEntry recursivamente, preenchendo o array files
-// Cada File ganha uma propriedade _relPath com o caminho relativo (ex: "TENIS/50_50.png")
-async function readEntry(entry, files, prefix) {
-  if (entry.isFile) {
-    return new Promise(resolve => {
-      entry.file(file => {
-        // Anexar caminho relativo customizado
-        file._relPath = prefix + entry.name;
-        files.push(file);
-        resolve();
-      }, () => resolve());
-    });
-  } else if (entry.isDirectory) {
-    const reader = entry.createReader();
-    return new Promise(resolve => {
-      const allEntries = [];
-      const readBatch = () => {
-        reader.readEntries(async entries => {
-          if (!entries.length) {
-            // Terminou — processar todos
-            await Promise.all(allEntries.map(e =>
-              readEntry(e, files, prefix + entry.name + '/')
-            ));
-            resolve();
-          } else {
-            allEntries.push(...entries);
-            readBatch(); // continuar lendo (readEntries vem em batches)
-          }
-        }, () => resolve());
-      };
-      readBatch();
-    });
-  }
-}
-// PC → IP do vMix (PD2 = 10.10.0.102 ... PD6 = 10.10.0.106)
-function pcToVmixHost(pc) {
-  if (!pc) return '';
-  const m = String(pc).match(/PD(\d+)/i);
-  if (!m) return '';
-  const num = parseInt(m[1], 10);
-  if (isNaN(num)) return '';
-  return `10.10.0.10${num}:8088`;
-}
-
-// Resolve o rootPath substituindo {PC} pelo nome do PC atual
-function resolveRootPath() {
-  let rp = (S.cfg && S.cfg.rootPath) || '';
-  return rp.replace(/\{PC\}/g, S.pcName || '');
-}
-
-// Resolve qualquer caminho com {PC} (ex: paths salvos com placeholder)
-function resolvePath(path) {
-  if (!path) return '';
-  return path.replace(/\{PC\}/g, S.pcName || '');
-}
-
-function buildPngPath(folder, fileName) {
-  if (!folder) return '';
-  // Detectar separador (Windows usa \, Unix usa /)
-  let sep = folder.includes('\\') ? '\\' : '/';
-  let normalized = folder.trim();
-  // Garante que termina com separador
-  if (!normalized.endsWith('\\') && !normalized.endsWith('/')) {
-    normalized += sep;
-  }
-  return normalized + fileName;
-}
-
-async function procPngs(files) {
-  if (!S.activeProj) { toast('Selecione uma competição','warn'); return; }
-  let folderFromDrop = null;
-  for (const f of files) {
-    const du = await rdFile(f);
-
-    // Determinar o caminho do PNG:
-    // 1) Se veio com _relPath (arrastou pasta inteira), usa rootPath + relPath
-    // 2) Senão, usa folderPath do projeto + nome
-    let pngPath = '';
-    const rel = f._relPath || f.webkitRelativePath || '';
-    if (rel && rel.includes('/')) {
-      // Veio de uma pasta arrastada — usar rootPath + caminho relativo (em formato Windows)
-      const root = (S.cfg && S.cfg.rootPath) || '';
-      // Converter / para \ (Windows)
-      const winRel = rel.replace(/\//g, '\\');
-      pngPath = root + winRel;
-
-      // Aproveitar para detectar a folderPath do projeto automaticamente
-      // pasta = root + primeira parte do relPath
-      const firstFolder = rel.split('/')[0];
-      if (firstFolder && !folderFromDrop) {
-        folderFromDrop = root + firstFolder + '\\';
-      }
-    } else {
-      // Drop de arquivo solto — usar folderPath manual do projeto
-      pngPath = buildPngPath(S.activeProj.folderPath || '', f.name);
-    }
-
-    const png = {
-      id:uid(),
-      name:f.name.replace(/\.png$/i,''),
-      dataUrl:du,    // FULL — só em memória, NÃO persistido (muito grande)
-      thumb:null,    // será preenchido logo abaixo
-      pips:null,
-      path: pngPath
-    };
-    S.activeProj.pngs.push(png); renderPngs();
-
-    // Gera thumbnail (persistido) em paralelo com a análise de pips
-    makeThumb(du).then(thumb => {
-      png.thumb = thumb;
-      save();
-      renderPngs();
-    });
-    analyzePng(du).then(pips => {
-      png.pips = pips;
-      save(); renderPngs();
-      toast(`${png.name}: ${pips.length} pip${pips.length!==1?'s':''} detectado${pips.length!==1?'s':''}`, 'ok');
-    });
-  }
-
-  // Se detectamos uma pasta arrastada, salvar como folderPath do projeto
-  if (folderFromDrop && !S.activeProj.folderPath) {
-    S.activeProj.folderPath = folderFromDrop;
-    S.activeProj._lastFolder = folderFromDrop;
-    save();
-    loadProjFolder();
-    toast('Pasta detectada: ' + folderFromDrop, 'ok');
-  }
-}
-function rmPng(id,e) {
-  e.stopPropagation();
-  if (!S.activeProj) return;
-  S.activeProj.pngs = S.activeProj.pngs.filter(p=>p.id!==id);
-  save(); renderPngs();
-}
-function rdFile(f) {
-  return new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsDataURL(f); });
-}
-
-// Gera thumbnail JPEG 320x180 (~10-30KB) a partir de um dataUrl PNG
-// Usado para persistir previews no localStorage sem estourar a cota
-function makeThumb(dataUrl) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = () => {
-      const TARGET_W = 320, TARGET_H = 180;
-      const c = document.createElement('canvas');
-      c.width = TARGET_W; c.height = TARGET_H;
-      const ctx = c.getContext('2d');
-      // Fundo escuro para áreas transparentes ficarem visíveis no preview
-      ctx.fillStyle = '#1a1a1f';
-      ctx.fillRect(0, 0, TARGET_W, TARGET_H);
-      // Desenha o PNG cobrindo (fit dentro do target)
-      ctx.drawImage(img, 0, 0, TARGET_W, TARGET_H);
-      // JPEG qualidade 0.75 (~15KB típico)
-      resolve(c.toDataURL('image/jpeg', 0.75));
-    };
-    img.onerror = () => resolve(null);
-    img.src = dataUrl;
-  });
-}
-
-// ════════════════════════════════════════
-// INPUTS
-// ════════════════════════════════════════
-function renderInps() {
-  const el = document.getElementById('inp-list');
-  el.innerHTML='';
-  if (!S.inputs.length) { el.innerHTML='<div class="empty"><div>Nenhum input</div></div>'; return; }
-  S.inputs.forEach(inp=>{
-    const r=document.createElement('div');
-    r.style.cssText='display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:var(--r);border:1px solid var(--border);background:var(--s2);margin-bottom:4px';
-    r.innerHTML=`
-      <span class="tag ${tc(inp.type)}">${inp.type}</span>
-      <span style="flex:1;font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${inp.name}</span>
-      <input type="text" value="${inp.shortName||inp.name.slice(0,12)}"
-        maxlength="12" placeholder="Nome curto"
-        style="width:90px;font-size:11px;padding:2px 6px"
-        onchange="setShortName('${inp.id}',this.value)"
-        title="Nome no botão StreamDeck"/>
-      <button class="btn xs ghost" onclick="rmInp('${inp.id}')">✕</button>`;
-    el.appendChild(r);
-  });
-  document.getElementById('ft-inp').textContent=S.inputs.length;
-}
-function saveInp() {
-  const n=document.getElementById('ni-name').value.trim();
-  const s=document.getElementById('ni-short').value.trim();
-  const t=document.getElementById('ni-type').value;
-  if (!n) { toast('Informe o nome','warn'); return; }
-  if (S.inputs.find(i=>i.name===n)) { toast('Já existe','warn'); return; }
-  S.inputs.push({id:uid(), name:n, shortName:s||n.slice(0,10), type:t}); save();
-  cm('m-inp');
-  document.getElementById('ni-name').value='';
-  document.getElementById('ni-short').value='';
-  renderInps(); toast('"'+n+'" adicionado','ok');
-}
-function rmInp(id) { S.inputs=S.inputs.filter(i=>i.id!==id); save(); renderInps(); }
-function setShortName(id, val) {
-  const inp = S.inputs.find(i=>i.id===id);
-  if (inp) { inp.shortName = val.trim().slice(0,12) || inp.name.slice(0,12); save(); }
-}
-function sortInputs() {
-  const order = { live:0, vt:1, call:2, replay:3 };
-  S.inputs.sort((a,b) => (order[a.type]??9) - (order[b.type]??9));
-  save(); renderInps();
-  toast('Inputs reordenados','ok');
-}
-
-
-// ════════════════════════════════════════
-// SELEÇÃO DE PACOTE
-// ════════════════════════════════════════
-function renderPkg(){
-  const g=document.getElementById('pkg-grid');g.innerHTML='';
-  if(!S.projects.length){
-    g.innerHTML='<div class="empty"><div class="empty-ic">🏆</div><div>Nenhum pacote.<br>Acesse Dev para adicionar.</div></div>';
-    document.getElementById('btn-usar').disabled=true;return;
-  }
-  const ics=['🏆','⚽','🏀','🎾','🏈','🏐','🎽','🥊'];
-  S.projects.forEach((p,i)=>{
-    const c=document.createElement('div');
-    c.className='pkg-card'+(S.activeProj?.id===p.id?' sel':'');
-    c.innerHTML=`<div class="pkg-ic">${ics[i%ics.length]}</div><div class="pkg-nm">${p.name}</div><div class="pkg-mt">${p.pngs.length} multitela${p.pngs.length!==1?'s':''}</div>`;
-    c.onclick=()=>{document.querySelectorAll('.pkg-card').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');S.activeProj=p;document.getElementById('btn-usar').disabled=false;updFt()};
-    g.appendChild(c);
-  });
-  document.getElementById('btn-usar').disabled=!S.activeProj;
-}
-
-function usarPkg(){
-  if(!S.activeProj)return;
-  // Inicializa playlist com todas as multitelas do pacote na ordem atual
-  S.playlist=S.activeProj.pngs.map(png=>({
-    id:uid(),projId:S.activeProj.id,pngId:png.id,
-    pngName:png.name,
-    dataUrl:png.dataUrl,    // pode estar undefined após reload — em memória só
-    thumb:png.thumb,        // persiste
-    pips:(png.pips||[]).map((_,i)=>({pipIdx:i,inputName:''}))
-  }));
-  S.hidden=[];
-  S.liveIdx=-1; if (S.workspaces) { S.workspaces.w1=null; S.workspaces.w2=null; }
-  updFt();goTab('live');
-  toast('Pacote "'+S.activeProj.name+'" carregado','ok');
-}
-
-// ════════════════════════════════════════
-// FAIXA DE MULTITELAS (TRAY)
-// ════════════════════════════════════════
-let dragSrc=null;
-let ctxTargetId=null;
-
-function renderTray(){
-  const tray=document.getElementById('tray');
-  tray.innerHTML='';
-  const visible=S.playlist.filter(it=>!S.hidden.includes(it.id));
-  const hidden=S.playlist.filter(it=>S.hidden.includes(it.id));
-
-  document.getElementById('tray-count').textContent=
-    visible.length+' de '+S.playlist.length;
-  const btnAll=document.getElementById('btn-show-all');
-  btnAll.style.display=hidden.length?'':'none';
-  btnAll.textContent='Mostrar '+hidden.length+' oculta'+(hidden.length!==1?'s':'');
-
-  visible.forEach(it=>{
-    const w1Id = S.workspaces?.w1?.id;
-    const w2Id = S.workspaces?.w2?.id;
-    const isPgm = w2Id === it.id;     // emularia PGM
-    const isPvw = w1Id === it.id;     // emularia PVW
-    const card=document.createElement('div');
-    card.className='mt-card'+(isPgm?' is-pgm':isPvw?' is-pvw':'');
-    card.draggable=true;
-    card.dataset.id=it.id;
-    card.innerHTML=
-      (isPgm?'<span class="badge pgm mt-badge">PGM</span>':
-       isPvw?'<span class="badge pvw mt-badge">PVW</span>':'')+
-      `<img class="mt-img" src="${it.thumb || it.dataUrl || ''}"/>
-       <div class="mt-nm">${it.pngName}</div>`;
-
-    // Drag para os workspaces (W1/W2)
-    card.draggable = true;
-    card.ondragstart = (ev) => {
-      ev.dataTransfer.setData('text/multitela-id', it.id);
-      ev.dataTransfer.effectAllowed = 'copy';
-      card.classList.add('dragging');
-    };
-    card.ondragend = () => card.classList.remove('dragging');
-
-    // Click simples → carrega no workspace ATIVO
-    card.onclick = () => loadIntoWs(it, S.activeWs || 'w1');
-
-    // Botão direito → context menu
-    card.addEventListener('contextmenu',e=>{
-      e.preventDefault();
-      ctxTargetId=it.id;
-      const ctx=document.getElementById('ctx');
-      ctx.style.left=Math.min(e.clientX,window.innerWidth-160)+'px';
-      ctx.style.top=Math.min(e.clientY,window.innerHeight-80)+'px';
-      ctx.classList.add('show');
-    });
-
-    // Drag & drop para reordenar
-    card.addEventListener('dragstart',e=>{
-      dragSrc=it.id;
-      card.classList.add('dragging');
-      e.dataTransfer.effectAllowed='move';
-    });
-    card.addEventListener('dragend',()=>card.classList.remove('dragging'));
-    card.addEventListener('dragover',e=>{
-      e.preventDefault();e.dataTransfer.dropEffect='move';
-      card.classList.add('drag-over');
-    });
-    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
-    card.addEventListener('drop',e=>{
-      e.preventDefault();card.classList.remove('drag-over');
-      if(dragSrc===it.id)return;
-      const fromIdx=S.playlist.findIndex(x=>x.id===dragSrc);
-      const toIdx  =S.playlist.findIndex(x=>x.id===it.id);
-      if(fromIdx<0||toIdx<0)return;
-      const [moved]=S.playlist.splice(fromIdx,1);
-      S.playlist.splice(toIdx,0,moved);
-      // Atualiza liveIdx se necessario
-      if(S.liveIdx>=0){
-        S.liveIdx=S.playlist.findIndex(x=>x.id===(S.playlist[S.liveIdx]?.id));
-      }
-      renderTray();
-    });
-
-    tray.appendChild(card);
-  });
-}
-
-function ctxCarregarWs(ws) {
-  if (!_ctxItem) return;
-  loadIntoWs(_ctxItem, ws);
-  fecharCtx();
-}
-function ctxCarregarPvw(){ ctxCarregarWs('w1'); }  // compat
-function ctxEsconder(){
-  closeCtx();
-  if(!S.hidden.includes(ctxTargetId))S.hidden.push(ctxTargetId);
-  renderTray();
-}
-function showAll(){S.hidden=[];renderTray()}
-function closeCtx(){document.getElementById('ctx').classList.remove('show')}
-document.addEventListener('click',closeCtx);
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCtx()});
-
-// ════════════════════════════════════════
-// AO VIVO
-// ════════════════════════════════════════
-function renderLive(){renderTray();updMons()}
-
-function loadIntoWs(item, ws){
-  // ws = 'w1' ou 'w2'
-  if (!S.workspaces) S.workspaces = { w1: null, w2: null };
-  S.workspaces[ws] = item;
-  S.activeWs = ws;
-  save();
-  updMons(); renderTray();
-}
-
-function setActiveWs(ws){
-  S.activeWs = ws;
-  save(); updMons();
-}
-
-function updMons(){
-  const w1 = S.workspaces?.w1;
-  const w2 = S.workspaces?.w2;
-  const active = S.activeWs || 'w1';
-  const ws = active === 'w2' ? w2 : w1;
-
-  // Tabs: nomes
-  const t1nm = document.getElementById('ws-tab-1-nm');
-  const t2nm = document.getElementById('ws-tab-2-nm');
-  if (t1nm) t1nm.textContent = w1 ? w1.pngName : 'vazio';
-  if (t2nm) t2nm.textContent = w2 ? w2.pngName : 'vazio';
-
-  // Tabs: ativo
-  const t1 = document.getElementById('ws-tab-1');
-  const t2 = document.getElementById('ws-tab-2');
-  if (t1) t1.classList.toggle('active', active === 'w1');
-  if (t2) t2.classList.toggle('active', active === 'w2');
-
-  // Botão GO único
-  const goBtn = document.getElementById('ws-go-btn');
-  if (goBtn) {
-    if (active === 'w2') {
-      goBtn.textContent = '▶ GO 2';
-      goBtn.classList.add('go-2');
-    } else {
-      goBtn.textContent = '▶ GO 1';
-      goBtn.classList.remove('go-2');
-    }
-  }
-
-  // Workspace view: preview, chips e botões IN
-  const prev = document.getElementById('ws-prev');
-  if (prev) prev.src = ws ? (ws.dataUrl || ws.thumb || '') : '';
-  renderChips('ws-ov', ws, 'ws-prev');
-  renderPvwBtns(ws);
-
-  // Cor do workspace ativo
-  const mon = document.getElementById('ws-mon');
-  if (mon) mon.classList.toggle('is-w2', active === 'w2');
-}
-
-function renderChips(oid,item,imgId){
-  const el=document.getElementById(oid);if(!el)return;
-  // Remove apenas chips, preserva drop zones
-  el.querySelectorAll('.pip-chip').forEach(e=>e.remove());
-  if(!item)return;
-  const proj=S.projects.find(p=>p.id===item.projId);
-  const png=proj?.pngs.find(p=>p.id===item.pngId);
-  if(!png?.pips)return;
-  const imgEl=document.getElementById(imgId);
-  const mW=imgEl?.clientWidth||160,mH=imgEl?.clientHeight||90;
-  png.pips.forEach((pip,i)=>{
-    const ch=document.createElement('div');ch.className='pip-chip';
-    ch.style.cssText=`left:${(pip.x*mW).toFixed(0)}px;top:${(pip.y*mH).toFixed(0)}px;width:${(pip.w*mW*.65).toFixed(0)}px`;
-    ch.textContent=item.pips[i]?.inputName||`PIP ${String.fromCharCode(65+i)}`;
-    el.appendChild(ch);
-  });
-}
-
-// input sendo arrastado no momento
-let sdDragInput = null;
-// pip selecionado atualmente na streamdeck (índice)
-let sdSelectedPip = 0;
-
-function renderPvwBtns(item){
-  const el=document.getElementById('ws-pip-btns');el.innerHTML='';
-  if(!item?.pips?.length)return;
-  if(sdSelectedPip >= item.pips.length) sdSelectedPip = 0;
-
-  // Abas por pip (ainda úteis para referência visual)
-  const tabs = document.createElement('div');
-  tabs.className = 'sd-pip-tabs';
-  item.pips.forEach((pip, i) => {
-    const tab = document.createElement('div');
-    const hasPip = !!pip.inputName;
-    tab.className = 'sd-pip-tab' + (i===sdSelectedPip?' active':'') + (hasPip?' has-inp':'');
-    tab.textContent = 'PIP ' + String.fromCharCode(65+i) + (hasPip ? ' ✓' : '');
-    tab.onclick = () => { sdSelectedPip=i; renderPvwBtns(item); };
-    tabs.appendChild(tab);
-  });
-  el.appendChild(tabs);
-
-  // Grid de botões StreamDeck — draggable
-  const grid = document.createElement('div');
-  grid.className = 'sd-grid';
-
-  if (!S.inputs.length) {
-    grid.innerHTML = '<div class="sd-empty">Nenhum input cadastrado.<br>Importe no Dev.</div>';
-    el.appendChild(grid); return;
-  }
-
-  const currentPip = item.pips[sdSelectedPip];
-  S.inputs.forEach(inp => {
-    const b = document.createElement('button');
-    const isActive = item.pips.some(p=>p.inputName===inp.name);
-    b.className = `sd-btn type-${inp.type}` + (isActive ? ' active' : '');
-    b.title = inp.name + '\nArraste para o pip ou clique';
-    b.textContent = inp.shortName || inp.name.slice(0,10);
-    b.draggable = true;
-
-    // Drag start — guarda qual input está sendo arrastado
-    b.addEventListener('dragstart', e => {
-      sdDragInput = inp;
-      e.dataTransfer.effectAllowed = 'copy';
-      e.dataTransfer.setData('text/plain', inp.name);
-      setTimeout(()=>b.style.opacity='0.5', 0);
-    });
-    b.addEventListener('dragend', () => {
-      b.style.opacity='';
-      sdDragInput = null;
-    });
-
-    // Clique simples — atribui ao pip selecionado
-    b.onclick = () => {
-      if(currentPip) currentPip.inputName = inp.name;
-      renderPvwBtns(item);
-      renderChips('ws-ov', item, 'ws-prev');
-      if(sdSelectedPip < item.pips.length - 1) {
-        sdSelectedPip++;
-        setTimeout(()=>renderPvwBtns(item), 150);
-      }
-    };
-    grid.appendChild(b);
-  });
-  el.appendChild(grid);
-
-  // Renderiza drop zones sobre os pips no preview
-  renderPipDropZones(item);
-}
-
-function renderPipDropZones(item) {
-  const ov   = document.getElementById('ws-ov');
-  const img  = document.getElementById('ws-prev');
-  if (!ov || !img) return;
-
-  // Remove drop zones anteriores (mantém chips)
-  ov.querySelectorAll('.pip-drop-zone').forEach(el=>el.remove());
-
-  const proj = S.projects.find(p=>p.id===item.projId);
-  const png  = proj?.pngs.find(p=>p.id===item.pngId);
-  if (!png?.pips) return;
-
-  const mW = img.clientWidth || 320;
-  const mH = img.clientHeight || 180;
-
-  png.pips.forEach((pip, i) => {
-    const dz = document.createElement('div');
-    dz.className = 'pip-drop-zone' + (item.pips[i]?.inputName ? ' has-input' : '');
-    dz.style.cssText = `
-      left:${(pip.x*mW).toFixed(0)}px;
-      top:${(pip.y*mH).toFixed(0)}px;
-      width:${(pip.w*mW).toFixed(0)}px;
-      height:${(pip.h*mH).toFixed(0)}px;
-    `;
-    dz.textContent = item.pips[i]?.inputName
-      ? (S.inputs.find(x=>x.name===item.pips[i].inputName)?.shortName || item.pips[i].inputName.slice(0,10))
-      : 'PIP ' + String.fromCharCode(65+i);
-
-    dz.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
-      dz.classList.add('drag-over');
-    });
-    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-    dz.addEventListener('drop', e => {
-      e.preventDefault();
-      dz.classList.remove('drag-over');
-      if (!sdDragInput) return;
-      item.pips[i].inputName = sdDragInput.name;
-      sdSelectedPip = i;
-      renderPvwBtns(item);
-      renderChips('ws-ov', item, 'ws-prev');
-    });
-
-    ov.appendChild(dz);
-  });
-}
-
-// ════════════════════════════════════════
-// WORKSPACE DROP
-// ════════════════════════════════════════
-function handleWsDrop(e, ws) {
-  const itemId = e.dataTransfer.getData('text/multitela-id');
-  if (!itemId) return;
-  const item = S.playlist.find(x => x.id === itemId);
-  if (!item) return;
-  loadIntoWs(item, ws);
-  toast('Carregado no Workspace ' + (ws === 'w2' ? '2' : '1'), 'ok');
-}
-
-// ════════════════════════════════════════
-// APLICAR NO VMIX
-// ════════════════════════════════════════
-async function applyTo(item, target) {
-  // target = 'pvw' ou 'pgm'
-  if (target !== 'pvw' && target !== 'pgm') return;
-  if (!item) { toast('Nada selecionado', 'warn'); return; }
-
-  const proj = S.projects.find(p => p.id === item.projId);
-  const png  = proj?.pngs.find(p => p.id === item.pngId);
-  if (!png) { toast('PNG não encontrado', 'err'); return; }
-
-  if (!png.path) {
-    toast('Caminho do PNG não configurado (configure no Dev)', 'warn');
+/* corta input num pip: SetMultiViewOverlay usa índice 1-10 (XML é 0-9) */
+function cutPip(pipNum, inputTitle) {
+  if (selMT === null) { toast('Selecione uma multitela primeiro', true); return; }
+  const mt = MULTITELAS[selMT];
+  if (pipNum > mt.layers.length) {
+    toast(`${mt.label} só tem ${mt.layers.length} pip${mt.layers.length>1?'s':''}`, true);
     return;
   }
+  const apiLayer = mt.layers[pipNum - 1] + 1;
+  vmix(`Function=SetMultiViewOverlay&Input=${encodeURIComponent(mt.title)}&Value=${apiLayer},${encodeURIComponent(inputTitle)}`);
 
-  // Nomes dos inputs no vMix:
-  const baseColour = (S.cfg.transp || 'Colour').trim();
-  const baseGT     = (S.cfg.gtBase || 'Multitela.gtzip').trim();
-  const fieldName  = (S.cfg.gtField || 'Image1.Source').trim();
-  const suffix     = target.toUpperCase();
-  const colourIn   = baseColour + ' ' + suffix;   // ex: "Colour PVW"
-  const gtIn       = baseGT     + ' ' + suffix;   // ex: "Moldura PVW"
+  if (!assign[selMT]) assign[selMT] = {};
+  assign[selMT][pipNum] = inputTitle;
+  localStorage.setItem('mc_assign', JSON.stringify(assign));
+  render();
+}
 
-  const cmds = [];
+function selectMT(i) {
+  selMT = i;
+  vmix(`Function=PreviewInput&Input=${encodeURIComponent(MULTITELAS[i].title)}`);
+  render();
+}
 
-  // ① Trocar a imagem do GT Title (moldura)
-  cmds.push(vCmd('SetImage', {
-    Input: gtIn,
-    SelectedName: fieldName,
-    Value: resolvePath(png.path)
-  }));
+/* ═══════════════════ HISTÓRICO ═══════════════════ */
+function saveEntry(kind) {
+  if (selMT === null) return;
+  const now = new Date();
+  const time = now.toTimeString().slice(0, 8);
+  history.unshift({
+    kind,                                   // 'ar' = foi ao ar | 'pl' = playlist
+    mt: selMT,
+    pips: { ...(assign[selMT] || {}) },
+    time,
+  });
+  if (history.length > 60) history.pop();   // limite de segurança
+  localStorage.setItem('mc_hist', JSON.stringify(history));
+  renderHistory();
+}
 
-  // ② Limpa todas as layers 1–9 do Colour (overlay, zoom, pan, crop)
-  for (let li = 1; li <= 9; li++) {
-    cmds.push(vCmd('SetMultiViewOverlay', { Input: colourIn, Value: `${li},` }));
-    cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: colourIn, Value: '1' }));
-    cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: colourIn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: colourIn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: colourIn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: colourIn, Value: '1' }));
-    cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: colourIn, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: colourIn, Value: '1' }));
-  }
+function recallEntry(idx) {
+  const h = history[idx];
+  if (!h) return;
+  selMT = h.mt;
+  assign[selMT] = { ...h.pips };
+  localStorage.setItem('mc_assign', JSON.stringify(assign));
 
-  // ③ Garante que a layer 10 do Colour exibe a moldura GT
-  cmds.push(vCmd('SetMultiViewOverlay', { Input: colourIn, Value: `10,${gtIn}` }));
+  /* reaplica os cortes no vMix e joga no preview */
+  const mt = MULTITELAS[selMT];
+  Object.entries(h.pips).forEach(([pipNum, inputTitle]) => {
+    const apiLayer = mt.layers[pipNum - 1] + 1;
+    vmix(`Function=SetMultiViewOverlay&Input=${encodeURIComponent(mt.title)}&Value=${apiLayer},${encodeURIComponent(inputTitle)}`);
+  });
+  vmix(`Function=PreviewInput&Input=${encodeURIComponent(mt.title)}`);
+  toast('Recuperado: ' + mt.label);
+  render();
+}
 
-  // ④ Aplica cada pip configurado nas layers 1-9
-  for (let i = 0; i < item.pips.length; i++) {
-    const pipCfg   = item.pips[i];
-    const pipCoord = png.pips[i];
-    if (!pipCfg.inputName || !pipCoord) continue;
-    const li = i + 1;
-    const sAR  = pipCoord.srcAR   || (16/9);
-    const mode = pipCoord.cropMode || defaultCropMode(pipCoord, sAR);
-    const p    = pipToVmix(pipCoord, png.bleed, mode, sAR);
+/* ═══════════════════ PAINEL DEV ═══════════════════ */
+function renderDev() {
+  $('dev-rows').innerHTML = Object.keys(PCS).map(k => {
+    const mod = !!ipOver[k];
+    return `<div class="dev-row">
+      <span class="dev-pc">${k}</span>
+      <input type="text" data-ip="${k}" value="${ipOf(k)}" class="${mod ? 'mod' : ''}" spellcheck="false">
+      <button class="dev-reset ${mod ? 'show' : ''}" data-ipreset="${k}">padrão</button>
+      <span class="dev-def">${mod ? 'preset: ' + PCS[k] : ''}</span>
+    </div>`;
+  }).join('');
 
-    cmds.push(vCmd('SetMultiViewOverlay',   { Input: colourIn, Value: `${li},${pipCfg.inputName}` }));
-    cmds.push(vCmd(`SetLayer${li}Zoom`,     { Input: colourIn, Value: `${p.zoom}` }));
-    cmds.push(vCmd(`SetLayer${li}PanX`,     { Input: colourIn, Value: `${p.panX}` }));
-    cmds.push(vCmd(`SetLayer${li}PanY`,     { Input: colourIn, Value: `${p.panY}` }));
-    // Crop só se houver crop real
-    const hasCrop = (p.cropX1 > 0.001) || (p.cropY1 > 0.001);
-    if (hasCrop) {
-      cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: colourIn, Value: `${p.cropX1}` }));
-      cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: colourIn, Value: `${p.cropX2}` }));
-      cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: colourIn, Value: `${p.cropY1}` }));
-      cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: colourIn, Value: `${p.cropY2}` }));
+  $('dev-rows').querySelectorAll('input[data-ip]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const k = inp.dataset.ip;
+      const v = inp.value.trim();
+      if (!v || v === PCS[k]) delete ipOver[k];
+      else ipOver[k] = v;
+      localStorage.setItem('mc_ips', JSON.stringify(ipOver));
+      renderDev();
+      setStatus(true);
+      toast(k + ' → ' + ipOf(k));
+    });
+  });
+}
+
+function renderHistory() {
+  const list = $('hist-list');
+  $('hist-empty').style.display = history.length ? 'none' : 'flex';
+  list.innerHTML = history.map((h, i) => {
+    const mt = MULTITELAS[h.mt];
+    const pipsTxt = Object.entries(h.pips)
+      .sort((a, b) => a[0] - b[0])
+      .map(([n, t]) => `${n}·${INPUTS.find(x => x.title === t)?.label || t}`)
+      .join('  ') || 'sem pips';
+    return `<div class="h-item" data-h="${i}">
+      <div class="h-top">
+        <span class="h-badge ${h.kind}">${h.kind === 'ar' ? 'NO AR' : 'PLAYLIST'}</span>
+        <span class="h-mt">${mt.label}</span>
+        <span class="h-time">${h.time}</span>
+      </div>
+      <div class="h-pips">${pipsTxt}</div>
+      <button class="h-del" data-hdel="${i}" title="Remover">✕</button>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════ RENDER ═══════════════════ */
+function render() {
+  /* PCs */
+  $('pcs').innerHTML = Object.keys(PCS).map(k =>
+    `<button class="pc-btn ${k===pc?'on':''}" data-pc="${k}">${k}</button>`).join('');
+
+  /* PVW */
+  const pvw = $('pvw');
+  pvw.querySelectorAll('.box').forEach(b => b.remove());
+  if (selMT === null) {
+    $('pvw-empty').style.display = 'flex';
+    $('mt-name').textContent = '—';
+    $('take').disabled = true;
+    $('plist').disabled = true;
+  } else {
+    $('pvw-empty').style.display = 'none';
+    const mt = MULTITELAS[selMT];
+    $('mt-name').textContent = mt.title.trim();
+    $('take').disabled = false;
+    $('plist').disabled = false;
+
+    if (mt.sinal) {
+      const [x,y,w,h] = mt.sinal;
+      const d = document.createElement('div');
+      d.className = 'box sinal';
+      d.style.cssText = `left:${x*100}%;top:${y*100}%;width:${w*100}%;height:${h*100}%`;
+      d.innerHTML = `<span class="lbl">SINAL</span>`;
+      pvw.appendChild(d);
     }
+    mt.pips.forEach((p, i) => {
+      const [x,y,w,h] = p;
+      const num = i + 1;
+      const inp = assign[selMT]?.[num];
+      const d = document.createElement('div');
+      d.className = 'box pip' + (inp ? ' filled' : '');
+      d.style.cssText = `left:${x*100}%;top:${y*100}%;width:${w*100}%;height:${h*100}%`;
+      const lbl = inp ? (INPUTS.find(x2 => x2.title === inp)?.label || inp) : 'vazio';
+      d.innerHTML = `<span class="n">${num}</span><span class="lbl">${lbl}</span>`;
+      pvw.appendChild(d);
+    });
   }
 
-  // ⑤ Envia tudo em paralelo
-  await vMulti(cmds);
-  toast('Aplicado em ' + suffix, 'ok');
+  /* Linha 1 — multitelas */
+  $('strip-mt').innerHTML = MULTITELAS.map((m, i) =>
+    `<button class="btn ${i===selMT?'sel-mt':''}" data-mt="${i}">${m.label}<span class="sub">${m.layers.length} pips</span></button>`).join('');
+
+  /* Linhas de inputs */
+  renderInputStrip('strip-p1', 1);
+  renderInputStrip('strip-p2', 2);
+  const p3pip = 3 + shiftPos;
+  $('p3-lbl').textContent = 'PIP ' + p3pip;
+  $('shift').textContent = shiftPos === 0 ? 'SHIFT ▸' : (shiftPos === 1 ? 'PIP 4 ▸' : 'PIP 5 ⟲');
+  $('shift').classList.toggle('on', shiftPos > 0);
+  renderInputStrip('strip-p3', p3pip);
 }
 
-// Helpers de UI
-function applyWs1() { applyTo(S.workspaces?.w1, 'pvw'); }
-function applyWs2() { applyTo(S.workspaces?.w2, 'pgm'); }
-function applyActiveWs() {
-  const a = S.activeWs || 'w1';
-  if (a === 'w2') applyWs2(); else applyWs1();
-}
-function handleActiveWsDrop(e) {
-  const itemId = e.dataTransfer.getData('text/multitela-id');
-  if (!itemId) return;
-  const item = S.playlist.find(x => x.id === itemId);
-  if (!item) return;
-  loadIntoWs(item, S.activeWs || 'w1');
-  toast('Carregado no Workspace ' + ((S.activeWs || 'w1') === 'w2' ? '2' : '1'), 'ok');
+function renderInputStrip(stripId, pipNum) {
+  const cur = selMT !== null ? assign[selMT]?.[pipNum] : null;
+  $(stripId).innerHTML = INPUTS.map(inp =>
+    `<button class="btn ${inp.title===cur?'sel-in':''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inp.title)}">${inp.label}</button>`).join('');
 }
 
-async function doCut() {
-  // Compat: aplica o workspace ativo no seu output
-  const ws = S.activeWs || 'w1';
-  const target = ws === 'w2' ? 'pgm' : 'pvw';
-  await applyTo(S.workspaces?.[ws], target);
-}
+/* ═══════════════════ EVENTS ═══════════════════ */
+document.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || suppressClick) return;
 
-// ════════════════════════════════════════
-// FOOTER
-// ════════════════════════════════════════
-function updFt(){
-  document.getElementById('ft-proj').textContent=S.activeProj?.name??'—';
-  document.getElementById('ft-mts').textContent=S.projects.reduce((a,p)=>a+p.pngs.length,0);
-  document.getElementById('ft-inp').textContent=S.inputs.length;
-}
+  if (b.dataset.pc) {
+    pc = b.dataset.pc;
+    localStorage.setItem('mc_pc', pc);
+    setStatus(true);
+    render();
+  }
+  else if (b.dataset.mt !== undefined) selectMT(+b.dataset.mt);
+  else if (b.dataset.in !== undefined) cutPip(+b.dataset.pip, decodeURIComponent(b.dataset.in));
+  else if (b.dataset.hdel !== undefined) {
+    history.splice(+b.dataset.hdel, 1);
+    localStorage.setItem('mc_hist', JSON.stringify(history));
+    renderHistory();
+  }
+  else if (b.dataset.h !== undefined || b.closest('.h-item')) {
+    /* clique no item do histórico (fora do X) */
+  }
+  else if (b.id === 'shift') { shiftPos = (shiftPos + 1) % 3; render(); }
+  else if (b.id === 'take') {
+    vmix('Function=Cut');
+    saveEntry('ar');
+    toast('CORTADO → ' + MULTITELAS[selMT].title.trim());
+  }
+  else if (b.id === 'plist') {
+    saveEntry('pl');
+    toast('Salvo na playlist: ' + MULTITELAS[selMT].label);
+  }
+  else if (b.id === 'hist-clear') {
+    history = [];
+    localStorage.setItem('mc_hist', '[]');
+    renderHistory();
+  }
+  else if (b.id === 'dev-btn') {
+    $('dev-panel').classList.toggle('open');
+    b.classList.toggle('on');
+  }
+  else if (b.dataset.ipreset !== undefined) {
+    delete ipOver[b.dataset.ipreset];
+    localStorage.setItem('mc_ips', JSON.stringify(ipOver));
+    renderDev();
+    setStatus(true);
+    toast(b.dataset.ipreset + ' restaurado: ' + PCS[b.dataset.ipreset]);
+  }
+});
 
-// ════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════
-loadSt();
-// Inicializa workspaces se não existirem (não persistem no localStorage por design)
-if (!S.workspaces) S.workspaces = { w1: null, w2: null };
-if (!S.activeWs)   S.activeWs = 'w1';
-if (!S.cfg) S.cfg = {};
-if (!S.cfg.transp) S.cfg.transp = 'Colour';
-// Novo: input base do GT Title (substitui o Browser Input)
-if (!S.cfg.gtBase)  S.cfg.gtBase  = 'Multitela.gtzip';   // nome base do GT
-if (!S.cfg.gtField) S.cfg.gtField = 'Image1.Source'; // nome do campo de imagem no GT Title
-if (!S.cfg.rootPath) S.cfg.rootPath = 'D:\\PROJETOS VMIX PDS\\'; // raiz fixa (igual em todos PCs)
-if (!S.pcName)       S.pcName       = '';   // PD2/PD3/PD4/PD5/PD6 — definido pelo operador
+/* clique no card do histórico (recall) */
+document.addEventListener('click', e => {
+  if (suppressClick) return;
+  if (e.target.closest('.h-del')) return;
+  const item = e.target.closest('.h-item');
+  if (item) recallEntry(+item.dataset.h);
+});
 
-// Reversão definitiva: {PC} ou PD\d+ → PDS (pasta raiz é fixa, mal-entendido anterior)
-// Roda sempre que detectar inconsistência (sem flag de "já migrou")
-{
-  let reverted = 0;
-  const fixPath = (p) => {
-    if (!p) return p;
-    let r = p.replace(/\{PC\}/g, 'PDS');
-    r = r.replace(/(VMIX )PD\d+/g, '$1PDS');   // "VMIX PD5" → "VMIX PDS"
-    return r;
+/* drag-scroll nas faixas */
+let suppressClick = false;
+document.querySelectorAll('.strip').forEach(strip => {
+  let down = false, startX = 0, startScroll = 0, moved = 0;
+  strip.addEventListener('pointerdown', e => {
+    down = true; moved = 0;
+    startX = e.clientX; startScroll = strip.scrollLeft;
+    strip.classList.add('dragging');
+  });
+  strip.addEventListener('pointermove', e => {
+    if (!down) return;
+    const dx = e.clientX - startX;
+    moved = Math.max(moved, Math.abs(dx));
+    if (moved > 5) strip.scrollLeft = startScroll - dx;
+  });
+  const up = () => {
+    if (!down) return;
+    down = false;
+    strip.classList.remove('dragging');
+    if (moved > 5) { suppressClick = true; setTimeout(() => suppressClick = false, 50); }
   };
-  (S.projects || []).forEach(proj => {
-    if (proj.folderPath) {
-      const f = fixPath(proj.folderPath);
-      if (f !== proj.folderPath) { proj.folderPath = f; reverted++; }
-    }
-    (proj.pngs || []).forEach(png => {
-      if (png.path) {
-        const f = fixPath(png.path);
-        if (f !== png.path) { png.path = f; reverted++; }
-      }
-    });
-  });
-  if (S.cfg && S.cfg.rootPath) {
-    const f = fixPath(S.cfg.rootPath);
-    if (f !== S.cfg.rootPath) { S.cfg.rootPath = f; reverted++; }
-  }
-  if (reverted > 0) {
-    console.log(`[Reversão] ${reverted} caminhos corrigidos para PDS`);
-    save();
-  }
-}
-loadCfgFields();
-loadDevCfg();
-updatePcBadge();
-ensurePcSelected();
-// Auto-conectar se já tem host salvo e PC selecionado
-if (S.host && S.host !== 'localhost:8088' && S.pcName) {
-  setTimeout(() => { if (typeof doConnect === 'function') doConnect(); }, 300);
-}
-renderPkg();
-renderInps();
-updFt();
-
-setDot('','Desconectado');
-
-// Recalcula drop zones se a janela for redimensionada
-window.addEventListener('resize', () => {
-  const _initWs = S.workspaces?.[S.activeWs || 'w1'];
-  if (_initWs) renderPipDropZones(_initWs);
+  strip.addEventListener('pointerup', up);
+  strip.addEventListener('pointerleave', up);
 });
+
+/* toast */
+let toastT;
+function toast(msg, err) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.className = '', 2200);
+}
+
+render();
+renderHistory();
+renderDev();
+setStatus(true);
 </script>
-
-<!-- PIP EDITOR MODAL -->
-<div id="pip-editor-overlay">
-  <div id="pip-editor-bar">
-    <span style="font:600 14px/1 var(--font);color:var(--fg1)" id="pip-editor-title">Editor de Pips</span>
-    <span id="pip-editor-hint">Arraste para desenhar um pip. ✕ remove.</span>
-    <div style="display:flex;align-items:center;gap:6px;margin-left:12px">
-      <span class="clbl">Sangria:</span>
-      <input type="range" id="pip-editor-bleed" min="0" max="30" step="1" value="4"
-             oninput="document.getElementById('pip-editor-bleed-v').textContent=this.value+'%'"
-             style="width:120px"/>
-      <span id="pip-editor-bleed-v" style="font:600 12px var(--mono);color:var(--fg1);min-width:34px">4%</span>
-    </div>
-    <div id="pip-editor-panel" style="display:flex;align-items:center;gap:8px;margin-left:12px;padding:0 10px;border-left:1px solid var(--border)">
-      <span id="pip-editor-panel-lbl" class="clbl">Clique num pip para configurar</span>
-      <div id="pip-editor-panel-ctl" style="display:none;align-items:center;gap:8px">
-        <label style="display:flex;align-items:center;gap:4px;cursor:pointer" title="Cover = preenche cortando. Fit = sinal inteiro, pode haver transparência.">
-          <input type="checkbox" id="pip-sel-crop"/>
-          <span class="clbl">Cover</span>
-        </label>
-        <span class="clbl">Sinal:</span>
-        <select id="pip-sel-srcar" style="background:var(--s2);color:var(--fg1);border:1px solid var(--border);padding:3px 5px;border-radius:4px;font-size:11px">
-          <option value="1.7778">16:9</option>
-          <option value="0.5625">9:16</option>
-          <option value="1">1:1</option>
-          <option value="1.3333">4:3</option>
-          <option value="2.3333">21:9</option>
-        </select>
-      </div>
-    </div>
-    <button class="btn sm" onclick="pipEditorConfirm()">✓ Salvar</button>
-    <button class="btn sm ghost" onclick="pipEditorCancel()">Cancelar</button>
-  </div>
-  <div id="pip-editor-wrap">
-    <img id="pip-editor-img" src="" alt=""/>
-    <div id="pip-editor-rects"></div>
-  </div>
-</div>
-
-<script>
-// ════════════════════════════════════════
-// PIP EDITOR MANUAL
-// ════════════════════════════════════════
-let _pipEditorPng = null;
-let _pipEditorRects = [];   // [{x,y,w,h,srcAR,cropMode} normalizados 0-1]
-let _pipEditorDrag = null;  // {startX, startY, el}
-let _pipEditorSel  = -1;    // índice do pip selecionado (-1 = nenhum)
-
-function openPipEditor(pngId) {
-  const proj = S.activeProj;
-  if (!proj) return;
-  const png = proj.pngs.find(p => p.id === pngId);
-  if (!png) return;
-  _pipEditorPng = png;
-  // Copia pips preservando suas configs individuais (srcAR, cropMode)
-  _pipEditorRects = (png.pips || []).map(p => ({...p}));
-  _pipEditorSel = -1;
-
-  // Carrega sangria salva (padrão = 4%)
-  const bleedPct = png.bleed ? Math.round((png.bleed - 1) * 100) : 4;
-  const bleedSlider = document.getElementById('pip-editor-bleed');
-  if (bleedSlider) {
-    bleedSlider.value = bleedPct;
-    document.getElementById('pip-editor-bleed-v').textContent = bleedPct + '%';
-  }
-  // (cropMode e srcAR agora são por pip — configurados no painel ao selecionar)
-
-  const img = document.getElementById('pip-editor-img');
-  img.src = png.dataUrl || png.thumb || '';
-  document.getElementById('pip-editor-title').textContent = png.name + ' — Pips';
-  document.getElementById('pip-editor-overlay').classList.add('open');
-  img.onload = () => pipEditorRenderRects();
-  if (img.complete) pipEditorRenderRects();
-}
-
-function pipEditorCancel() {
-  document.getElementById('pip-editor-overlay').classList.remove('open');
-  _pipEditorPng = null; _pipEditorRects = []; _pipEditorDrag = null;
-}
-
-function pipEditorConfirm() {
-  if (!_pipEditorPng) return;
-  // Ordenar cima→baixo, esq→dir
-  _pipEditorRects.sort((a,b) => {
-    const ra = Math.round(a.y*20), rb = Math.round(b.y*20);
-    return ra !== rb ? ra - rb : a.x - b.x;
-  });
-  _pipEditorPng.pips = _pipEditorRects.map(r => ({
-    x: Math.round(r.x*10000)/10000,
-    y: Math.round(r.y*10000)/10000,
-    w: Math.round(r.w*10000)/10000,
-    h: Math.round(r.h*10000)/10000,
-    cropMode: r.cropMode || 'cover',
-    srcAR:    r.srcAR    || (16/9)
-  }));
-  // Salva sangria (1.00 = sem sangria; 1.04 = 4%; etc.)
-  const bleedSlider = document.getElementById('pip-editor-bleed');
-  if (bleedSlider) {
-    _pipEditorPng.bleed = 1 + (parseInt(bleedSlider.value, 10) || 0) / 100;
-  }
-  // (cropMode/srcAR já estão salvos em cada pip individualmente)
-  save(); renderPngs();
-  toast(`${_pipEditorPng.name}: ${_pipEditorPng.pips.length} pip(s) salvos`, 'ok');
-  pipEditorCancel();
-}
-
-function pipEditorRenderRects() {
-  const wrap = document.getElementById('pip-editor-wrap');
-  const img  = document.getElementById('pip-editor-img');
-  const container = document.getElementById('pip-editor-rects');
-  container.innerHTML = '';
-  const iW = img.offsetWidth, iH = img.offsetHeight;
-
-  _pipEditorRects.forEach((r, i) => {
-    const el = document.createElement('div');
-    el.className = 'pip-rect' + (i === _pipEditorSel ? ' selected' : '');
-    el.style.cssText = `left:${r.x*iW}px;top:${r.y*iH}px;width:${r.w*iW}px;height:${r.h*iH}px;pointer-events:auto;cursor:pointer`;
-    // Badge do modo (C=cover, F=fit) + AR resumido
-    const ar   = r.srcAR    || (16/9);
-    const mode = r.cropMode || defaultCropMode(r, ar);
-    const arLbl = Math.abs(ar - 16/9) < 0.01 ? '16:9'
-               : Math.abs(ar - 9/16) < 0.01 ? '9:16'
-               : Math.abs(ar - 1) < 0.01    ? '1:1'
-               : Math.abs(ar - 4/3) < 0.01  ? '4:3'
-               : Math.abs(ar - 21/9) < 0.01 ? '21:9'
-               : ar.toFixed(2);
-    el.innerHTML =
-      `<span class="pip-lbl">PIP ${i+1} · ${mode==='cover'?'Cover':'Fit'} · ${arLbl}</span>` +
-      `<span class="pip-del" data-i="${i}">✕</span>`;
-    // Click no pip seleciona (exceto se clicou no botão de remover)
-    el.addEventListener('mousedown', (e) => {
-      if (e.target.classList.contains('pip-del')) {
-        e.stopPropagation();
-        e.preventDefault();
-        const idx = parseInt(e.target.getAttribute('data-i'), 10);
-        pipEditorRemove(idx);
-        return;
-      }
-      e.stopPropagation();   // evita iniciar desenho de novo pip
-      pipEditorSelect(i);
-    });
-    container.appendChild(el);
-  });
-
-  // Atualizar painel lateral
-  pipEditorUpdatePanel();
-}
-
-function pipEditorSelect(i) {
-  _pipEditorSel = i;
-  pipEditorRenderRects();
-}
-
-function pipEditorUpdatePanel() {
-  const lbl = document.getElementById('pip-editor-panel-lbl');
-  const ctl = document.getElementById('pip-editor-panel-ctl');
-  if (!lbl || !ctl) return;
-
-  if (_pipEditorSel < 0 || _pipEditorSel >= _pipEditorRects.length) {
-    lbl.textContent = 'Clique num pip para configurar';
-    lbl.style.display = '';
-    ctl.style.display = 'none';
-    return;
-  }
-
-  const r = _pipEditorRects[_pipEditorSel];
-  lbl.textContent = `PIP ${_pipEditorSel + 1}:`;
-  lbl.style.display = '';
-  ctl.style.display = 'flex';
-
-  const cropChk = document.getElementById('pip-sel-crop');
-  const srcSel  = document.getElementById('pip-sel-srcar');
-  if (cropChk) {
-    const effectiveMode = r.cropMode || defaultCropMode(r, r.srcAR || (16/9));
-    cropChk.checked = effectiveMode !== 'fit';
-    cropChk.onchange = () => {
-      r.cropMode = cropChk.checked ? 'cover' : 'fit';
-      pipEditorRenderRects();
-    };
-  }
-  if (srcSel) {
-    const v = r.srcAR || (16/9);
-    let best = srcSel.options[0], bd = Infinity;
-    for (const o of srcSel.options) {
-      const d = Math.abs(parseFloat(o.value) - v);
-      if (d < bd) { bd = d; best = o; }
-    }
-    srcSel.value = best.value;
-    srcSel.onchange = () => {
-      r.srcAR = parseFloat(srcSel.value) || (16/9);
-      pipEditorRenderRects();
-    };
-  }
-}
-
-function pipEditorRemove(i) {
-  _pipEditorRects.splice(i, 1);
-  if (_pipEditorSel === i) _pipEditorSel = -1;
-  else if (_pipEditorSel > i) _pipEditorSel--;
-  pipEditorRenderRects();
-}
-
-// Desenhar novo pip por clique+arraste
-const _wrap = document.getElementById('pip-editor-wrap');
-
-_wrap.addEventListener('mousedown', e => {
-  // Cliques em pip-rect já são tratados via stopPropagation (seleção)
-  // Aqui só processa cliques na área "vazia" (desenhar novo pip)
-  if (e.target.closest('.pip-rect')) return;
-  if (e.target.classList.contains('pip-del')) return;
-
-  const img = document.getElementById('pip-editor-img');
-  const rect = img.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / rect.width;
-  const y = (e.clientY - rect.top)  / rect.height;
-  if (x < 0 || x > 1 || y < 0 || y > 1) return;
-
-  // Click fora de qualquer pip → desseleciona
-  _pipEditorSel = -1;
-  pipEditorUpdatePanel();
-
-  // Criar elemento de preview do retângulo sendo desenhado
-  const el = document.createElement('div');
-  el.className = 'pip-rect';
-  el.style.cssText = `left:${x*rect.width}px;top:${y*rect.height}px;width:0;height:0;border-color:var(--pgm);pointer-events:none`;
-  document.getElementById('pip-editor-rects').appendChild(el);
-
-  _pipEditorDrag = { x0: x, y0: y, x0px: e.clientX, y0px: e.clientY, el, rect, moved: false };
-  e.preventDefault();
-});
-
-window.addEventListener('mousemove', e => {
-  if (!_pipEditorDrag) return;
-  const { x0, y0, rect, el } = _pipEditorDrag;
-  const x1 = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  const y1 = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
-  const lx = Math.min(x0, x1), ly = Math.min(y0, y1);
-  const lw = Math.abs(x1-x0),  lh = Math.abs(y1-y0);
-  el.style.left   = (lx * rect.width)  + 'px';
-  el.style.top    = (ly * rect.height) + 'px';
-  el.style.width  = (lw * rect.width)  + 'px';
-  el.style.height = (lh * rect.height) + 'px';
-});
-
-window.addEventListener('mouseup', e => {
-  if (!_pipEditorDrag) return;
-  const { x0, y0, rect, el } = _pipEditorDrag;
-  const x1 = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-  const y1 = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
-  const lx = Math.min(x0,x1), ly = Math.min(y0,y1);
-  const lw = Math.abs(x1-x0), lh = Math.abs(y1-y0);
-
-  el.remove(); // remove preview
-  _pipEditorDrag = null;
-
-  // Só salva se for um drag real (não click) — mínimo 2% em ambas dimensões
-  if (lw > 0.02 && lh > 0.02) {
-    const newPip = { x: lx, y: ly, w: lw, h: lh, srcAR: 16/9 };
-    // cropMode não definido → será detectado automaticamente pela posição
-    _pipEditorRects.push(newPip);
-    _pipEditorSel = _pipEditorRects.length - 1;
-    pipEditorRenderRects();
-  }
-});
-
-// Fechar com ESC
-window.addEventListener('keydown', e => {
-  if (e.key === 'Escape') pipEditorCancel();
-});
-</script>
-
-  <!-- Modal de seleção de PC -->
-  <div id="pc-select-overlay" class="modal-overlay" style="display:none">
-    <div class="modal-card">
-      <h2 style="margin:0 0 8px;font:600 16px var(--sans)">Bem-vindo!</h2>
-      <p style="margin:0 0 16px;color:var(--text2);font-size:13px">
-        Qual computador você está usando agora?
-      </p>
-      <div id="pc-select-grid" class="pc-grid">
-        <button class="pc-btn" onclick="selectPc('PD2')">
-          <span class="pc-btn-name">PD2</span>
-          <span class="pc-btn-ip">10.10.0.102</span>
-        </button>
-        <button class="pc-btn" onclick="selectPc('PD3')">
-          <span class="pc-btn-name">PD3</span>
-          <span class="pc-btn-ip">10.10.0.103</span>
-        </button>
-        <button class="pc-btn" onclick="selectPc('PD4')">
-          <span class="pc-btn-name">PD4</span>
-          <span class="pc-btn-ip">10.10.0.104</span>
-        </button>
-        <button class="pc-btn" onclick="selectPc('PD5')">
-          <span class="pc-btn-name">PD5</span>
-          <span class="pc-btn-ip">10.10.0.105</span>
-        </button>
-        <button class="pc-btn" onclick="selectPc('PD6')">
-          <span class="pc-btn-name">PD6</span>
-          <span class="pc-btn-ip">10.10.0.106</span>
-        </button>
-      </div>
-      <p style="margin:14px 0 0;color:var(--text3);font-size:11px;text-align:center">
-        Você pode trocar isso depois no canto superior da tela.
-      </p>
-    </div>
-  </div>
-
 </body>
 </html>
