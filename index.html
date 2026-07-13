@@ -22,7 +22,6 @@
   --pvw-glow: rgba(0,184,148,.35);
   --accent:   #fdcb6e;
   --acc-dim:  rgba(253,203,110,.12);
-  --blue:     #0984e3;
   --text:     #e8e8ed;
   --text2:    #8e8e9e;
   --text3:    #4a4a5a;
@@ -76,7 +75,7 @@ header {
   transition: border-color .1s, transform .1s;
 }
 .pack-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-.pack-card .pk-name { font-family: var(--sans); font-weight: 700; font-size: 17px; margin-bottom: 8px; }
+.pack-card .pk-name { font-weight: 700; font-size: 17px; margin-bottom: 8px; }
 .pack-card .pk-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 1px; }
 .pack-empty { text-align: center; color: var(--text3); font-family: var(--mono); font-size: 12px; padding: 60px 0; line-height: 2; }
 
@@ -121,6 +120,7 @@ header {
   border-radius: var(--r2); overflow: hidden;
   box-shadow: 0 0 24px rgba(0,184,148,.12), inset 0 0 60px rgba(0,0,0,.6);
 }
+.pvw img.thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .9; }
 .pvw-tag {
   position: absolute; top: 8px; left: 10px; z-index: 5;
   font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
@@ -132,21 +132,18 @@ header {
   color: var(--text3); font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
 }
 .box {
-  position: absolute; border: 1px solid var(--border2);
-  background: linear-gradient(160deg, #101014, #0a0a0d);
+  position: absolute; border: 1px dashed rgba(253,203,110,.45);
+  background: rgba(0,0,0,.25);
   border-radius: 3px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 3px; overflow: hidden;
 }
-.box.pip.filled { border-color: var(--accent); background: linear-gradient(160deg, #17150e, #0d0c08); }
-.box .n { font-family: var(--mono); font-size: 10px; color: var(--text3); position: absolute; top: 4px; left: 6px; }
-.box.filled .n { color: var(--accent); }
-.box .lbl { font-family: var(--mono); font-size: clamp(9px, 1.4vw, 13px); color: var(--text2); text-align: center; padding: 0 4px; }
+.box.filled { border-style: solid; border-color: var(--accent); background: rgba(20,16,4,.55); }
+.box .n { font-family: var(--mono); font-size: 10px; color: rgba(253,203,110,.7); position: absolute; top: 3px; left: 6px; }
+.box .lbl { font-family: var(--mono); font-size: clamp(9px, 1.3vw, 13px); color: var(--text2); text-align: center; padding: 0 4px; text-shadow: 0 1px 3px #000; }
 .box.filled .lbl { color: var(--text); }
-.box.sinal { border-style: dashed; border-color: var(--border); }
-.box.sinal .lbl { color: var(--text3); letter-spacing: 1px; font-size: 11px; }
 
 .pvw-bar { width: 100%; max-width: 780px; display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-.mt-name { font-family: var(--mono); font-size: 13px; color: var(--pvw); flex: 1; letter-spacing: .5px; }
+.mt-name { font-family: var(--mono); font-size: 13px; color: var(--pvw); flex: 1; letter-spacing: .5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .take {
   font-family: var(--sans); font-weight: 700; font-size: 14px; letter-spacing: 2px;
   padding: 10px 34px; border-radius: var(--r2); cursor: pointer;
@@ -222,7 +219,7 @@ header {
 }
 .gate input:focus { border-color: var(--accent); }
 .gate button {
-  width: 100%; font-family: var(--sans); font-weight: 700; font-size: 13px; letter-spacing: 1px;
+  width: 100%; font-weight: 700; font-size: 13px; letter-spacing: 1px;
   padding: 10px; border-radius: var(--r); cursor: pointer;
   background: var(--acc-dim); color: var(--accent); border: 1px solid var(--accent);
 }
@@ -249,6 +246,7 @@ header {
 
 .dev-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
 .dev-row .dev-pc { font-family: var(--mono); font-size: 11px; color: var(--text); flex: 0 0 44px; }
+.dev-row label { font-family: var(--mono); font-size: 10px; color: var(--text2); }
 .dev-row input, .dev-row select {
   font-family: var(--mono); font-size: 12px; color: var(--text);
   background: var(--s2); border: 1px solid var(--border); border-radius: var(--r);
@@ -274,21 +272,36 @@ header {
 }
 .pk-tab.on { background: var(--acc-dim); color: var(--accent); border-color: var(--accent); }
 
+.drop-zone {
+  border: 2px dashed var(--border2); border-radius: var(--r2);
+  padding: 26px; text-align: center; font-family: var(--mono); font-size: 11px;
+  color: var(--text3); margin-bottom: 12px; letter-spacing: .5px; line-height: 1.8;
+  transition: border-color .1s, background .1s;
+}
+.drop-zone.drag { border-color: var(--accent); background: var(--acc-dim); color: var(--accent); }
+
 table.cfg { width: 100%; border-collapse: collapse; }
 table.cfg th {
   font-family: var(--mono); font-size: 9px; letter-spacing: 1px; color: var(--text3);
   text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--border);
 }
-table.cfg td { padding: 4px 6px; border-bottom: 1px solid var(--border); }
+table.cfg td { padding: 4px 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 table.cfg input[type=text] {
   width: 100%; font-family: var(--mono); font-size: 11px; color: var(--text);
   background: var(--s2); border: 1px solid var(--border); border-radius: 3px;
   padding: 5px 8px; outline: none;
 }
 table.cfg input[type=text]:focus { border-color: var(--accent); }
-table.cfg input[type=checkbox] { accent-color: var(--accent); }
+table.cfg select {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  background: var(--s2); border: 1px solid var(--border); border-radius: 3px;
+  padding: 5px 6px; outline: none;
+}
 .tdel { font-family: var(--mono); font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; }
 .tdel:hover { color: var(--pgm); }
+.mt-thumb { width: 64px; height: 36px; object-fit: cover; border-radius: 3px; border: 1px solid var(--border2); display: block; }
+.pip-count { font-family: var(--mono); font-size: 10px; color: var(--pvw); }
+.pip-count.zero { color: #ff7675; }
 
 /* toast */
 #toast {
@@ -388,7 +401,6 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
     <div class="logo">ÁREA <b>DEV</b></div>
   </header>
 
-  <!-- senha -->
   <div class="gate" id="gate">
     <h2>ACESSO DEV</h2>
     <input type="password" id="gate-pw" placeholder="senha">
@@ -396,8 +408,33 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
     <div class="gate-err" id="gate-err"></div>
   </div>
 
-  <!-- conteúdo dev -->
   <div id="dev-content" style="display:none">
+
+    <div class="sec">
+      <div class="sec-hd">
+        <span class="sec-ttl">CONFIGURAÇÃO VMIX</span>
+        <span class="dev-hint">nomes exatos dos inputs fixos no vMix</span>
+      </div>
+      <div class="sec-bd">
+        <div class="dev-row">
+          <label style="width:150px">INPUT GT (moldura)</label>
+          <input type="text" id="cfg-gt" style="width:240px" spellcheck="false">
+        </div>
+        <div class="dev-row">
+          <label style="width:150px">CAMPO DE IMAGEM DO GT</label>
+          <input type="text" id="cfg-field" style="width:240px" spellcheck="false">
+        </div>
+        <div class="dev-row">
+          <label style="width:150px">INPUT COLOUR (sinais)</label>
+          <input type="text" id="cfg-colour" style="width:240px" spellcheck="false">
+        </div>
+        <div class="dev-row">
+          <label style="width:150px">PASTA RAIZ NAS PDs</label>
+          <input type="text" id="cfg-root" style="width:340px" spellcheck="false">
+        </div>
+        <div class="dev-hint">No CORTAR: SetImage no GT com o caminho do PNG → limpa layers 1-9 do Colour → aplica overlay + zoom/pan/crop de cada pip.</div>
+      </div>
+    </div>
 
     <div class="sec">
       <div class="sec-hd">
@@ -415,7 +452,7 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
       <div class="sec-bd">
         <div class="pk-tabs" id="pk-tabs"></div>
         <div class="dev-row" id="pk-actions" style="margin-top:10px; display:none">
-          <input type="text" id="pk-name" style="width:240px" placeholder="Nome do pacote">
+          <input type="text" id="pk-name" style="width:240px" placeholder="Nome da competição">
           <button class="sm-btn" id="pk-rename">RENOMEAR</button>
           <button class="sm-btn red" id="pk-del">EXCLUIR PACOTE</button>
         </div>
@@ -425,21 +462,28 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
     <div class="sec" id="sec-mts" style="display:none">
       <div class="sec-hd">
         <span class="sec-ttl">MULTITELAS DO PACOTE</span>
-        <button class="sm-btn acc" id="mt-add">+ MULTITELA</button>
+        <span class="dev-hint" id="mt-count"></span>
       </div>
       <div class="sec-bd">
+        <div class="drop-zone" id="dz">
+          ARRASTE AQUI A <b>PASTA</b> DO PACOTE COM OS PNGs DAS MULTITELAS<br>
+          o sistema monta o caminho a partir da raiz (igual em todas as PDs)<br>
+          e detecta os pips automaticamente pelas áreas transparentes
+        </div>
         <table class="cfg">
           <thead><tr>
-            <th style="width:16%">BOTÃO</th>
-            <th style="width:34%">INPUT NO VMIX (nome exato)</th>
-            <th style="width:22%">LAYERS DOS PIPS (ex: 5,6,7,8)</th>
-            <th style="width:10%">SINAL CENTRAL</th>
+            <th style="width:70px"></th>
+            <th style="width:16%">NOME</th>
+            <th style="width:42%">CAMINHO NA PD</th>
+            <th style="width:60px">PIPS</th>
+            <th style="width:70px">BLEED</th>
+            <th style="width:90px">CROP</th>
             <th></th>
           </tr></thead>
           <tbody id="mt-tbody"></tbody>
         </table>
         <div class="dev-hint" style="margin-top:8px">
-          Layers em ordem de leitura dos pips (esquerda→direita, cima→baixo). O app converte pro índice 1-10 da API sozinho.
+          Pips em ordem de leitura (esquerda→direita, cima→baixo) → layers 1, 2, 3... do Colour. Layer 10 é a moldura GT, nunca é tocada.
         </div>
       </div>
     </div>
@@ -448,6 +492,7 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
       <div class="sec-hd">
         <span class="sec-ttl">INPUTS DE SINAL DO PACOTE</span>
         <div>
+          <button class="sm-btn" id="in-import">IMPORTAR DO VMIX</button>
           <button class="sm-btn" id="in-default">RESTAURAR PADRÃO</button>
           <button class="sm-btn acc" id="in-add">+ INPUT</button>
         </div>
@@ -455,12 +500,16 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
       <div class="sec-bd">
         <table class="cfg">
           <thead><tr>
-            <th style="width:28%">BOTÃO (nome curto)</th>
-            <th style="width:52%">INPUT NO VMIX (nome exato)</th>
+            <th style="width:24%">BOTÃO (nome curto)</th>
+            <th style="width:46%">INPUT NO VMIX (nome exato)</th>
+            <th style="width:14%">FORMATO</th>
             <th></th>
           </tr></thead>
           <tbody id="in-tbody"></tbody>
         </table>
+        <div class="dev-hint" style="margin-top:8px">
+          FORMATO define o cálculo de zoom: 16:9 preenche a largura do pip, 9:16 (vertical) preenche a altura.
+        </div>
       </div>
     </div>
 
@@ -479,53 +528,33 @@ table.cfg input[type=checkbox] { accent-color: var(--accent); }
 <div id="toast"></div>
 
 <script>
-/* ═══════════════════ PRESETS FIXOS ═══════════════════ */
+/* ═══════════════════ PRESETS ═══════════════════ */
 const PCS = {
   'PD2': '10.10.0.102', 'PD3': '10.10.0.103', 'PD4': '10.10.0.104',
   'PD5': '10.10.0.105', 'PD6': '10.10.0.106',
 };
 
 const DEFAULT_INPUTS = [
-  { title: 'IN 1',                label: 'IN 1' },
-  { title: 'IN 2',                label: 'IN 2' },
-  { title: 'IN 3',                label: 'IN 3' },
-  { title: 'IN 4',                label: 'IN 4' },
-  { title: 'IN 5',                label: 'IN 5' },
-  { title: 'CALL 1',              label: 'CALL 1' },
-  { title: 'CALL 2',              label: 'CALL 2' },
-  { title: 'CONTEÚDO HORIZONTAL', label: 'CONT HOR' },
-  { title: 'ADBREAK MONTADO',     label: 'ADBREAK' },
-  { title: 'CONTEUDO VERTICAL',   label: 'CONT VER' },
-  { title: 'replay',              label: 'REPLAY A' },
-  { title: 'replay - B',          label: 'REPLAY B' },
+  { title: 'IN 1',                label: 'IN 1',     ar: '16:9' },
+  { title: 'IN 2',                label: 'IN 2',     ar: '16:9' },
+  { title: 'IN 3',                label: 'IN 3',     ar: '16:9' },
+  { title: 'IN 4',                label: 'IN 4',     ar: '16:9' },
+  { title: 'IN 5',                label: 'IN 5',     ar: '16:9' },
+  { title: 'CALL 1',              label: 'CALL 1',   ar: '16:9' },
+  { title: 'CALL 2',              label: 'CALL 2',   ar: '16:9' },
+  { title: 'CONTEÚDO HORIZONTAL', label: 'CONT HOR', ar: '16:9' },
+  { title: 'ADBREAK MONTADO',     label: 'ADBREAK',  ar: '16:9' },
+  { title: 'CONTEUDO VERTICAL',   label: 'CONT VER', ar: '9:16' },
+  { title: 'replay',              label: 'REPLAY A', ar: '16:9' },
+  { title: 'replay - B',          label: 'REPLAY B', ar: '16:9' },
 ];
 
-/* geometria feita à mão pros layouts conhecidos (chave = label) */
-const GEO_PRESETS = {
-  '50:50':          { pips: [[.010,.260,.485,.480],[.505,.260,.485,.480]] },
-  '80:20':          { pips: [[.010,.110,.760,.780],[.780,.560,.210,.330]] },
-  '60:40':          { pips: [[.010,.230,.580,.540],[.600,.230,.390,.540]] },
-  '60:40 +1':       { pips: [[.010,.160,.580,.680],[.600,.160,.390,.400],[.600,.580,.390,.260]] },
-  '60:40 +2':       { pips: [[.010,.160,.580,.680],[.600,.160,.390,.380],[.600,.560,.188,.280],[.800,.560,.190,.280]] },
-  '60:40 +1 VERT':  { pips: [[.010,.160,.560,.680],[.585,.160,.260,.680],[.860,.160,.130,.680]] },
-  '2+ SINAL +2':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.280],[.810,.195,.180,.280],[.010,.490,.180,.280],[.810,.490,.180,.280]] },
-  '1+ SINAL +1':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.575],[.810,.195,.180,.575]] },
-  '3+ SINAL +1':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.180],[.810,.195,.180,.575],[.010,.393,.180,.180],[.010,.590,.180,.180]] },
-  '2+ SINAL +1':    { sinal: [.200,.195,.600,.575], pips: [[.010,.195,.180,.280],[.810,.195,.180,.575],[.010,.490,.180,.280]] },
+const DEFAULT_CFG = {
+  gt:     'Multitela.gtzip',
+  field:  'Image1.Source',
+  colour: 'Colour',
+  root:   'D:\\PROJETOS VMIX PDS\\',
 };
-
-const SEED_MTS = [
-  { label: '50:50',         title: '50:50 COPA MONTADO',        layers: [7,8],     sinal: false },
-  { label: '80:20',         title: '80:20 COPA MONTADO',        layers: [7,8],     sinal: false },
-  { label: '60:40',         title: '60:40 COPA MONTADO',        layers: [7,8],     sinal: false },
-  { label: '60:40 +1',      title: '60:40+1 COPA MONTADO ',     layers: [6,7,8],   sinal: false },
-  { label: '60:40 +2',      title: '60:40+2 COPA MONTADO ',     layers: [5,6,7,8], sinal: false },
-  { label: '60:40 +1 VERT', title: '60:40 +1 VERTICAL MONTADO', layers: [6,7,8],   sinal: false },
-  { label: '2+ SINAL +2',   title: '2+ SINAL +2 MONTADO',       layers: [5,6,7,8], sinal: true },
-  { label: '1+ SINAL +1',   title: '1+ SINAL +1 MONTADO',       layers: [7,8],     sinal: true },
-  { label: '3+ SINAL +1',   title: '3+ SINAL +1 MONTADO',       layers: [5,6,7,8], sinal: true },
-  { label: '2+ SINAL +1',   title: '2+ SINAL +1 MONTADO',       layers: [6,7,8],   sinal: true },
-];
 
 /* ═══════════════════ STATE ═══════════════════ */
 function loadJ(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? fb; } catch(e) { return fb; } }
@@ -533,66 +562,41 @@ function loadJ(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); ret
 let pc      = localStorage.getItem('mc_pc') || 'PD2';
 let ipOver  = loadJ('mc_ips', {});
 let devPw   = localStorage.getItem('mc_pw') || '1234';
-let packs   = loadJ('mc_packs', null);
-let history = loadJ('mc_hist', []);
-let assign  = loadJ('mc_assign', {});          // { mtTitle: { pipNum: inputTitle } }
+let cfg     = Object.assign({}, DEFAULT_CFG, loadJ('mc_cfg', {}));
+let packs   = loadJ('mc_packs2', null);
+let history = loadJ('mc_hist2', []);
+let assign  = loadJ('mc_assign2', {});   // { mtId: { pipNum: inputTitle } }
 
 if (!packs) {
-  packs = [{ id: 'pk' + Date.now(), name: 'MULTITELA COPA 2026', mts: SEED_MTS, inputs: DEFAULT_INPUTS.map(i => ({...i})) }];
+  packs = [{ id: 'pk' + Date.now(), name: 'MULTITELA COPA 2026', mts: [], inputs: DEFAULT_INPUTS.map(i => ({...i})) }];
   savePacks();
 }
 
-let activePk  = null;   // pacote aberto na mesa
-let devPk     = packs[0]?.id || null;  // pacote selecionado no dev
-let devOpen   = false;  // gate liberado nesta sessão
-let selMT     = null;   // index dentro de activePk.mts
-let shiftPos  = 0;
+let activePk = null;
+let devPk    = packs[0]?.id || null;
+let devOpen  = false;
+let selMT    = null;      // index em activePk.mts
+let shiftPos = 0;
 
 const $ = id => document.getElementById(id);
 const ipOf = k => ipOver[k] || PCS[k];
-const api = () => `http://${ipOf(pc)}:8088/api/?`;
-function savePacks()  { localStorage.setItem('mc_packs', JSON.stringify(packs)); }
-function saveAssign() { localStorage.setItem('mc_assign', JSON.stringify(assign)); }
-function saveHist()   { localStorage.setItem('mc_hist', JSON.stringify(history)); }
+const apiBase = () => `http://${ipOf(pc)}:8088/api/?`;
+function savePacks()  { try { localStorage.setItem('mc_packs2', JSON.stringify(packs)); } catch(e) { toast('localStorage cheio — pacote grande demais', true); } }
+function saveAssign() { localStorage.setItem('mc_assign2', JSON.stringify(assign)); }
+function saveHist()   { localStorage.setItem('mc_hist2', JSON.stringify(history)); }
+function saveCfg()    { localStorage.setItem('mc_cfg', JSON.stringify(cfg)); }
 const pkById = id => packs.find(p => p.id === id);
 
-/* geometria: preset conhecido pelo label, senão automática */
-function geoOf(mt) {
-  if (GEO_PRESETS[mt.label]) return GEO_PRESETS[mt.label];
-  const n = mt.layers.length;
-  if (mt.sinal) {
-    /* lados alternados em volta do sinal central */
-    const left = [], right = [];
-    for (let i = 0; i < n; i++) (i % 2 === 0 ? left : right).push(i);
-    const col = (list, x) => list.map((_, j) => {
-      const h = .575 / list.length - .02;
-      return [x, .195 + j * (.575 / list.length), .180, h];
-    });
-    const boxes = new Array(n);
-    col(left, .010).forEach((b, j) => boxes[left[j]] = b);
-    col(right, .810).forEach((b, j) => boxes[right[j]] = b);
-    return { sinal: [.200,.195,.600,.575], pips: boxes };
-  }
-  /* grade simples */
-  const cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
-  const pips = [];
-  for (let i = 0; i < n; i++) {
-    const c = i % cols, r = Math.floor(i / cols);
-    pips.push([.01 + c * (.98/cols), .10 + r * (.8/rows), .98/cols - .012, .8/rows - .02]);
-  }
-  return { pips };
-}
-
-/* ═══════════════════ NAVEGAÇÃO ═══════════════════ */
-function show(scr) {
-  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
-  $(scr).classList.add('on');
-}
-
 /* ═══════════════════ vMIX ═══════════════════ */
-async function vmix(params) {
+function vCmd(fn, params) {
+  const qs = Object.entries(params || {})
+    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+  return fetch(`${apiBase()}Function=${fn}${qs ? '&' + qs : ''}`, { mode: 'no-cors' });
+}
+
+async function vMulti(cmds) {
   try {
-    await fetch(api() + params, { mode: 'no-cors' });
+    await Promise.all(cmds);
     setStatus(true);
     return true;
   } catch(e) {
@@ -611,25 +615,131 @@ function setStatus(ok) {
   });
 }
 
-/* ═══════════════════ MESA DE CORTE ═══════════════════ */
+/* ═══════════════════ FÓRMULA PIP → VMIX ═══════════════════ */
+function pipToVmix(pip, bleed, cropMode, srcAR) {
+  // Sistema de coordenadas vMix:
+  //   zoom=1  → o ESPAÇO 16:9 (1920x1080) ocupa 100% da tela
+  //   PanX=0  → centrado (POSITIVO = direita)
+  //   PanY=0  → centrado (POSITIVO = cima — invertido do canvas HTML)
+  //
+  // srcAR >= 16/9 (mais largo): sinal preenche a LARGURA do espaço
+  // srcAR <  16/9 (mais alto):  sinal preenche a ALTURA do espaço
+  //
+  // cropMode 'cover' → crop nas dimensões onde o sinal vaza do pip
+  // cropMode 'fit'   → sem crop (o PNG da moldura mascara o entorno)
+
+  const CANVAS_AR = 16 / 9;
+  const SRC_AR    = (typeof srcAR === 'number' && srcAR > 0) ? srcAR : CANVAS_AR;
+  const BLEED     = (typeof bleed === 'number' && bleed >= 1) ? bleed : 1.04;
+  const mode      = cropMode === 'fit' ? 'fit' : 'cover';
+
+  let sW_per_zoom, sH_per_zoom;
+  if (SRC_AR >= CANVAS_AR) { sW_per_zoom = 1; sH_per_zoom = CANVAS_AR / SRC_AR; }
+  else                     { sH_per_zoom = 1; sW_per_zoom = SRC_AR / CANVAS_AR; }
+
+  let zoom;
+  if (SRC_AR >= CANVAS_AR) zoom = pip.w * BLEED;   // horizontal: zoom pela largura
+  else                     zoom = pip.h * BLEED;   // vertical: zoom pela altura
+
+  const sinalW = zoom * sW_per_zoom;
+  const sinalH = zoom * sH_per_zoom;
+
+  let cropFracX = 0, cropFracY = 0;
+  if (mode === 'cover') {
+    if (sinalW > pip.w) cropFracX = (sinalW - pip.w) / (2 * sinalW);
+    if (sinalH > pip.h) cropFracY = (sinalH - pip.h) / (2 * sinalH);
+  }
+
+  const cx   = pip.x + pip.w / 2;
+  const cy   = pip.y + pip.h / 2;
+  const panX = (cx - 0.5) * 2;
+  const panY = (0.5 - cy) * 2;
+
+  const r4 = v => Math.round(v * 10000) / 10000;
+  return {
+    zoom:   r4(zoom),
+    panX:   r4(panX),
+    panY:   r4(panY),
+    cropX1: r4(cropFracX),
+    cropX2: r4(1 - cropFracX),
+    cropY1: r4(cropFracY),
+    cropY2: r4(1 - cropFracY),
+  };
+}
+
+function parseAR(s) {
+  const m = /^(\d+(?:\.\d+)?)\s*[:x\/]\s*(\d+(?:\.\d+)?)$/.exec((s || '').trim());
+  if (!m) return 16 / 9;
+  const w = parseFloat(m[1]), h = parseFloat(m[2]);
+  return h > 0 ? w / h : 16 / 9;
+}
+
+/* ═══════════════════ CORTAR (GO) ═══════════════════ */
+async function doCut() {
+  if (selMT === null || !activePk) return;
+  const mt = activePk.mts[selMT];
+  if (!mt.path) { toast('Multitela sem caminho configurado (Dev)', true); return; }
+
+  const cmds = [];
+
+  /* ① SetImage no GT com o caminho do PNG */
+  cmds.push(vCmd('SetImage', {
+    Input: cfg.gt, SelectedName: cfg.field, Value: mt.path,
+  }));
+
+  /* ② Limpa layers 1-9 do Colour */
+  for (let li = 1; li <= 9; li++) {
+    cmds.push(vCmd('SetMultiViewOverlay', { Input: cfg.colour, Value: `${li},` }));
+    cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: cfg.colour, Value: '1' }));
+    cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: cfg.colour, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: cfg.colour, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: cfg.colour, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: cfg.colour, Value: '1' }));
+    cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: cfg.colour, Value: '0' }));
+    cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: cfg.colour, Value: '1' }));
+  }
+
+  /* ③ Aplica cada pip: overlay + zoom + pan + crop */
+  const pips = assign[mt.id] || {};
+  mt.pips.forEach((pipCoord, i) => {
+    const inputTitle = pips[i + 1];
+    if (!inputTitle) return;
+    const li  = i + 1;
+    const inp = activePk.inputs.find(x => x.title === inputTitle);
+    const p   = pipToVmix(pipCoord, mt.bleed, mt.cropMode, parseAR(inp?.ar));
+    cmds.push(vCmd('SetMultiViewOverlay',  { Input: cfg.colour, Value: `${li},${inputTitle}` }));
+    cmds.push(vCmd(`SetLayer${li}Zoom`,    { Input: cfg.colour, Value: p.zoom }));
+    cmds.push(vCmd(`SetLayer${li}PanX`,    { Input: cfg.colour, Value: p.panX }));
+    cmds.push(vCmd(`SetLayer${li}PanY`,    { Input: cfg.colour, Value: p.panY }));
+    cmds.push(vCmd(`SetLayer${li}CropX1`,  { Input: cfg.colour, Value: p.cropX1 }));
+    cmds.push(vCmd(`SetLayer${li}CropX2`,  { Input: cfg.colour, Value: p.cropX2 }));
+    cmds.push(vCmd(`SetLayer${li}CropY1`,  { Input: cfg.colour, Value: p.cropY1 }));
+    cmds.push(vCmd(`SetLayer${li}CropY2`,  { Input: cfg.colour, Value: p.cropY2 }));
+  });
+
+  const ok = await vMulti(cmds);
+  if (ok) {
+    saveEntry('ar');
+    toast('CORTADO → ' + mt.name);
+  }
+}
+
+/* ═══════════════════ MESA ═══════════════════ */
 function cutPip(pipNum, inputTitle) {
   if (selMT === null) { toast('Selecione uma multitela primeiro', true); return; }
   const mt = activePk.mts[selMT];
-  if (pipNum > mt.layers.length) {
-    toast(`${mt.label} só tem ${mt.layers.length} pip${mt.layers.length > 1 ? 's' : ''}`, true);
+  if (pipNum > mt.pips.length) {
+    toast(`${mt.name} só tem ${mt.pips.length} pip${mt.pips.length > 1 ? 's' : ''}`, true);
     return;
   }
-  const apiLayer = mt.layers[pipNum - 1] + 1;  /* XML 0-9 → API 1-10 */
-  vmix(`Function=SetMultiViewOverlay&Input=${encodeURIComponent(mt.title)}&Value=${apiLayer},${encodeURIComponent(inputTitle)}`);
-  if (!assign[mt.title]) assign[mt.title] = {};
-  assign[mt.title][pipNum] = inputTitle;
+  if (!assign[mt.id]) assign[mt.id] = {};
+  assign[mt.id][pipNum] = inputTitle;
   saveAssign();
   renderMesa();
 }
 
 function selectMT(i) {
   selMT = i;
-  vmix(`Function=PreviewInput&Input=${encodeURIComponent(activePk.mts[i].title)}`);
   renderMesa();
 }
 
@@ -637,8 +747,8 @@ function saveEntry(kind) {
   if (selMT === null) return;
   const mt = activePk.mts[selMT];
   history.unshift({
-    kind, mtTitle: mt.title, mtLabel: mt.label,
-    pips: { ...(assign[mt.title] || {}) },
+    kind, mtId: mt.id, mtName: mt.name,
+    pips: { ...(assign[mt.id] || {}) },
     time: new Date().toTimeString().slice(0, 8),
   });
   if (history.length > 60) history.pop();
@@ -649,18 +759,12 @@ function saveEntry(kind) {
 function recallEntry(idx) {
   const h = history[idx];
   if (!h || !activePk) return;
-  const i = activePk.mts.findIndex(m => m.title === h.mtTitle);
+  const i = activePk.mts.findIndex(m => m.id === h.mtId);
   if (i < 0) { toast('Multitela não existe neste pacote', true); return; }
   selMT = i;
-  const mt = activePk.mts[i];
-  assign[mt.title] = { ...h.pips };
+  assign[h.mtId] = { ...h.pips };
   saveAssign();
-  Object.entries(h.pips).forEach(([pipNum, inputTitle]) => {
-    const apiLayer = mt.layers[pipNum - 1] + 1;
-    vmix(`Function=SetMultiViewOverlay&Input=${encodeURIComponent(mt.title)}&Value=${apiLayer},${encodeURIComponent(inputTitle)}`);
-  });
-  vmix(`Function=PreviewInput&Input=${encodeURIComponent(mt.title)}`);
-  toast('Recuperado: ' + mt.label);
+  toast('Recuperado: ' + h.mtName + ' — aperte CORTAR pra colocar no ar');
   renderMesa();
 }
 
@@ -669,9 +773,8 @@ function renderMesa() {
   $('mesa-pack').textContent = activePk.name;
   renderPcs('pcs-mesa');
 
-  /* PVW */
   const pvw = $('pvw');
-  pvw.querySelectorAll('.box').forEach(b => b.remove());
+  pvw.querySelectorAll('.box, img.thumb').forEach(b => b.remove());
   if (selMT === null) {
     $('pvw-empty').style.display = 'flex';
     $('mt-name').textContent = '—';
@@ -680,35 +783,32 @@ function renderMesa() {
   } else {
     $('pvw-empty').style.display = 'none';
     const mt = activePk.mts[selMT];
-    const geo = geoOf(mt);
-    $('mt-name').textContent = mt.title.trim();
+    $('mt-name').textContent = mt.name;
     $('take').disabled = false;
     $('plist').disabled = false;
 
-    if (geo.sinal) {
-      const [x,y,w,h] = geo.sinal;
-      const d = document.createElement('div');
-      d.className = 'box sinal';
-      d.style.cssText = `left:${x*100}%;top:${y*100}%;width:${w*100}%;height:${h*100}%`;
-      d.innerHTML = `<span class="lbl">SINAL</span>`;
-      pvw.appendChild(d);
+    if (mt.thumb) {
+      const img = document.createElement('img');
+      img.className = 'thumb';
+      img.src = mt.thumb;
+      pvw.appendChild(img);
     }
-    geo.pips.forEach((p, i) => {
-      const [x,y,w,h] = p;
+    mt.pips.forEach((p, i) => {
       const num = i + 1;
-      const inp = assign[mt.title]?.[num];
+      const inp = assign[mt.id]?.[num];
       const d = document.createElement('div');
-      d.className = 'box pip' + (inp ? ' filled' : '');
-      d.style.cssText = `left:${x*100}%;top:${y*100}%;width:${w*100}%;height:${h*100}%`;
-      const lbl = inp ? (activePk.inputs.find(x2 => x2.title === inp)?.label || inp) : 'vazio';
+      d.className = 'box' + (inp ? ' filled' : '');
+      d.style.cssText = `left:${p.x*100}%;top:${p.y*100}%;width:${p.w*100}%;height:${p.h*100}%`;
+      const lbl = inp ? (activePk.inputs.find(x => x.title === inp)?.label || inp) : 'vazio';
       d.innerHTML = `<span class="n">${num}</span><span class="lbl">${lbl}</span>`;
       pvw.appendChild(d);
     });
   }
 
-  /* linhas */
   $('strip-mt').innerHTML = activePk.mts.map((m, i) =>
-    `<button class="btn ${i === selMT ? 'sel-mt' : ''}" data-mt="${i}">${m.label}<span class="sub">${m.layers.length} pips</span></button>`).join('');
+    `<button class="btn ${i === selMT ? 'sel-mt' : ''}" data-mt="${i}">${m.name}<span class="sub">${m.pips.length} pips</span></button>`).join('')
+    || '<span class="dev-hint" style="padding:10px">Nenhuma multitela — carregue a pasta do pacote no DEV</span>';
+
   renderInputStrip('strip-p1', 1);
   renderInputStrip('strip-p2', 2);
   const p3pip = 3 + shiftPos;
@@ -720,7 +820,7 @@ function renderMesa() {
 
 function renderInputStrip(stripId, pipNum) {
   const mt = selMT !== null ? activePk.mts[selMT] : null;
-  const cur = mt ? assign[mt.title]?.[pipNum] : null;
+  const cur = mt ? assign[mt.id]?.[pipNum] : null;
   $(stripId).innerHTML = activePk.inputs.map(inp =>
     `<button class="btn ${inp.title === cur ? 'sel-in' : ''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inp.title)}">${inp.label}</button>`).join('');
 }
@@ -735,7 +835,7 @@ function renderHistory() {
     return `<div class="h-item" data-h="${i}">
       <div class="h-top">
         <span class="h-badge ${h.kind}">${h.kind === 'ar' ? 'NO AR' : 'PLAYLIST'}</span>
-        <span class="h-mt">${h.mtLabel}</span>
+        <span class="h-mt">${h.mtName}</span>
         <span class="h-time">${h.time}</span>
       </div>
       <div class="h-pips">${pipsTxt}</div>
@@ -744,7 +844,7 @@ function renderHistory() {
   }).join('');
 }
 
-/* ═══════════════════ TELA PACOTES ═══════════════════ */
+/* ═══════════════════ HOME ═══════════════════ */
 function renderHome() {
   renderPcs('pcs-home');
   $('pack-empty').style.display = packs.length ? 'none' : 'block';
@@ -760,8 +860,196 @@ function renderPcs(elId) {
     `<button class="pc-btn ${k === pc ? 'on' : ''}" data-pc="${k}">${k}</button>`).join('');
 }
 
-/* ═══════════════════ DEV ═══════════════════ */
+/* ═══════════════════ DETECÇÃO DE PIPS (flood fill no alpha) ═══════════════════ */
+function detectPips(img) {
+  const W = 480, H = 270;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, W, H);
+  const d = ctx.getImageData(0, 0, W, H).data;
+  const seen = new Uint8Array(W * H);
+  const isT = i => d[i * 4 + 3] < 16;   // alpha quase zero = janela do pip
+
+  const regions = [];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const start = y * W + x;
+    if (seen[start] || !isT(start)) continue;
+    let minX = x, maxX = x, minY = y, maxY = y, count = 0;
+    const stack = [start];
+    seen[start] = 1;
+    while (stack.length) {
+      const idx = stack.pop();
+      count++;
+      const ix = idx % W, iy = (idx / W) | 0;
+      if (ix < minX) minX = ix; if (ix > maxX) maxX = ix;
+      if (iy < minY) minY = iy; if (iy > maxY) maxY = iy;
+      if (ix > 0)     { const n = idx - 1; if (!seen[n] && isT(n)) { seen[n] = 1; stack.push(n); } }
+      if (ix < W - 1) { const n = idx + 1; if (!seen[n] && isT(n)) { seen[n] = 1; stack.push(n); } }
+      if (iy > 0)     { const n = idx - W; if (!seen[n] && isT(n)) { seen[n] = 1; stack.push(n); } }
+      if (iy < H - 1) { const n = idx + W; if (!seen[n] && isT(n)) { seen[n] = 1; stack.push(n); } }
+    }
+    const w = maxX - minX + 1, h = maxY - minY + 1;
+    /* ignora regiões minúsculas (anti-ruído) */
+    if (count > W * H * 0.004 && w > 10 && h > 10) {
+      regions.push({
+        x: minX / W, y: minY / H, w: w / W, h: h / H,
+      });
+    }
+  }
+
+  /* ordem de leitura: agrupa por linha (tolerância de y) e ordena por x */
+  regions.sort((a, b) => {
+    const ay = a.y + a.h / 2, by = b.y + b.h / 2;
+    if (Math.abs(ay - by) < 0.10) return a.x - b.x;
+    return ay - by;
+  });
+  return regions.map(r => ({
+    x: Math.round(r.x * 10000) / 10000, y: Math.round(r.y * 10000) / 10000,
+    w: Math.round(r.w * 10000) / 10000, h: Math.round(r.h * 10000) / 10000,
+  }));
+}
+
+function makeThumb(img) {
+  const c = document.createElement('canvas');
+  c.width = 320; c.height = 180;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0a0a0d';
+  ctx.fillRect(0, 0, 320, 180);
+  ctx.drawImage(img, 0, 0, 320, 180);
+  return c.toDataURL('image/jpeg', 0.7);
+}
+
+/* ═══════════════════ DROP DA PASTA (webkitGetAsEntry) ═══════════════════ */
+function walkEntry(entry, base) {
+  return new Promise(resolve => {
+    if (entry.isFile) {
+      entry.file(file => {
+        if (/\.png$/i.test(file.name)) resolve([{ file, rel: base + file.name }]);
+        else resolve([]);
+      }, () => resolve([]));
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      const all = [];
+      const readBatch = () => {
+        reader.readEntries(async entries => {
+          if (!entries.length) {
+            const results = await Promise.all(all);
+            resolve(results.flat());
+            return;
+          }
+          entries.forEach(e => all.push(walkEntry(e, base + entry.name + '\\')));
+          readBatch();   /* readEntries retorna em lotes de 100 */
+        }, () => resolve([]));
+      };
+      /* base já inclui o caminho até aqui; o nome desta pasta entra no rel dos filhos */
+      const fix = [];
+      const r2 = entry.createReader();
+      const collect = () => {
+        r2.readEntries(async entries => {
+          if (!entries.length) {
+            const results = await Promise.all(fix);
+            resolve(results.flat());
+            return;
+          }
+          entries.forEach(e => fix.push(walkEntry(e, base)));
+          collect();
+        }, () => resolve([]));
+      };
+      collect();
+    } else resolve([]);
+  });
+}
+
+async function handleFolderDrop(e) {
+  e.preventDefault();
+  $('dz').classList.remove('drag');
+  const items = [...e.dataTransfer.items];
+  const jobs = [];
+  for (const it of items) {
+    const entry = it.webkitGetAsEntry?.();
+    if (!entry) continue;
+    if (entry.isDirectory) jobs.push(walkEntry(entry, entry.name + '\\'));
+    else jobs.push(walkEntry(entry, ''));
+  }
+  const files = (await Promise.all(jobs)).flat();
+  if (!files.length) { toast('Nenhum PNG encontrado na pasta', true); return; }
+
+  toast(`Processando ${files.length} PNG${files.length > 1 ? 's' : ''}...`);
+  const pk = pkById(devPk);
+  let done = 0;
+
+  for (const { file, rel } of files) {
+    await new Promise(resolve => {
+      const fr = new FileReader();
+      fr.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const pips = detectPips(img);
+          const name = file.name.replace(/\.png$/i, '');
+          const path = cfg.root.replace(/\\+$/, '') + '\\' + rel;
+          const existing = pk.mts.find(m => m.path === path);
+          const mtObj = {
+            id: existing?.id || 'mt' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+            name, path, pips,
+            thumb: makeThumb(img),
+            bleed: existing?.bleed ?? 1.04,
+            cropMode: existing?.cropMode || 'cover',
+          };
+          if (existing) Object.assign(existing, mtObj);
+          else pk.mts.push(mtObj);
+          done++;
+          resolve();
+        };
+        img.onerror = resolve;
+        img.src = fr.result;
+      };
+      fr.onerror = resolve;
+      fr.readAsDataURL(file);
+    });
+  }
+
+  savePacks();
+  renderDev();
+  toast(`${done} multitela${done > 1 ? 's' : ''} carregada${done > 1 ? 's' : ''} com detecção de pips`);
+}
+
+/* ═══════════════════ IMPORTAR INPUTS DO VMIX ═══════════════════ */
+async function importVmix() {
+  try {
+    const res = await fetch(apiBase().replace('/api/?', '/api'));
+    const xml = await res.text();
+    const doc = new DOMParser().parseFromString(xml, 'text/xml');
+    const inputs = [...doc.querySelectorAll('input')];
+    const map = { 'Capture': '16:9', 'VideoCall': '16:9', 'VideoList': '16:9', 'Replay': '16:9', 'ReplayPreview': '16:9' };
+    const found = inputs
+      .filter(i => map[i.getAttribute('type')])
+      .map(i => ({
+        title: i.getAttribute('title'),
+        label: (i.getAttribute('title') || '').slice(0, 10).toUpperCase(),
+        ar: '16:9',
+      }));
+    if (!found.length) { toast('Nenhum input compatível encontrado no vMix', true); return; }
+    const pk = pkById(devPk);
+    found.forEach(f => { if (!pk.inputs.some(x => x.title === f.title)) pk.inputs.push(f); });
+    savePacks();
+    renderDev();
+    setStatus(true);
+    toast(`${found.length} inputs lidos do vMix (${pc})`);
+  } catch(e) {
+    setStatus(false);
+    toast('Não consegui ler o XML do vMix — verifique IP e se a página está em http', true);
+  }
+}
+
+/* ═══════════════════ DEV RENDER ═══════════════════ */
 function renderDev() {
+  /* config vmix */
+  $('cfg-gt').value     = cfg.gt;
+  $('cfg-field').value  = cfg.field;
+  $('cfg-colour').value = cfg.colour;
+  $('cfg-root').value   = cfg.root;
+
   /* IPs */
   $('dev-rows').innerHTML = Object.keys(PCS).map(k => {
     const mod = !!ipOver[k];
@@ -793,21 +1081,38 @@ function renderDev() {
   $('pk-name').value = pk.name;
 
   /* multitelas */
+  $('mt-count').textContent = pk.mts.length + ' carregadas';
   $('mt-tbody').innerHTML = pk.mts.map((m, i) => `
     <tr>
-      <td><input type="text" data-mtf="label" data-i="${i}" value="${m.label.replace(/"/g,'&quot;')}"></td>
-      <td><input type="text" data-mtf="title" data-i="${i}" value="${m.title.replace(/"/g,'&quot;')}"></td>
-      <td><input type="text" data-mtf="layers" data-i="${i}" value="${m.layers.join(',')}"></td>
-      <td style="text-align:center"><input type="checkbox" data-mtf="sinal" data-i="${i}" ${m.sinal ? 'checked' : ''}></td>
+      <td>${m.thumb ? `<img class="mt-thumb" src="${m.thumb}">` : ''}</td>
+      <td><input type="text" data-mtf="name" data-i="${i}" value="${(m.name || '').replace(/"/g, '&quot;')}"></td>
+      <td><input type="text" data-mtf="path" data-i="${i}" value="${(m.path || '').replace(/"/g, '&quot;')}"></td>
+      <td><span class="pip-count ${m.pips.length ? '' : 'zero'}">${m.pips.length}</span></td>
+      <td><input type="text" data-mtf="bleed" data-i="${i}" value="${m.bleed}" style="width:56px"></td>
+      <td><select data-mtf="cropMode" data-i="${i}">
+        <option value="cover" ${m.cropMode === 'cover' ? 'selected' : ''}>COVER</option>
+        <option value="fit" ${m.cropMode === 'fit' ? 'selected' : ''}>FIT</option>
+      </select></td>
       <td><button class="tdel" data-mtdel="${i}">✕</button></td>
     </tr>`).join('');
-  bindCfg('#mt-tbody', pk.mts, ['label','title','layers','sinal']);
+  $('mt-tbody').querySelectorAll('[data-mtf]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const i = +inp.dataset.i, f = inp.dataset.mtf;
+      if (f === 'bleed') {
+        const v = parseFloat(inp.value.replace(',', '.'));
+        pk.mts[i].bleed = (!isNaN(v) && v >= 1) ? v : 1.04;
+        inp.value = pk.mts[i].bleed;
+      } else pk.mts[i][f] = inp.value;
+      savePacks();
+    });
+  });
 
   /* inputs */
   $('in-tbody').innerHTML = pk.inputs.map((m, i) => `
     <tr>
-      <td><input type="text" data-inf="label" data-i="${i}" value="${m.label.replace(/"/g,'&quot;')}"></td>
-      <td><input type="text" data-inf="title" data-i="${i}" value="${m.title.replace(/"/g,'&quot;')}"></td>
+      <td><input type="text" data-inf="label" data-i="${i}" value="${(m.label || '').replace(/"/g, '&quot;')}"></td>
+      <td><input type="text" data-inf="title" data-i="${i}" value="${(m.title || '').replace(/"/g, '&quot;')}"></td>
+      <td><input type="text" data-inf="ar" data-i="${i}" value="${m.ar || '16:9'}" style="width:64px"></td>
       <td><button class="tdel" data-indel="${i}">✕</button></td>
     </tr>`).join('');
   $('in-tbody').querySelectorAll('input[data-inf]').forEach(inp => {
@@ -818,30 +1123,28 @@ function renderDev() {
   });
 }
 
-function bindCfg(sel, arr, fields) {
-  document.querySelector(sel).querySelectorAll('input[data-mtf]').forEach(inp => {
-    inp.addEventListener('change', () => {
-      const i = +inp.dataset.i, f = inp.dataset.mtf;
-      if (f === 'layers') {
-        arr[i].layers = inp.value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 9);
-        inp.value = arr[i].layers.join(',');
-      }
-      else if (f === 'sinal') arr[i].sinal = inp.checked;
-      else arr[i][f] = inp.value;
-      savePacks();
-    });
+/* config vmix: salvar on change */
+['gt', 'field', 'colour', 'root'].forEach(f => {
+  document.addEventListener('change', e => {
+    if (e.target.id === 'cfg-' + f) {
+      cfg[f] = e.target.value;
+      saveCfg();
+      toast('Configuração salva');
+    }
   });
-}
+});
 
 /* ═══════════════════ EVENTS ═══════════════════ */
 let suppressClick = false;
 
-document.addEventListener('click', e => {
-  const b = e.target.closest('button');
-  const card = e.target.closest('.pack-card');
-  if (suppressClick) return;
+function show(scr) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  $(scr).classList.add('on');
+}
 
-  /* abrir pacote */
+document.addEventListener('click', e => {
+  if (suppressClick) return;
+  const card = e.target.closest('.pack-card');
   if (card) {
     activePk = pkById(card.dataset.pk);
     selMT = null;
@@ -849,18 +1152,15 @@ document.addEventListener('click', e => {
     renderMesa(); renderHistory();
     return;
   }
+  const b = e.target.closest('button');
   if (!b) return;
 
-  /* navegação */
-  if (b.id === 'go-home')  { show('scr-home'); renderHome(); }
+  if (b.id === 'go-home' || b.id === 'dev-home') { show('scr-home'); renderHome(); }
   else if (b.id === 'go-dev') {
     show('scr-dev');
     if (devOpen) { $('gate').style.display = 'none'; $('dev-content').style.display = 'block'; renderDev(); }
     else { $('gate').style.display = 'block'; $('dev-content').style.display = 'none'; $('gate-pw').value = ''; $('gate-err').textContent = ''; }
   }
-  else if (b.id === 'dev-home') { show('scr-home'); renderHome(); }
-
-  /* gate */
   else if (b.id === 'gate-go') {
     if ($('gate-pw').value === devPw) {
       devOpen = true;
@@ -869,37 +1169,28 @@ document.addEventListener('click', e => {
       renderDev();
     } else $('gate-err').textContent = 'senha incorreta';
   }
-
-  /* PCs */
   else if (b.dataset.pc) {
     pc = b.dataset.pc;
     localStorage.setItem('mc_pc', pc);
     setStatus(true);
-    renderPcs('pcs-home'); renderPcs('pcs-mesa');
+    renderPcs('pcs-home');
+    if (activePk) renderPcs('pcs-mesa');
   }
-
-  /* mesa */
   else if (b.dataset.mt !== undefined) selectMT(+b.dataset.mt);
   else if (b.dataset.in !== undefined) cutPip(+b.dataset.pip, decodeURIComponent(b.dataset.in));
   else if (b.id === 'shift') { shiftPos = (shiftPos + 1) % 3; renderMesa(); }
-  else if (b.id === 'take') {
-    vmix('Function=Cut');
-    saveEntry('ar');
-    toast('CORTADO → ' + activePk.mts[selMT].title.trim());
-  }
+  else if (b.id === 'take')  doCut();
   else if (b.id === 'plist') {
     saveEntry('pl');
-    toast('Salvo na playlist: ' + activePk.mts[selMT].label);
+    toast('Salvo na playlist: ' + activePk.mts[selMT].name);
   }
   else if (b.id === 'hist-clear') { history = []; saveHist(); renderHistory(); }
   else if (b.dataset.hdel !== undefined) {
     history.splice(+b.dataset.hdel, 1);
     saveHist(); renderHistory();
   }
-
-  /* dev: pacotes */
   else if (b.id === 'pk-add') {
-    const name = prompt('Nome do novo pacote:');
+    const name = prompt('Nome da competição / pacote:');
     if (!name) return;
     const p = { id: 'pk' + Date.now(), name: name.trim(), mts: [], inputs: DEFAULT_INPUTS.map(i => ({...i})) };
     packs.push(p); devPk = p.id;
@@ -919,20 +1210,13 @@ document.addEventListener('click', e => {
     devPk = packs[0]?.id || null;
     savePacks(); renderDev();
   }
-
-  /* dev: multitelas */
-  else if (b.id === 'mt-add') {
-    pkById(devPk).mts.push({ label: 'NOVA MT', title: '', layers: [7,8], sinal: false });
-    savePacks(); renderDev();
-  }
   else if (b.dataset.mtdel !== undefined) {
     pkById(devPk).mts.splice(+b.dataset.mtdel, 1);
     savePacks(); renderDev();
   }
-
-  /* dev: inputs */
+  else if (b.id === 'in-import') importVmix();
   else if (b.id === 'in-add') {
-    pkById(devPk).inputs.push({ label: 'NOVO', title: '' });
+    pkById(devPk).inputs.push({ label: 'NOVO', title: '', ar: '16:9' });
     savePacks(); renderDev();
   }
   else if (b.dataset.indel !== undefined) {
@@ -945,8 +1229,6 @@ document.addEventListener('click', e => {
     savePacks(); renderDev();
     toast('Inputs restaurados pro padrão');
   }
-
-  /* dev: senha */
   else if (b.id === 'save-pw') {
     const v = $('new-pw').value.trim();
     if (!v) { toast('Digite a nova senha', true); return; }
@@ -955,8 +1237,6 @@ document.addEventListener('click', e => {
     $('new-pw').value = '';
     toast('Senha atualizada');
   }
-
-  /* dev: reset de IP */
   else if (b.dataset.ipreset !== undefined) {
     delete ipOver[b.dataset.ipreset];
     localStorage.setItem('mc_ips', JSON.stringify(ipOver));
@@ -970,13 +1250,19 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && document.activeElement === $('gate-pw')) $('gate-go').click();
 });
 
-/* clique no card do histórico (recall) */
+/* recall no histórico */
 document.addEventListener('click', e => {
   if (suppressClick) return;
   if (e.target.closest('.h-del')) return;
   const item = e.target.closest('.h-item');
   if (item) recallEntry(+item.dataset.h);
 });
+
+/* drop zone */
+const dz = $('dz');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', handleFolderDrop);
 
 /* drag-scroll nas faixas */
 document.querySelectorAll('.strip').forEach(strip => {
@@ -1009,7 +1295,7 @@ function toast(msg, err) {
   t.textContent = msg;
   t.className = 'show' + (err ? ' err' : '');
   clearTimeout(toastT);
-  toastT = setTimeout(() => t.className = '', 2200);
+  toastT = setTimeout(() => t.className = '', 2600);
 }
 
 /* init */
