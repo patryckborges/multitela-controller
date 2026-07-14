@@ -303,6 +303,25 @@ table.cfg select {
 .pip-count { font-family: var(--mono); font-size: 10px; color: var(--pvw); }
 .pip-count.zero { color: #ff7675; }
 
+/* modal de seleção */
+.modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,.7); align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  width: min(680px, 92vw); max-height: 80vh; display: flex; flex-direction: column;
+  background: var(--s1); border: 1px solid var(--border2); border-radius: var(--r2);
+  overflow: hidden;
+}
+.modal-hd { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.modal-list { flex: 1; overflow-y: auto; padding: 8px 16px; scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+.modal-ft { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); }
+.pick-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.pick-item input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; flex: 0 0 auto; }
+.pick-item .pi-name { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.pick-item .pi-path { font-family: var(--mono); font-size: 9px; color: var(--text3); word-break: break-all; }
+
 /* toast */
 #toast {
   position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
@@ -446,8 +465,32 @@ table.cfg select {
 
     <div class="sec">
       <div class="sec-hd">
+        <span class="sec-ttl">NUVEM (sincronização automática)</span>
+        <div class="status"><div class="dot" id="dot-cloud"></div><span id="st-cloud">desligada</span></div>
+      </div>
+      <div class="sec-bd">
+        <div class="dev-row">
+          <label style="width:150px">ID DO NPOINT</label>
+          <input type="text" id="cfg-cloud" style="width:280px" spellcheck="false" placeholder="ex: a1b2c3d4e5f6">
+          <button class="sm-btn" id="cloud-pull">RECARREGAR</button>
+          <button class="sm-btn acc" id="cloud-push">SALVAR AGORA</button>
+        </div>
+        <div class="dev-hint">
+          Configure uma vez: abra <b>npoint.io</b>, apague o conteúdo, digite <b>{}</b>, clique em Save e copie o código da URL (npoint.io/docs/<b>SEU-ID</b>). Cole aqui em todas as máquinas.<br>
+          Com o ID preenchido, pacotes e configurações salvam na nuvem automaticamente e carregam sozinhos ao abrir o app em qualquer PD.
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-hd">
         <span class="sec-ttl">PACOTES GRÁFICOS</span>
-        <button class="sm-btn acc" id="pk-add">+ NOVO PACOTE</button>
+        <div>
+          <button class="sm-btn" id="pk-export">EXPORTAR JSON</button>
+          <button class="sm-btn" id="pk-import">IMPORTAR JSON</button>
+          <button class="sm-btn acc" id="pk-add">+ NOVO PACOTE</button>
+          <input type="file" id="pk-file" accept=".json,application/json" style="display:none">
+        </div>
       </div>
       <div class="sec-bd">
         <div class="pk-tabs" id="pk-tabs"></div>
@@ -465,10 +508,19 @@ table.cfg select {
         <span class="dev-hint" id="mt-count"></span>
       </div>
       <div class="sec-bd">
+        <div class="dev-row">
+          <label style="width:150px">SUBPASTA (a partir da raiz)</label>
+          <input type="text" id="dz-prefix" style="width:440px" spellcheck="false"
+            placeholder="ex: MULTITELAS NEUTRO NOVA\3.1 - MULTITELAS\5.1.3 - 80.20\">
+        </div>
+        <div class="dev-hint" style="margin-bottom:10px">
+          Arrastando a <b>pasta</b>: deixe vazio se ela estiver direto na raiz — a estrutura interna é lida sozinha.<br>
+          Arrastando <b>PNGs avulsos</b>: preencha com a subpasta onde eles ficam nas PDs (o navegador não enxerga o caminho de origem do arquivo).
+        </div>
         <div class="drop-zone" id="dz">
-          ARRASTE AQUI A <b>PASTA</b> DO PACOTE COM OS PNGs DAS MULTITELAS<br>
-          o sistema monta o caminho a partir da raiz (igual em todas as PDs)<br>
-          e detecta os pips automaticamente pelas áreas transparentes
+          ARRASTE AQUI A <b>PASTA</b> DO PACOTE OU <b>PNGs AVULSOS</b><br>
+          antes de importar você escolhe quais entram —<br>
+          os pips são detectados automaticamente pelas áreas transparentes
         </div>
         <table class="cfg">
           <thead><tr>
@@ -527,6 +579,21 @@ table.cfg select {
 </div>
 <div id="toast"></div>
 
+<!-- modal de seleção de PNGs -->
+<div class="modal-bg" id="pick-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="sec-ttl">SELECIONE OS PNGs PRA IMPORTAR</span>
+      <button class="sm-btn" id="pick-all">MARCAR/DESMARCAR TODOS</button>
+    </div>
+    <div class="modal-list" id="pick-list"></div>
+    <div class="modal-ft">
+      <button class="sm-btn" id="pick-cancel">CANCELAR</button>
+      <button class="sm-btn acc" id="pick-go">IMPORTAR SELECIONADOS</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ═══════════════════ PRESETS ═══════════════════ */
 const PCS = {
@@ -581,11 +648,77 @@ let shiftPos = 0;
 const $ = id => document.getElementById(id);
 const ipOf = k => ipOver[k] || PCS[k];
 const apiBase = () => `http://${ipOf(pc)}:8088/api/?`;
-function savePacks()  { try { localStorage.setItem('mc_packs2', JSON.stringify(packs)); } catch(e) { toast('localStorage cheio — pacote grande demais', true); } }
+function savePacks()  { try { localStorage.setItem('mc_packs2', JSON.stringify(packs)); } catch(e) { toast('localStorage cheio — pacote grande demais', true); } cloudPush(); }
 function saveAssign() { localStorage.setItem('mc_assign2', JSON.stringify(assign)); }
 function saveHist()   { localStorage.setItem('mc_hist2', JSON.stringify(history)); }
-function saveCfg()    { localStorage.setItem('mc_cfg', JSON.stringify(cfg)); }
+function saveCfg()    { localStorage.setItem('mc_cfg', JSON.stringify(cfg)); cloudPush(); }
 const pkById = id => packs.find(p => p.id === id);
+
+/* ═══════════════════ NUVEM (npoint.io) ═══════════════════ */
+let cloudTimer = null;
+let cloudPulling = false;   /* evita push disparado pelo próprio pull */
+
+function cloudState(s) {
+  const d = $('dot-cloud'), t = $('st-cloud');
+  if (!d) return;
+  if (s === 'ok')      { d.className = 'dot ok';  t.textContent = 'sincronizada'; }
+  else if (s === 'err'){ d.className = 'dot err'; t.textContent = 'erro de conexão'; }
+  else if (s === 'sav'){ d.className = 'dot';     t.textContent = 'salvando...'; }
+  else                 { d.className = 'dot';     t.textContent = 'desligada'; }
+}
+
+function cloudPush() {
+  if (!cfg.cloudId || cloudPulling) return;
+  clearTimeout(cloudTimer);
+  cloudState('sav');
+  cloudTimer = setTimeout(async () => {
+    try {
+      const body = { updatedAt: Date.now(), packs, cfg: { ...cfg } };
+      const r = await fetch('https://api.npoint.io/' + cfg.cloudId.trim(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      cloudState(r.ok ? 'ok' : 'err');
+      if (!r.ok) toast('Nuvem recusou o salvamento (bin travado?)', true);
+    } catch(e) {
+      cloudState('err');
+    }
+  }, 1200);
+}
+
+async function cloudPull(silent) {
+  if (!cfg.cloudId) { cloudState('off'); return false; }
+  try {
+    cloudPulling = true;
+    const r = await fetch('https://api.npoint.io/' + cfg.cloudId.trim(), { cache: 'no-store' });
+    if (!r.ok) throw 0;
+    const d = await r.json();
+    if (d && Array.isArray(d.packs)) {
+      packs = d.packs;
+      if (d.cfg) {
+        const keepCloud = cfg.cloudId;
+        cfg = Object.assign({}, DEFAULT_CFG, d.cfg);
+        cfg.cloudId = keepCloud;   /* o ID local sempre prevalece */
+      }
+      localStorage.setItem('mc_packs2', JSON.stringify(packs));
+      localStorage.setItem('mc_cfg', JSON.stringify(cfg));
+      if (!pkById(devPk)) devPk = packs[0]?.id || null;
+      cloudState('ok');
+      if (!silent) toast('Pacotes carregados da nuvem');
+      return true;
+    }
+    /* bin vazio ({}) na primeira vez: considera conectado */
+    cloudState('ok');
+    return false;
+  } catch(e) {
+    cloudState('err');
+    if (!silent) toast('Não consegui ler da nuvem — confira o ID', true);
+    return false;
+  } finally {
+    cloudPulling = false;
+  }
+}
 
 /* ═══════════════════ vMIX ═══════════════════ */
 function vCmd(fn, params) {
@@ -950,6 +1083,19 @@ function walkEntry(entry, base) {
   });
 }
 
+let pendingFiles = [];   /* arquivos aguardando confirmação no modal */
+
+function dzPrefix() {
+  let p = ($('dz-prefix').value || '').trim();
+  p = p.replace(/^[\\\/]+/, '').replace(/\//g, '\\');
+  if (p && !p.endsWith('\\')) p += '\\';
+  return p;
+}
+
+function buildPath(rel) {
+  return cfg.root.replace(/\\+$/, '') + '\\' + dzPrefix() + rel;
+}
+
 async function handleFolderDrop(e) {
   e.preventDefault();
   $('dz').classList.remove('drag');
@@ -961,8 +1107,22 @@ async function handleFolderDrop(e) {
     jobs.push(walkEntry(entry, ''));
   }
   const files = (await Promise.all(jobs)).flat();
-  if (!files.length) { toast('Nenhum PNG encontrado na pasta', true); return; }
+  if (!files.length) { toast('Nenhum PNG encontrado', true); return; }
 
+  /* abre o modal de seleção com preview do caminho final */
+  pendingFiles = files;
+  $('pick-list').innerHTML = files.map((f, i) => `
+    <label class="pick-item">
+      <input type="checkbox" data-pick="${i}" checked>
+      <div>
+        <div class="pi-name">${f.file.name}</div>
+        <div class="pi-path">${buildPath(f.rel)}</div>
+      </div>
+    </label>`).join('');
+  $('pick-modal').classList.add('open');
+}
+
+async function importFiles(files) {
   toast(`Processando ${files.length} PNG${files.length > 1 ? 's' : ''}...`);
   const pk = pkById(devPk);
   let done = 0;
@@ -975,8 +1135,8 @@ async function handleFolderDrop(e) {
         img.onload = () => {
           const pips = detectPips(img);
           const name = file.name.replace(/\.png$/i, '');
-          const path = cfg.root.replace(/\\+$/, '') + '\\' + rel;
-          /* casa por NOME: re-arrastar a pasta corrige caminhos sem duplicar */
+          const path = buildPath(rel);
+          /* casa por NOME: re-arrastar corrige caminhos sem duplicar */
           const existing = pk.mts.find(m => m.name === name) || pk.mts.find(m => m.path === path);
           const mtObj = {
             id: existing?.id || 'mt' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
@@ -1000,7 +1160,7 @@ async function handleFolderDrop(e) {
 
   savePacks();
   renderDev();
-  toast(`${done} multitela${done > 1 ? 's' : ''} carregada${done > 1 ? 's' : ''} com detecção de pips`);
+  toast(`${done} multitela${done > 1 ? 's' : ''} importada${done > 1 ? 's' : ''} com detecção de pips`);
 }
 
 /* ═══════════════════ IMPORTAR INPUTS DO VMIX ═══════════════════ */
@@ -1038,6 +1198,9 @@ function renderDev() {
   $('cfg-field').value  = cfg.field;
   $('cfg-colour').value = cfg.colour;
   $('cfg-root').value   = cfg.root;
+  $('dz-prefix').value  = cfg.prefix || '';
+  $('cfg-cloud').value  = cfg.cloudId || '';
+  if (!cfg.cloudId) cloudState('off');
 
   /* IPs */
   $('dev-rows').innerHTML = Object.keys(PCS).map(k => {
@@ -1121,6 +1284,19 @@ function renderDev() {
       toast('Configuração salva');
     }
   });
+});
+/* prefixo da subpasta e ID da nuvem persistem também */
+document.addEventListener('change', e => {
+  if (e.target.id === 'dz-prefix') {
+    cfg.prefix = e.target.value;
+    saveCfg();
+  }
+  if (e.target.id === 'cfg-cloud') {
+    cfg.cloudId = e.target.value.trim();
+    localStorage.setItem('mc_cfg', JSON.stringify(cfg));   /* salva sem disparar push */
+    if (cfg.cloudId) cloudPull().then(ok => { if (ok) renderDev(); });
+    else cloudState('off');
+  }
 });
 
 /* ═══════════════════ EVENTS ═══════════════════ */
@@ -1226,6 +1402,42 @@ document.addEventListener('click', e => {
     $('new-pw').value = '';
     toast('Senha atualizada');
   }
+  else if (b.id === 'pick-cancel') {
+    pendingFiles = [];
+    $('pick-modal').classList.remove('open');
+  }
+  else if (b.id === 'pick-all') {
+    const boxes = [...document.querySelectorAll('#pick-list input[data-pick]')];
+    const allOn = boxes.every(c => c.checked);
+    boxes.forEach(c => c.checked = !allOn);
+  }
+  else if (b.id === 'pick-go') {
+    const sel = [...document.querySelectorAll('#pick-list input[data-pick]:checked')]
+      .map(c => pendingFiles[+c.dataset.pick]);
+    $('pick-modal').classList.remove('open');
+    pendingFiles = [];
+    if (!sel.length) { toast('Nenhum PNG selecionado', true); return; }
+    importFiles(sel);
+  }
+  else if (b.id === 'cloud-pull') {
+    cloudPull().then(ok => { if (ok) renderDev(); });
+  }
+  else if (b.id === 'cloud-push') {
+    if (!cfg.cloudId) { toast('Preencha o ID do npoint primeiro', true); return; }
+    cloudPush();
+    toast('Salvando na nuvem...');
+  }
+  else if (b.id === 'pk-export') {
+    const data = JSON.stringify({ packs, cfg }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'pacotes.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('pacotes.json exportado — suba no repositório ou leve pro trabalho');
+  }
+  else if (b.id === 'pk-import') $('pk-file').click();
   else if (b.dataset.ipreset !== undefined) {
     delete ipOver[b.dataset.ipreset];
     localStorage.setItem('mc_ips', JSON.stringify(ipOver));
@@ -1290,6 +1502,13 @@ function toast(msg, err) {
 /* init */
 renderHome();
 setStatus(true);
+/* carrega da nuvem ao abrir (se configurada) e atualiza a tela */
+cloudPull(true).then(ok => {
+  if (ok) {
+    renderHome();
+    if (activePk) { activePk = pkById(activePk.id) || null; if (activePk) renderMesa(); }
+  }
+});
 </script>
 </body>
 </html>
