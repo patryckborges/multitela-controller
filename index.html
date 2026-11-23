@@ -488,6 +488,8 @@ table.cfg select {
         <div>
           <button class="sm-btn" id="pk-export">EXPORTAR JSON</button>
           <button class="sm-btn" id="pk-import">IMPORTAR JSON</button>
+          <button class="sm-btn" id="vmx-import">IMPORTAR PROJETO .vmix</button>
+          <input type="file" id="vmx-file" accept=".vmix,.xml" style="display:none">
           <button class="sm-btn acc" id="pk-add">+ NOVO PACOTE</button>
           <input type="file" id="pk-file" accept=".json,application/json" style="display:none">
         </div>
@@ -498,6 +500,12 @@ table.cfg select {
           <input type="text" id="pk-name" style="width:240px" placeholder="Nome da competição">
           <button class="sm-btn" id="pk-rename">RENOMEAR</button>
           <button class="sm-btn red" id="pk-del">EXCLUIR PACOTE</button>
+          <label style="margin-left:14px">DEPOIS DE CORTAR</label>
+          <select id="pk-after" title="Só vale pra multitelas MONTADAS (importadas do .vmix)">
+            <option value="none">só muda as layers</option>
+            <option value="preview">manda pro PREVIEW do vMix</option>
+            <option value="cut">CUT direto (no ar)</option>
+          </select>
         </div>
       </div>
     </div>
@@ -526,8 +534,9 @@ table.cfg select {
           <thead><tr>
             <th style="width:70px"></th>
             <th style="width:16%">NOME</th>
-            <th style="width:42%">CAMINHO NA PD</th>
-            <th style="width:60px">PIPS</th>
+            <th style="width:20%">INPUT NO VMIX</th>
+            <th style="width:26%">CAMINHO NA PD</th>
+            <th style="width:80px">PIPS</th>
             <th style="width:70px">BLEED</th>
             <th style="width:90px">CROP</th>
             <th></th>
@@ -535,7 +544,8 @@ table.cfg select {
           <tbody id="mt-tbody"></tbody>
         </table>
         <div class="dev-hint" style="margin-top:8px">
-          Pips em ordem de leitura (esquerda→direita, cima→baixo) → layers 1, 2, 3... do Colour. Layer 10 é a moldura GT, nunca é tocada.
+          <b>Sem INPUT NO VMIX</b> (modo GT): pips em ordem de leitura → layers 1, 2, 3... do Colour; layer 10 é a moldura GT.<br>
+          <b>Com INPUT NO VMIX</b> (modo MONTADO, vindo do .vmix): o CORTAR mexe só nas layers dos pips (L1, L2...) daquele input; a base PNG continua na layer dela.
         </div>
       </div>
     </div>
@@ -552,15 +562,17 @@ table.cfg select {
       <div class="sec-bd">
         <table class="cfg">
           <thead><tr>
-            <th style="width:24%">BOTÃO (nome curto)</th>
-            <th style="width:46%">INPUT NO VMIX (nome exato)</th>
-            <th style="width:14%">FORMATO</th>
+            <th style="width:20%">BOTÃO (nome curto)</th>
+            <th style="width:34%">INPUT NO VMIX (nome exato)</th>
+            <th style="width:12%">FORMATO</th>
+            <th style="width:22%">REGIÃO DO SINAL</th>
             <th></th>
           </tr></thead>
           <tbody id="in-tbody"></tbody>
         </table>
         <div class="dev-hint" style="margin-top:8px">
-          FORMATO define o cálculo de zoom: 16:9 preenche a largura do pip, 9:16 (vertical) preenche a altura.
+          FORMATO define o cálculo de zoom (16:9, 9:16, 4:3...). O sinal sempre cobre o pip inteiro e o excesso é cortado na borda (COVER).<br>
+          REGIÃO DO SINAL (opcional): pedaço do sinal que entra no pip, em frações <b>x1,y1,x2,y2</b> — ex.: <b>0,0.24,0.26,0.79</b> = câmera da esquerda de um sinal com 3. Vazio = quadro inteiro.
         </div>
       </div>
     </div>
@@ -578,6 +590,27 @@ table.cfg select {
 
 </div>
 <div id="toast"></div>
+
+<!-- modal de importação de projeto .vmix -->
+<div class="modal-bg" id="vmx-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="sec-ttl">IMPORTAR MULTITELAS DO PROJETO VMIX</span>
+    </div>
+    <div class="modal-list">
+      <div class="dev-hint" style="margin:6px 0 10px">Escolha a aba (categoria) do vMix que tem as multitelas:</div>
+      <div id="vmx-list"></div>
+      <div class="dev-row" style="margin-top:12px">
+        <label style="width:120px">NOME DO PACOTE</label>
+        <input type="text" id="vmx-name" style="flex:1" spellcheck="false">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="sm-btn" id="vmx-cancel">CANCELAR</button>
+      <button class="sm-btn acc" id="vmx-go">IMPORTAR</button>
+    </div>
+  </div>
+</div>
 
 <!-- modal de seleção de PNGs -->
 <div class="modal-bg" id="pick-modal">
@@ -623,6 +656,55 @@ const DEFAULT_CFG = {
   root:   'D:\\PROJETOS VMIX PDS\\',
 };
 
+/* Pacotes que já vêm prontos no sistema (gerados pelo IMPORTAR PROJETO .vmix).
+   OLIMPICOS 2027 = aba OLIMPICOS do PROJETO_OLIMPICOS_2027.vmix:
+   cada multitela aponta pro input MONTADO dela (Key do vMix) e pras layers dos pips. */
+const PRESET_PACKS = [{
+  "id":"pk_olimpicos_2027",
+  "name":"OLIMPICOS 2027",
+  "afterCut":"none",
+  "source":{"file":"PROJETO_OLIMPICOS_2027","aba":"OLIMPICOS"},
+  "inputs":[
+    {"title":"MIX 1","label":"MIX 1","ar":"16:9"},
+    {"title":"MIX 2","label":"MIX 2","ar":"16:9"},
+    {"title":"MIX 3","label":"MIX 3","ar":"16:9"},
+    {"title":"MIX 4","label":"MIX 4","ar":"16:9"},
+    {"title":"MIX 5","label":"MIX 5","ar":"16:9"},
+    {"title":"IN 1","label":"IN 1","ar":"16:9"},
+    {"title":"IN 2","label":"IN 2","ar":"16:9"},
+    {"title":"IN 3","label":"IN 3","ar":"16:9"},
+    {"title":"IN 4","label":"IN 4","ar":"16:9"},
+    {"title":"IN 5","label":"IN 5","ar":"16:9"},
+    {"key":"IN 5 · 1","title":"IN 5","label":"IN 5 · 1","ar":"16:9","region":[0,0.2432,0.2588,0.7864]},
+    {"key":"IN 5 · 2","title":"IN 5","label":"IN 5 · 2","ar":"16:9","region":[0.3221,0.2456,0.5799,0.7831]},
+    {"key":"IN 5 · 3","title":"IN 5","label":"IN 5 · 3","ar":"16:9","region":[0.7407,0.2456,1,0.7831]},
+    {"title":"IN 6 (PGM)","label":"IN 6 (PGM)","ar":"16:9"},
+    {"title":"CONTEÚDO HORIZONTAL","label":"CONT HOR","ar":"16:9"},
+    {"title":"ADBREAK MONTADO","label":"ADBREAK","ar":"16:9"},
+    {"title":"CONTEUDO VERTICAL","label":"CONT VER","ar":"9:16"},
+    {"title":"CALL 1","label":"CALL 1","ar":"16:9"},
+    {"title":"CALL 2","label":"CALL 2","ar":"16:9"},
+    {"title":"replay","label":"REPLAY A","ar":"16:9"},
+    {"title":"replay - B","label":"REPLAY B","ar":"16:9"},
+    {"title":"RECUPERADA ADBREAK","label":"RECUPERADA ADB","ar":"16:9"},
+    {"title":"ANALISE TÁTICA LISTA","label":"ANALISE TÁTICA","ar":"16:9"},
+  ],
+  "mts":[
+    {"id":"mt_02138e0a-db85-4ca7-8d01-e327f7e61468","name":"PIP","target":"02138e0a-db85-4ca7-8d01-e327f7e61468","targetTitle":"PIP","path":"","baseLayer":null,"bleed":1,"cropMode":"cover","pips":[{"x":0.7166,"y":0.0287,"w":0.0796,"h":0.1655,"layer":1,"orig":{"input":"IN 5","zoom":0.3078,"panX":0.741,"panY":0.786,"cropX1":0,"cropY1":0.2432,"cropX2":0.2588,"cropY2":0.7864},"win":{"x":0.7166,"y":0.0287,"w":0.0796,"h":0.1655}},{"x":0.8108,"y":0.0295,"w":0.0793,"h":0.1638,"layer":2,"orig":{"input":"IN 5","zoom":0.3078,"panX":0.731,"panY":0.786,"cropX1":0.3221,"cropY1":0.2456,"cropX2":0.5799,"cropY2":0.7831},"win":{"x":0.8108,"y":0.0295,"w":0.0793,"h":0.1638}},{"x":0.9041,"y":0.0287,"w":0.0798,"h":0.1654,"layer":3,"orig":{"input":"IN 5","zoom":0.3078,"panX":0.66,"panY":0.786,"cropX1":0.7407,"cropY1":0.2456,"cropX2":1,"cropY2":0.7831},"win":{"x":0.9041,"y":0.0287,"w":0.0798,"h":0.1654}}],"defaults":{"1":"IN 5 · 1","2":"IN 5 · 2","3":"IN 5 · 3"}},
+    {"id":"mt_ac8f7c7f-5432-4cfa-a295-4c7c93dc2f9e","name":"50:50 OLIMPICOS MONTADO","target":"ac8f7c7f-5432-4cfa-a295-4c7c93dc2f9e","targetTitle":"50:50 OLIMPICOS MONTADO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.2 - 50_50\\[MÁSCARA] 50_50.png","baseLayer":9,"bleed":1,"cropMode":"cover","pips":[{"x":0.012,"y":0.2045,"w":0.49,"h":0.49,"layer":1,"orig":{"input":"MIX 1","zoom":0.49,"panX":-0.486,"panY":0.101,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.012,"y":0.2045,"w":0.49,"h":0.49}},{"x":0.5036,"y":0.2063,"w":0.4855,"h":0.4855,"layer":2,"orig":{"input":"MIX 2","zoom":0.4855,"panX":0.4926,"panY":0.102,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.5036,"y":0.2063,"w":0.4855,"h":0.4855}}],"defaults":{"1":"MIX 1","2":"MIX 2"}},
+    {"id":"mt_5c864c0b-4f00-4cab-9d46-ffc4eaca1f83","name":"60:40 OLIMPICOS MONTADO","target":"5c864c0b-4f00-4cab-9d46-ffc4eaca1f83","targetTitle":"60:40 OLIMPICOS MONTADO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.12 - 60.40\\60.40 [BASE].png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.0137,"y":0.0136,"w":0.6797,"h":0.6797,"layer":1,"orig":{"input":"MIX 1","zoom":0.6797,"panX":-0.2929,"panY":0.293,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.0137,"y":0.0136,"w":0.6797,"h":0.6797}},{"x":0.5478,"y":0.5415,"w":0.4463,"h":0.4571,"layer":2,"orig":{"input":"MIX 2","zoom":0.4592,"panX":0.529,"panY":-0.538,"cropX1":0.0282,"cropY1":0.0047,"cropX2":1,"cropY2":1},"win":{"x":0.5478,"y":0.5415,"w":0.4463,"h":0.4571}}],"defaults":{"1":"MIX 1","2":"MIX 2"}},
+    {"id":"mt_6755652f-a80f-40e6-a411-9c3af83bd7a2","name":"80.20 OLIMPICOS MONTADO","target":"6755652f-a80f-40e6-a411-9c3af83bd7a2","targetTitle":"80.20 OLIMPICOS MONTADO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.10 - 80.20\\[MÁSCARA] 80.20.png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0,"y":0.1795,"w":0.5992,"h":0.6025,"layer":1,"orig":{"input":"MIX 1","zoom":0.6025,"panX":-0.404,"panY":0.0386,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0,"y":0.1795,"w":0.5992,"h":0.6025}},{"x":0.6025,"y":0.2885,"w":0.384,"h":0.384,"layer":2,"orig":{"input":"MIX 2","zoom":0.384,"panX":0.589,"panY":0.039,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.6025,"y":0.2885,"w":0.384,"h":0.384}}],"defaults":{"1":"MIX 1","2":"MIX 2"}},
+    {"id":"mt_4a2ed1c4-a3d1-42cf-ac4c-89bc4349b760","name":"30:70 OLIMPICOS MONTADO","target":"4a2ed1c4-a3d1-42cf-ac4c-89bc4349b760","targetTitle":"30:70 OLIMPICOS MONTADO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.9 - 70.30\\[BASE] 70.30.png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.0049,"y":0.0114,"w":0.3393,"h":0.3393,"layer":1,"orig":{"input":"MIX 1","zoom":0.3393,"panX":-0.651,"panY":0.638,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.0049,"y":0.0114,"w":0.3393,"h":0.3393}},{"x":0.3447,"y":0.3402,"w":0.6475,"h":0.6475,"layer":2,"orig":{"input":"MIX 2","zoom":0.6475,"panX":0.337,"panY":-0.328,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.3447,"y":0.3402,"w":0.6475,"h":0.6475}}],"defaults":{"1":"MIX 1","2":"MIX 2"}},
+    {"id":"mt_bc6bd593-028a-4bd8-b66f-fbae50271d3e","name":"SINAL +1 OLIMPICO MONTADO","target":"bc6bd593-028a-4bd8-b66f-fbae50271d3e","targetTitle":"SINAL +1 OLIMPICO MONTADO ","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.5 - MULTITELA SINAL +1\\ANTIGOS\\[BASE] SINAL +1.png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.009,"y":0.1565,"w":0.6786,"h":0.685,"layer":1,"orig":{"input":"MIX 1","zoom":0.685,"panX":-0.297,"panY":0.002,"cropX1":0,"cropY1":0,"cropX2":0.9907,"cropY2":1},"win":{"x":0.009,"y":0.1565,"w":0.6786,"h":0.685}},{"x":0.6876,"y":0.0134,"w":0.3124,"h":0.9713,"layer":2,"orig":{"input":"MIX 2","zoom":0.9713,"panX":0.694,"panY":0.002,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.3614,"y":0.0134,"w":0.6386,"h":0.9713}}],"defaults":{"1":"MIX 1","2":"MIX 2"}},
+    {"id":"mt_4dd24bbc-f0f8-4c34-9bf7-3a3048a6ea9e","name":"SINAL +2 OLIMPICO MONTADO","target":"4dd24bbc-f0f8-4c34-9bf7-3a3048a6ea9e","targetTitle":"SINAL +2 OLIMPICO MONTADO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.6 - MULTITELA SINAL +2\\[BASE] SINAL +2 VERTICAL.png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.006,"y":0.1595,"w":0.681,"h":0.681,"layer":1,"orig":{"input":"MIX 1","zoom":0.681,"panX":-0.307,"panY":0,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.006,"y":0.1595,"w":0.681,"h":0.681}},{"x":0.6844,"y":0.0143,"w":0.3156,"h":0.4805,"layer":2,"orig":{"input":"MIX 2","zoom":0.4805,"panX":0.675,"panY":0.491,"cropX1":0.1814,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.6844,"y":0.0143,"w":0.3156,"h":0.4805}},{"x":0.6897,"y":0.495,"w":0.3103,"h":0.497,"layer":3,"orig":{"input":"MIX 3","zoom":0.497,"panX":0.696,"panY":-0.487,"cropX1":0.1814,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.6897,"y":0.495,"w":0.3103,"h":0.497}}],"defaults":{"1":"MIX 1","2":"MIX 2","3":"MIX 3"}},
+    {"id":"mt_00ac048d-1d78-4464-92b1-7a317feb2469","name":"SINAL +3 VERTICAL OLIMPICOS","target":"00ac048d-1d78-4464-92b1-7a317feb2469","targetTitle":"SINAL +3 VERTICAL OLIMPICOS","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.7 - MULTITELA SINAL +3\\[MÁSCARA] SINAL +3 VERTICAL.png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.012,"y":0.1635,"w":0.673,"h":0.673,"layer":1,"orig":{"input":"MIX 1","zoom":0.673,"panX":-0.303,"panY":0,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.012,"y":0.1635,"w":0.673,"h":0.673}},{"x":0.683,"y":0,"w":0.317,"h":0.3478,"layer":2,"orig":{"input":"MIX 2","zoom":0.961,"panX":1.318,"panY":0.7876,"cropX1":0.0047,"cropY1":0,"cropX2":0.3674,"cropY2":0.919},"win":{"x":0.683,"y":0,"w":0.317,"h":0.5088}},{"x":0.6852,"y":0.3478,"w":0.3148,"h":0.3084,"layer":3,"orig":{"input":"MIX 3","zoom":0.8713,"panX":0.658,"panY":0.041,"cropX1":0.3349,"cropY1":0.3488,"cropX2":1,"cropY2":0.919},"win":{"x":0.6852,"y":0.3478,"w":0.3148,"h":0.4968}},{"x":0.6948,"y":0.6562,"w":0.3052,"h":0.3438,"layer":4,"orig":{"input":"MIX 4","zoom":0.8055,"panX":0.251,"panY":-0.526,"cropX1":0.586,"cropY1":0.3674,"cropX2":0.9997,"cropY2":1},"win":{"x":0.6948,"y":0.6562,"w":0.3052,"h":0.3438}}],"defaults":{"1":"MIX 1","2":"MIX 2","3":"MIX 3","4":"MIX 4"}},
+    {"id":"mt_e6555051-a13c-42ea-a205-8ccb8d1f2ddc","name":"X1+SINAL OLIMPICO","target":"e6555051-a13c-42ea-a205-8ccb8d1f2ddc","targetTitle":"X1+SINAL OLIMPICO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.11 - SINAL HORIZONTAL +2 CONTEUDOS\\[BASE] SINAL HORIZONAL +2 CONTEUDO.png","baseLayer":2,"bleed":1,"cropMode":"cover","pips":[{"x":0.1485,"y":0.0574,"w":0.6923,"h":0.6923,"layer":1,"orig":{"input":"MIX 1","zoom":0.6923,"panX":-0.0108,"panY":0.1929,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.1485,"y":0.0574,"w":0.6923,"h":0.6923}}],"defaults":{"1":"MIX 1"}},
+    {"id":"mt_da4aee3e-77d5-4caf-b691-edfff815dc0c","name":"L FININHO PIP +3 OLIMPICOS MONTADO","target":"da4aee3e-77d5-4caf-b691-edfff815dc0c","targetTitle":"L FININHO PIP +3 OLIMPICOS MONTADO","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\L FININHO + 3 [BASE].png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.006,"y":0.014,"w":0.828,"h":0.828,"layer":1,"orig":{"input":"MIX 1","zoom":0.828,"panX":-0.16,"panY":0.144,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.006,"y":0.014,"w":0.828,"h":0.828}},{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.2685,"layer":2,"orig":{"input":"IN 5","zoom":0.4818,"panX":1.031,"panY":0.732,"cropX1":0.1302,"cropY1":0.2543,"cropX2":0.4564,"cropY2":0.8116},"win":{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.2685}},{"x":0.8382,"y":0.286,"w":0.1574,"h":0.2824,"layer":3,"orig":{"input":"IN 5","zoom":0.5068,"panX":0.673,"panY":0.179,"cropX1":0.5034,"cropY1":0.2543,"cropX2":0.814,"cropY2":0.8116},"win":{"x":0.8382,"y":0.286,"w":0.1574,"h":0.2824}},{"x":0.8346,"y":0.5685,"w":0.1654,"h":0.2812,"layer":4,"orig":{"input":"IN 5","zoom":0.5045,"panX":0.798,"panY":-0.385,"cropX1":0.3724,"cropY1":0.2543,"cropX2":0.7581,"cropY2":0.8116},"win":{"x":0.8346,"y":0.5685,"w":0.1654,"h":0.2812}}],"defaults":{"1":"MIX 1","2":"IN 5","3":"IN 5","4":"IN 5"}},
+    {"id":"mt_8a85e51a-9acc-458c-a849-345fd11839af","name":"L FININHO +4 OLIMPICOS MONTADO","target":"8a85e51a-9acc-458c-a849-345fd11839af","targetTitle":"L FININHO +4 OLIMPICOS MONTADO","path":"Z:\\JUDÔ\\2026\\MUNDIAL DE BAKU\\L FININHO +4 [BASE].png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.0081,"y":0.0137,"w":0.8248,"h":0.8247,"layer":1,"orig":{"input":"MIX 1","zoom":0.8248,"panX":-0.159,"panY":0.1479,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.0081,"y":0.0137,"w":0.8248,"h":0.8247}},{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.236,"layer":2,"orig":{"input":"IN 5","zoom":0.4818,"panX":1.031,"panY":0.732,"cropX1":0.1302,"cropY1":0.2543,"cropX2":0.4564,"cropY2":0.8116},"win":{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.2685}},{"x":0.8373,"y":0.2516,"w":0.1571,"h":0.242,"layer":3,"orig":{"input":"IN 5","zoom":0.4818,"panX":1.031,"panY":0.26,"cropX1":0.1302,"cropY1":0.2543,"cropX2":0.4564,"cropY2":0.8116},"win":{"x":0.8373,"y":0.2516,"w":0.1571,"h":0.2685}},{"x":0.8373,"y":0.4936,"w":0.1571,"h":0.2685,"layer":4,"orig":{"input":"IN 5","zoom":0.4818,"panX":1.031,"panY":-0.224,"cropX1":0.1302,"cropY1":0.2543,"cropX2":0.4564,"cropY2":0.8116},"win":{"x":0.8373,"y":0.4936,"w":0.1571,"h":0.2685}},{"x":0.8373,"y":0.7621,"w":0.1571,"h":0.2379,"layer":5,"orig":{"input":"IN 5","zoom":0.4818,"panX":1.031,"panY":-0.726,"cropX1":0.1302,"cropY1":0.2543,"cropX2":0.4564,"cropY2":0.8116},"win":{"x":0.8373,"y":0.7446,"w":0.1571,"h":0.2554}}],"defaults":{"1":"MIX 1","2":"IN 5","3":"IN 5","4":"IN 5","5":"IN 5"}},
+    {"id":"mt_f1426bbb-22ca-4368-83e8-0d7f7a7ad13d","name":"SINAL +1 V2 OLIMPICOS","target":"f1426bbb-22ca-4368-83e8-0d7f7a7ad13d","targetTitle":"SINAL +1 V2 OLIMPICOS","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\multitela-pips-transparentes.png","baseLayer":10,"bleed":1,"cropMode":"cover","pips":[{"x":0.0066,"y":0.0171,"w":0.6817,"h":0.6817,"layer":1,"orig":{"input":"MIX 1","zoom":0.6818,"panX":-0.305,"panY":0.284,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.0066,"y":0.0171,"w":0.6817,"h":0.6817}},{"x":0.6883,"y":0.0134,"w":0.3117,"h":0.9713,"layer":2,"orig":{"input":"MIX 2","zoom":0.9713,"panX":0.694,"panY":0.002,"cropX1":0,"cropY1":0,"cropX2":1,"cropY2":1},"win":{"x":0.3614,"y":0.0134,"w":0.6386,"h":0.9713}}],"defaults":{"1":"MIX 1","2":"MIX 2"}},
+  ],
+}];
+
 /* ═══════════════════ STATE ═══════════════════ */
 function loadJ(k, fb) { try { const v = JSON.parse(localStorage.getItem(k)); return v ?? fb; } catch(e) { return fb; } }
 
@@ -637,6 +719,18 @@ let assign  = loadJ('mc_assign2', {});   // { mtId: { pipNum: inputTitle } }
 if (!packs) {
   packs = [{ id: 'pk' + Date.now(), name: 'MULTITELA COPA 2026', mts: [], inputs: DEFAULT_INPUTS.map(i => ({...i})) }];
   savePacks();
+}
+
+/* adiciona os pacotes prontos uma única vez (se o operador excluir, não volta) */
+function ensurePresets() {
+  const seen = cfg.presetsAdded || [];
+  const missing = PRESET_PACKS.filter(p => !seen.includes(p.id));
+  if (!missing.length) return false;
+  missing.forEach(p => { if (!pkById(p.id)) packs.push(JSON.parse(JSON.stringify(p))); });
+  cfg.presetsAdded = [...seen, ...missing.map(p => p.id)];
+  localStorage.setItem('mc_cfg', JSON.stringify(cfg));
+  savePacks();
+  return true;
 }
 
 let activePk = null;
@@ -749,55 +843,72 @@ function setStatus(ok) {
 }
 
 /* ═══════════════════ FÓRMULA PIP → VMIX ═══════════════════ */
-function pipToVmix(pip, bleed, cropMode, srcAR) {
+function pipToVmix(pip, bleed, cropMode, srcAR, region) {
   // Sistema de coordenadas vMix:
   //   zoom=1  → o ESPAÇO 16:9 (1920x1080) ocupa 100% da tela
-  //   PanX=0  → centrado (POSITIVO = direita)
+  //   PanX=0  → centrado (POSITIVO = direita, 1 = meia tela)
   //   PanY=0  → centrado (POSITIVO = cima — invertido do canvas HTML)
+  //   Crop    → fração do sinal; recorta NO LUGAR (não recentraliza)
   //
-  // srcAR >= 16/9 (mais largo): sinal preenche a LARGURA do espaço
-  // srcAR <  16/9 (mais alto):  sinal preenche a ALTURA do espaço
+  // srcAR >= 16/9 (mais largo): quadro inteiro preenche a LARGURA do espaço
+  // srcAR <  16/9 (mais alto):  quadro inteiro preenche a ALTURA do espaço
   //
-  // cropMode 'cover' → crop nas dimensões onde o sinal vaza do pip
-  // cropMode 'fit'   → sem crop (o PNG da moldura mascara o entorno)
+  // region   → pedaço do sinal que interessa [x1,y1,x2,y2] (ex.: 1/3 de um
+  //            sinal com 3 câmeras). Sem region = quadro inteiro.
+  // cropMode 'cover' → a região cobre o pip inteiro, o excesso é cortado
+  //                    exatamente na borda do pip (nunca sobra buraco)
+  // cropMode 'fit'   → a região inteira cabe no pip, sem crop extra
+  //                    (o PNG da moldura mascara o entorno)
 
   const CANVAS_AR = 16 / 9;
   const SRC_AR    = (typeof srcAR === 'number' && srcAR > 0) ? srcAR : CANVAS_AR;
   const BLEED     = (typeof bleed === 'number' && bleed >= 1) ? bleed : 1.04;
   const mode      = cropMode === 'fit' ? 'fit' : 'cover';
+  const R         = normRegion(region);
 
-  let sW_per_zoom, sH_per_zoom;
-  if (SRC_AR >= CANVAS_AR) { sW_per_zoom = 1; sH_per_zoom = CANVAS_AR / SRC_AR; }
-  else                     { sH_per_zoom = 1; sW_per_zoom = SRC_AR / CANVAS_AR; }
+  /* tamanho do quadro inteiro do sinal na tela com zoom = 1 */
+  let sW, sH;
+  if (SRC_AR >= CANVAS_AR) { sW = 1; sH = CANVAS_AR / SRC_AR; }
+  else                     { sH = 1; sW = SRC_AR / CANVAS_AR; }
 
-  let zoom;
-  if (SRC_AR >= CANVAS_AR) zoom = pip.w * BLEED;   // horizontal: zoom pela largura
-  else                     zoom = pip.h * BLEED;   // vertical: zoom pela altura
+  /* zoom pra região ocupar a largura / a altura do pip */
+  const zW = pip.w / (sW * (R[2] - R[0]));
+  const zH = pip.h / (sH * (R[3] - R[1]));
+  const zoom = (mode === 'cover' ? Math.max(zW, zH) : Math.min(zW, zH)) * BLEED;
 
-  const sinalW = zoom * sW_per_zoom;
-  const sinalH = zoom * sH_per_zoom;
+  /* centro da região no centro do pip */
+  const fw = zoom * sW, fh = zoom * sH;            // quadro inteiro na tela
+  const cx = pip.x + pip.w / 2 - ((R[0] + R[2]) / 2 - 0.5) * fw;
+  const cy = pip.y + pip.h / 2 - ((R[1] + R[3]) / 2 - 0.5) * fh;
+  const left = cx - fw / 2, top = cy - fh / 2;
 
-  let cropFracX = 0, cropFracY = 0;
+  let x1 = R[0], y1 = R[1], x2 = R[2], y2 = R[3];
   if (mode === 'cover') {
-    if (sinalW > pip.w) cropFracX = (sinalW - pip.w) / (2 * sinalW);
-    if (sinalH > pip.h) cropFracY = (sinalH - pip.h) / (2 * sinalH);
+    x1 = Math.max(x1, (pip.x - left) / fw);
+    x2 = Math.min(x2, (pip.x + pip.w - left) / fw);
+    y1 = Math.max(y1, (pip.y - top) / fh);
+    y2 = Math.min(y2, (pip.y + pip.h - top) / fh);
   }
-
-  const cx   = pip.x + pip.w / 2;
-  const cy   = pip.y + pip.h / 2;
-  const panX = (cx - 0.5) * 2;
-  const panY = (0.5 - cy) * 2;
+  const c01 = v => Math.min(1, Math.max(0, v));
 
   const r4 = v => Math.round(v * 10000) / 10000;
   return {
     zoom:   r4(zoom),
-    panX:   r4(panX),
-    panY:   r4(panY),
-    cropX1: r4(cropFracX),
-    cropX2: r4(1 - cropFracX),
-    cropY1: r4(cropFracY),
-    cropY2: r4(1 - cropFracY),
+    panX:   r4((cx - 0.5) * 2),
+    panY:   r4((0.5 - cy) * 2),
+    cropX1: r4(c01(x1)),
+    cropX2: r4(c01(x2)),
+    cropY1: r4(c01(y1)),
+    cropY2: r4(c01(y2)),
   };
+}
+
+/* região "x1,y1,x2,y2" (texto ou array) → array válido; vazio = quadro inteiro */
+function normRegion(r) {
+  if (typeof r === 'string') r = r.split(/[,;\s]+/).filter(Boolean).map(v => parseFloat(v.replace(',', '.')));
+  if (!Array.isArray(r) || r.length !== 4 || r.some(v => isNaN(v))) return [0, 0, 1, 1];
+  const [x1, y1, x2, y2] = r.map(v => Math.min(1, Math.max(0, v)));
+  return (x2 - x1 > 0.01 && y2 - y1 > 0.01) ? [x1, y1, x2, y2] : [0, 0, 1, 1];
 }
 
 function parseAR(s) {
@@ -808,49 +919,76 @@ function parseAR(s) {
 }
 
 /* ═══════════════════ CORTAR (GO) ═══════════════════ */
+/* inputs são identificados por key (quando existe) — permite vários botões
+   do MESMO input do vMix com regiões diferentes (ex.: IN 5 · 1/2/3) */
+const inKey = inp => inp.key || inp.title;
+const inByKey = (pk, k) => pk?.inputs.find(x => inKey(x) === k);
+const inLabel = (pk, k) => inByKey(pk, k)?.label || k;
+
+function layerCmds(cmds, target, li, vTitle, p) {
+  cmds.push(vCmd('SetMultiViewOverlay',  { Input: target, Value: `${li},${vTitle}` }));
+  cmds.push(vCmd(`SetLayer${li}Zoom`,    { Input: target, Value: p.zoom }));
+  cmds.push(vCmd(`SetLayer${li}PanX`,    { Input: target, Value: p.panX }));
+  cmds.push(vCmd(`SetLayer${li}PanY`,    { Input: target, Value: p.panY }));
+  cmds.push(vCmd(`SetLayer${li}CropX1`,  { Input: target, Value: p.cropX1 }));
+  cmds.push(vCmd(`SetLayer${li}CropX2`,  { Input: target, Value: p.cropX2 }));
+  cmds.push(vCmd(`SetLayer${li}CropY1`,  { Input: target, Value: p.cropY1 }));
+  cmds.push(vCmd(`SetLayer${li}CropY2`,  { Input: target, Value: p.cropY2 }));
+}
+
+/* parâmetros de um pip pra um input: se for o MESMO sinal que estava no
+   projeto original do vMix, reaproveita o enquadramento exato do operador */
+function pipParams(mt, pipCoord, inp, vTitle) {
+  const o = pipCoord.orig;
+  if (o && o.input === vTitle && !(inp && inp.region)) return o;
+  return pipToVmix(pipCoord, mt.bleed, mt.cropMode, parseAR(inp?.ar), inp?.region);
+}
+
 async function doCut() {
   if (selMT === null || !activePk) return;
   const mt = activePk.mts[selMT];
-  if (!mt.path) { toast('Multitela sem caminho configurado (Dev)', true); return; }
-
+  const pips = assign[mt.id] || {};
   const cmds = [];
 
-  /* ① SetImage no GT com o caminho do PNG */
-  cmds.push(vCmd('SetImage', {
-    Input: cfg.gt, SelectedName: cfg.field, Value: mt.path,
-  }));
+  if (mt.target) {
+    /* ── MODO MONTADO: cada multitela é um input Colour próprio no vMix,
+          com a base PNG já na layer dela. Só as layers dos pips são tocadas. */
+    mt.pips.forEach((pipCoord, i) => {
+      const k = pips[i + 1];
+      if (!k) return;
+      const inp = inByKey(activePk, k);
+      const vTitle = inp ? inp.title : k;
+      layerCmds(cmds, mt.target, pipCoord.layer || i + 1, vTitle, pipParams(mt, pipCoord, inp, vTitle));
+    });
+    if (!cmds.length) { toast('Nenhum pip preenchido', true); return; }
+  } else {
+    /* ── MODO GT: uma moldura GT + um Colour únicos pra todas as multitelas */
+    if (!mt.path) { toast('Multitela sem caminho configurado (Dev)', true); return; }
 
-  /* ② Limpa layers 1-9 do Colour */
-  for (let li = 1; li <= 9; li++) {
-    cmds.push(vCmd('SetMultiViewOverlay', { Input: cfg.colour, Value: `${li},` }));
-    cmds.push(vCmd(`SetLayer${li}Zoom`,   { Input: cfg.colour, Value: '1' }));
-    cmds.push(vCmd(`SetLayer${li}PanX`,   { Input: cfg.colour, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}PanY`,   { Input: cfg.colour, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropX1`, { Input: cfg.colour, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropX2`, { Input: cfg.colour, Value: '1' }));
-    cmds.push(vCmd(`SetLayer${li}CropY1`, { Input: cfg.colour, Value: '0' }));
-    cmds.push(vCmd(`SetLayer${li}CropY2`, { Input: cfg.colour, Value: '1' }));
+    /* ① SetImage no GT com o caminho do PNG */
+    cmds.push(vCmd('SetImage', {
+      Input: cfg.gt, SelectedName: cfg.field, Value: mt.path,
+    }));
+
+    /* ② Limpa layers 1-9 do Colour */
+    for (let li = 1; li <= 9; li++) {
+      layerCmds(cmds, cfg.colour, li, '', { zoom: 1, panX: 0, panY: 0, cropX1: 0, cropX2: 1, cropY1: 0, cropY2: 1 });
+    }
+
+    /* ③ Aplica cada pip: overlay + zoom + pan + crop */
+    mt.pips.forEach((pipCoord, i) => {
+      const k = pips[i + 1];
+      if (!k) return;
+      const inp = inByKey(activePk, k);
+      const vTitle = inp ? inp.title : k;
+      layerCmds(cmds, cfg.colour, pipCoord.layer || i + 1, vTitle, pipParams(mt, pipCoord, inp, vTitle));
+    });
   }
 
-  /* ③ Aplica cada pip: overlay + zoom + pan + crop */
-  const pips = assign[mt.id] || {};
-  mt.pips.forEach((pipCoord, i) => {
-    const inputTitle = pips[i + 1];
-    if (!inputTitle) return;
-    const li  = i + 1;
-    const inp = activePk.inputs.find(x => x.title === inputTitle);
-    const p   = pipToVmix(pipCoord, mt.bleed, mt.cropMode, parseAR(inp?.ar));
-    cmds.push(vCmd('SetMultiViewOverlay',  { Input: cfg.colour, Value: `${li},${inputTitle}` }));
-    cmds.push(vCmd(`SetLayer${li}Zoom`,    { Input: cfg.colour, Value: p.zoom }));
-    cmds.push(vCmd(`SetLayer${li}PanX`,    { Input: cfg.colour, Value: p.panX }));
-    cmds.push(vCmd(`SetLayer${li}PanY`,    { Input: cfg.colour, Value: p.panY }));
-    cmds.push(vCmd(`SetLayer${li}CropX1`,  { Input: cfg.colour, Value: p.cropX1 }));
-    cmds.push(vCmd(`SetLayer${li}CropX2`,  { Input: cfg.colour, Value: p.cropX2 }));
-    cmds.push(vCmd(`SetLayer${li}CropY1`,  { Input: cfg.colour, Value: p.cropY1 }));
-    cmds.push(vCmd(`SetLayer${li}CropY2`,  { Input: cfg.colour, Value: p.cropY2 }));
-  });
-
-  const ok = await vMulti(cmds);
+  let ok = await vMulti(cmds);
+  /* depois das layers prontas: opcionalmente leva o montado pro PVW / PGM do vMix */
+  if (ok && mt.target && activePk.afterCut === 'preview') ok = await vMulti([vCmd('PreviewInput', { Input: mt.target })]);
+  if (ok && mt.target && activePk.afterCut === 'cut')     ok = await vMulti([vCmd('CutDirect',    { Input: mt.target })]);
   if (ok) {
     saveEntry('ar');
     toast('CORTADO → ' + mt.name);
@@ -873,6 +1011,9 @@ function cutPip(pipNum, inputTitle) {
 
 function selectMT(i) {
   selMT = i;
+  /* primeira vez nessa multitela: começa com os sinais do projeto original */
+  const mt = activePk.mts[i];
+  if (mt && !assign[mt.id] && mt.defaults) { assign[mt.id] = { ...mt.defaults }; saveAssign(); }
   renderMesa();
 }
 
@@ -920,10 +1061,11 @@ function renderMesa() {
     $('take').disabled = false;
     $('plist').disabled = false;
 
-    if (mt.thumb) {
+    const th = mtThumb(mt);
+    if (th) {
       const img = document.createElement('img');
       img.className = 'thumb';
-      img.src = mt.thumb;
+      img.src = th;
       pvw.appendChild(img);
     }
     mt.pips.forEach((p, i) => {
@@ -932,7 +1074,7 @@ function renderMesa() {
       const d = document.createElement('div');
       d.className = 'box' + (inp ? ' filled' : '');
       d.style.cssText = `left:${p.x*100}%;top:${p.y*100}%;width:${p.w*100}%;height:${p.h*100}%`;
-      const lbl = inp ? (activePk.inputs.find(x => x.title === inp)?.label || inp) : 'vazio';
+      const lbl = inp ? inLabel(activePk, inp) : 'vazio';
       d.innerHTML = `<span class="n">${num}</span><span class="lbl">${lbl}</span>`;
       pvw.appendChild(d);
     });
@@ -955,7 +1097,7 @@ function renderInputStrip(stripId, pipNum) {
   const mt = selMT !== null ? activePk.mts[selMT] : null;
   const cur = mt ? assign[mt.id]?.[pipNum] : null;
   $(stripId).innerHTML = activePk.inputs.map(inp =>
-    `<button class="btn ${inp.title === cur ? 'sel-in' : ''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inp.title)}">${inp.label}</button>`).join('');
+    `<button class="btn ${inKey(inp) === cur ? 'sel-in' : ''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inKey(inp))}">${inp.label}</button>`).join('');
 }
 
 function renderHistory() {
@@ -963,7 +1105,7 @@ function renderHistory() {
   $('hist-list').innerHTML = history.map((h, i) => {
     const pipsTxt = Object.entries(h.pips)
       .sort((a, b) => a[0] - b[0])
-      .map(([n, t]) => `${n}·${activePk?.inputs.find(x => x.title === t)?.label || t}`)
+      .map(([n, t]) => `${n}·${inLabel(activePk, t)}`)
       .join('  ') || 'sem pips';
     return `<div class="h-item" data-h="${i}">
       <div class="h-top">
@@ -1053,6 +1195,52 @@ function makeThumb(img) {
   return c.toDataURL('image/jpeg', 0.7);
 }
 
+/* miniatura esquemática pra multitelas sem PNG (importadas do projeto .vmix) */
+const thumbCache = {};
+function mtThumb(mt) {
+  if (mt.thumb) return mt.thumb;
+  if (!mt.pips?.length) return null;
+  const sig = mt.pips.map(p => [p.x, p.y, p.w, p.h].join(',')).join('|');
+  if (thumbCache[sig]) return thumbCache[sig];
+  const c = document.createElement('canvas');
+  c.width = 320; c.height = 180;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#121218'; ctx.fillRect(0, 0, 320, 180);
+  ctx.strokeStyle = '#2a2a32';
+  for (let gx = 0; gx <= 320; gx += 32) { ctx.beginPath(); ctx.moveTo(gx + .5, 0); ctx.lineTo(gx + .5, 180); ctx.stroke(); }
+  for (let gy = 0; gy <= 180; gy += 18) { ctx.beginPath(); ctx.moveTo(0, gy + .5); ctx.lineTo(320, gy + .5); ctx.stroke(); }
+  mt.pips.forEach(p => {
+    ctx.fillStyle = '#050506';
+    ctx.fillRect(p.x * 320, p.y * 180, p.w * 320, p.h * 180);
+  });
+  return (thumbCache[sig] = c.toDataURL('image/png'));
+}
+
+/* encaixa os buracos detectados no PNG nas layers de uma multitela MONTADA:
+   cada pip (layer) fica com o buraco que mais se sobrepõe à janela original */
+function refineFromHoles(mt, holes) {
+  const inter = (a, b) => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x))
+                        * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+  const pairs = [];
+  mt.pips.forEach((p, pi) => {
+    const win = p.win || { x: p.x, y: p.y, w: p.w, h: p.h };
+    holes.forEach((h, hi) => {
+      const sc = inter(win, h) / (h.w * h.h);          // quanto do buraco cai dentro da layer
+      if (sc >= 0.5) pairs.push({ pi, hi, sc, area: inter(win, h) });
+    });
+  });
+  pairs.sort((a, b) => b.area - a.area);
+  const usedP = new Set(), usedH = new Set();
+  pairs.forEach(({ pi, hi }) => {
+    if (usedP.has(pi) || usedH.has(hi)) return;
+    usedP.add(pi); usedH.add(hi);
+    const p = mt.pips[pi];
+    if (!p.win) p.win = { x: p.x, y: p.y, w: p.w, h: p.h };
+    Object.assign(p, holes[hi]);
+  });
+  return usedP.size;
+}
+
 /* ═══════════════════ DROP DA PASTA (webkitGetAsEntry) ═══════════════════ */
 function walkEntry(entry, base) {
   /* base = caminho relativo ATÉ o pai desta entry.
@@ -1137,7 +1325,18 @@ async function importFiles(files) {
           const name = file.name.replace(/\.png$/i, '');
           const path = buildPath(rel);
           /* casa por NOME: re-arrastar corrige caminhos sem duplicar */
-          const existing = pk.mts.find(m => m.name === name) || pk.mts.find(m => m.path === path);
+          const fname = file.name.toLowerCase();
+          const existing = pk.mts.find(m => m.name === name) || pk.mts.find(m => m.path === path)
+            || pk.mts.find(m => m.path && m.path.split('\\').pop().toLowerCase() === fname);
+          /* multitela MONTADA (vinda do .vmix): o PNG só calibra os buracos dos pips */
+          if (existing?.target) {
+            const n = refineFromHoles(existing, pips);
+            existing.thumb = makeThumb(img);
+            toast(`${existing.name}: ${n}/${existing.pips.length} pips calibrados pelo PNG`);
+            done++;
+            resolve();
+            return;
+          }
           const mtObj = {
             id: existing?.id || 'mt' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
             name, path, pips,
@@ -1191,6 +1390,254 @@ async function importVmix() {
   }
 }
 
+/* ═══════════════════ IMPORTAR PROJETO .vmix ═══════════════════ */
+/* Lê o arquivo de projeto do vMix e transforma cada input MultiView
+   (Colour com layers) de uma aba/categoria numa multitela do sistema:
+     • janela de cada pip = área visível da layer no projeto (zoom/pan/crop)
+     • alvo do CORTAR      = o próprio input MONTADO (pela Key do vMix)
+     • layers de imagem/GT/browser (a base PNG) nunca são tocadas
+     • enquadramento original de cada layer guardado como "orig"          */
+const VMX_SIGNAL = new Set(['5', '14', '3000', '3001', '6000', '11000']);   // captura, lista, replay, call, mix
+const VMX_NOPIP  = new Set(['1', '7', '9000', '5000']);                     // imagem, áudio, GT, browser
+
+const vmxKids = (el, tag) => [...el.children].filter(c => c.tagName === tag);
+const vmxKid  = (el, tag) => vmxKids(el, tag)[0];
+
+function vmxPositions(str) {
+  if (!str) return [];
+  const doc = new DOMParser().parseFromString(str.replace(/^\s*<\?xml[^>]*\?>/, ''), 'text/xml');
+  if (!doc.documentElement || doc.querySelector('parsererror')) return [];
+  return vmxKids(doc.documentElement, 'MatrixPosition').map(mp => {
+    const num = (t, d) => { const e = vmxKid(mp, t); const v = e ? parseFloat(e.textContent) : NaN; return isNaN(v) ? d : v; };
+    const cl = vmxKid(mp, 'Clipping');
+    let clip = cl ? vmxKids(cl, 'float').map(f => parseFloat(f.textContent)) : [];
+    if (clip.length !== 4 || clip.some(isNaN)) clip = [0, 0, 1, 1];   // ordem do vMix: X1, Y1, X2, Y2
+    return {
+      hidden: (vmxKid(mp, 'Hidden')?.textContent || '').trim() === 'true',
+      zx: num('ZoomX', 1), zy: num('ZoomY', 1), px: num('PanX', 0), py: num('PanY', 0), clip,
+    };
+  });
+}
+
+function vmxArGuess(title) {
+  return /VERTICAL/i.test(title) && !/FUNDO|MONTAD/i.test(title) ? '9:16' : '16:9';
+}
+
+function vmxShortLabel(title) {
+  const known = DEFAULT_INPUTS.find(d => d.title.toUpperCase() === title.toUpperCase());
+  if (known) return known.label;
+  return title.toUpperCase()
+    .replace(/CONTE[UÚ]DO/g, 'CONT').replace(/HORIZONTAL/g, 'HOR').replace(/VERTICAL/g, 'VER')
+    .replace(/\s+/g, ' ').trim().slice(0, 14);
+}
+
+/* No projeto as layers se sobrepõem e a base PNG esconde a sobra. Sem o PNG,
+   separa os pips sobrepostos cortando a faixa de sobreposição de UM deles:
+   escolhe o corte que deixa o pip mais perto de 16:9 ou 9:16 (empate → corta a
+   layer de baixo, já que a de cima aparece por cima). Sobreposição de canto
+   fica como está. A janela original fica em "win" pra calibrar pelo PNG.   */
+function deOverlap(pips) {
+  const r4 = v => Math.round(v * 10000) / 10000;
+  const arErr = r => {
+    const ar = (r.w * 16) / (r.h * 9);
+    return Math.min(Math.abs(Math.log(ar / (16 / 9))), Math.abs(Math.log(ar / (9 / 16))));
+  };
+  pips.forEach(p => { p.win = { x: p.x, y: p.y, w: p.w, h: p.h }; });
+  for (let i = 0; i < pips.length; i++) for (let j = i + 1; j < pips.length; j++) {
+    const a = pips[i], b = pips[j];                    // a = layer de baixo, b = de cima
+    const ox1 = Math.max(a.x, b.x), ox2 = Math.min(a.x + a.w, b.x + b.w);
+    const oy1 = Math.max(a.y, b.y), oy2 = Math.min(a.y + a.h, b.y + b.h);
+    if (ox2 - ox1 < 0.002 || oy2 - oy1 < 0.002) continue;
+    /* sobreposição de canto (não atravessa nenhum dos dois pips) → deixa */
+    const full = r => (ox1 <= r.x + 0.003 && ox2 >= r.x + r.w - 0.003) || (oy1 <= r.y + 0.003 && oy2 >= r.y + r.h - 0.003);
+    if (!full(a) && !full(b)) continue;
+    const valid = [];
+    [[a, 0], [b, 1]].forEach(([r, top]) => {
+      /* a faixa cortada precisa encostar numa borda do pip (continua retângulo) */
+      if (Math.abs(ox1 - r.x) < 0.003 && ox2 < r.x + r.w - 0.02)       valid.push({ r, top, n: { x: ox2, y: r.y, w: r.x + r.w - ox2, h: r.h } });
+      if (Math.abs(ox2 - (r.x + r.w)) < 0.003 && ox1 > r.x + 0.02)     valid.push({ r, top, n: { x: r.x, y: r.y, w: ox1 - r.x, h: r.h } });
+      if (Math.abs(oy1 - r.y) < 0.003 && oy2 < r.y + r.h - 0.02)       valid.push({ r, top, n: { x: r.x, y: oy2, w: r.w, h: r.y + r.h - oy2 } });
+      if (Math.abs(oy2 - (r.y + r.h)) < 0.003 && oy1 > r.y + 0.02)     valid.push({ r, top, n: { x: r.x, y: r.y, w: r.w, h: oy1 - r.y } });
+    });
+    if (!valid.length) continue;
+    valid.sort((m, n) => (arErr(m.n) - arErr(n.n)) || (m.top - n.top));
+    const best = valid.find(o => o.top === 0 && arErr(o.n) <= arErr(valid[0].n) + 0.05) || valid[0];
+    Object.assign(best.r, { x: r4(best.n.x), y: r4(best.n.y), w: r4(best.n.w), h: r4(best.n.h) });
+  }
+}
+
+function parseVmixProject(text) {
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const root = doc.documentElement;
+  if (!root || doc.querySelector('parsererror') || root.tagName !== 'XML') throw new Error('arquivo não parece um projeto .vmix');
+
+  /* nomes das abas (ordem do XML = número da Category) */
+  const cats = [];
+  const cs = vmxKid(root, 'CategorySettings');
+  if (cs) [...cs.children].filter(c => c.tagName.endsWith('.Text')).forEach((c, i) => cats.push((c.textContent || '').trim() || '(aba ' + i + ')'));
+
+  const all = vmxKids(root, 'Input').map(el => ({
+    el,
+    key:   el.getAttribute('Key'),
+    type:  el.getAttribute('Type'),
+    title: (el.getAttribute('Title') || el.getAttribute('OriginalTitle') || '').trim(),
+    rawTitle: el.getAttribute('Title') || el.getAttribute('OriginalTitle') || '',
+    cat:   +(el.getAttribute('Category') || 0),
+    path:  (el.textContent || '').trim(),
+  })).filter(x => x.key);
+  const byKey = Object.fromEntries(all.map(x => [x.key, x]));
+
+  /* inputs de sinal (botões da mesa) */
+  const inputs = all.filter(x => VMX_SIGNAL.has(x.type) && x.title)
+    .map(x => ({ title: x.title, label: vmxShortLabel(x.title), ar: vmxArGuess(x.title) }));
+
+  /* multitelas = inputs com layers apontando pra sinais */
+  const mts = [];
+  all.forEach(x => {
+    const ovs = [...x.el.attributes]
+      .filter(a => /^Overlay\d+$/.test(a.name))
+      .map(a => ({ layer: +a.name.slice(7) + 1, src: byKey[a.value] }))
+      .filter(o => o.src)
+      .sort((a, b) => a.layer - b.layer);
+    if (!ovs.length) return;
+    const pos = vmxPositions(x.el.getAttribute('PositionsExtended'));
+    const posOld = vmxPositions(x.el.getAttribute('Positions'));
+    const P = li => pos[li] || posOld[li] || { hidden: false, zx: 1, zy: 1, px: 0, py: 0, clip: [0, 0, 1, 1] };
+
+    const pips = [], defaults = [];
+    let base = null;
+    ovs.forEach(o => {
+      const p = P(o.layer);
+      if (VMX_NOPIP.has(o.src.type) || p.hidden) {
+        if (o.src.type === '1' && !p.hidden && !base) base = { layer: o.layer, path: o.src.path, title: o.src.title };
+        return;
+      }
+      /* área visível da layer na tela (frações 0-1, y pra baixo) */
+      const ar = parseAR(vmxArGuess(o.src.title));
+      const sW = ar >= 16 / 9 ? 1 : ar / (16 / 9), sH = ar >= 16 / 9 ? (16 / 9) / ar : 1;
+      const fw = p.zx * sW, fh = p.zy * sH;
+      const left = 0.5 + p.px / 2 - fw / 2, top = 0.5 - p.py / 2 - fh / 2;
+      const c01 = v => Math.min(1, Math.max(0, v));
+      const x1 = c01(left + p.clip[0] * fw), x2 = c01(left + p.clip[2] * fw);
+      const y1 = c01(top + p.clip[1] * fh),  y2 = c01(top + p.clip[3] * fh);
+      if (x2 - x1 < 0.01 || y2 - y1 < 0.01) return;
+      const r4 = v => Math.round(v * 10000) / 10000;
+      pips.push({
+        x: r4(x1), y: r4(y1), w: r4(x2 - x1), h: r4(y2 - y1),
+        layer: o.layer,
+        orig: {
+          input: o.src.title,
+          zoom: r4(p.zx), panX: r4(p.px), panY: r4(p.py),
+          cropX1: r4(p.clip[0]), cropY1: r4(p.clip[1]), cropX2: r4(p.clip[2]), cropY2: r4(p.clip[3]),
+        },
+      });
+      defaults.push(o.src.title);
+    });
+    if (!pips.length) return;
+    deOverlap(pips);
+    mts.push({
+      cat: x.cat, vmixKey: x.key,
+      name: x.title, target: x.key, targetTitle: x.rawTitle,
+      base, pips, defaults,
+    });
+  });
+
+  return { cats, inputs, mts };
+}
+
+/* monta (ou atualiza) um pacote a partir de uma aba do projeto */
+function packFromVmix(parsed, catIdx, name, fileName) {
+  const mts = parsed.mts.filter(m => m.cat === catIdx);
+  const inputs = parsed.inputs.map(i => ({ ...i }));
+
+  /* multitela em que TODAS as layers são o mesmo sinal recortado (ex.: PIP com
+     3 câmeras do IN 5) → cria um botão por pedaço: "IN 5 · 1", "IN 5 · 2"...   */
+  mts.forEach(m => {
+    const srcs = [...new Set(m.pips.map(p => p.orig.input))];
+    if (srcs.length !== 1 || m.pips.length < 2) return;
+    const src = srcs[0];
+    const base = inputs.find(i => i.title === src);
+    m.pips.forEach((p, n) => {
+      const o = p.orig;
+      if (o.cropX1 === 0 && o.cropY1 === 0 && o.cropX2 === 1 && o.cropY2 === 1) return;
+      const region = [o.cropX1, o.cropY1, o.cropX2, o.cropY2];
+      let inp = inputs.find(i => i.title === src && i.region && i.region.join() === region.join());
+      if (!inp) {
+        const k = inputs.filter(i => i.title === src && i.region).length + 1;
+        inp = { key: `${src} · ${k}`, title: src, label: `${base?.label || src} · ${k}`, ar: base?.ar || '16:9', region };
+        inputs.splice(inputs.indexOf(base) + k, 0, inp);
+      }
+      m.defaults[n] = inp.key;
+    });
+  });
+
+  return {
+    id: 'pk_vmx_' + (fileName + '_' + catIdx).replace(/[^a-z0-9]+/gi, '_').toLowerCase(),
+    name,
+    afterCut: 'none',
+    source: { file: fileName, aba: parsed.cats[catIdx] },
+    inputs,
+    mts: mts.map(m => ({
+      id: 'mt_' + m.vmixKey,
+      name: m.name,
+      target: m.target,
+      targetTitle: m.targetTitle,
+      path: m.base?.path || '',
+      baseLayer: m.base?.layer || null,
+      bleed: 1,
+      cropMode: 'cover',
+      pips: m.pips,
+      defaults: Object.fromEntries(m.defaults.map((t, i) => [i + 1, t])),
+    })),
+  };
+}
+
+let pendingVmx = null;
+
+async function openVmixFile(file) {
+  try {
+    const text = await file.text();
+    const parsed = parseVmixProject(text);
+    const counts = parsed.cats.map((_, i) => parsed.mts.filter(m => m.cat === i).length);
+    if (!counts.some(Boolean)) { toast('Nenhuma multitela (input com layers) encontrada no projeto', true); return; }
+    pendingVmx = { parsed, fileName: file.name.replace(/\.vmix$/i, '') };
+    const first = counts.findIndex((c, i) => c && i > 0);
+    $('vmx-list').innerHTML = parsed.cats.map((c, i) => counts[i] ? `
+      <label class="pick-item">
+        <input type="radio" name="vmx-cat" value="${i}" ${i === (first < 0 ? 0 : first) ? 'checked' : ''}>
+        <div>
+          <div class="pi-name">${c}</div>
+          <div class="pi-path">${parsed.mts.filter(m => m.cat === i).map(m => m.name).join(' · ')}</div>
+        </div>
+      </label>` : '').join('');
+    $('vmx-name').value = (pendingVmx.fileName.replace(/^[0-9a-f]{8}-/i, '').replace(/^PROJETO_/i, '').replace(/_/g, ' ') + ' · ' + parsed.cats[first < 0 ? 0 : first]).toUpperCase();
+    $('vmx-modal').classList.add('open');
+  } catch (e) {
+    toast('Não consegui ler o projeto: ' + e.message, true);
+  }
+}
+
+function confirmVmixImport() {
+  if (!pendingVmx) return;
+  const sel = document.querySelector('#vmx-list input[name=vmx-cat]:checked');
+  if (!sel) { toast('Escolha uma aba', true); return; }
+  const catIdx = +sel.value;
+  const name = ($('vmx-name').value || '').trim() || pendingVmx.parsed.cats[catIdx];
+  const pk = packFromVmix(pendingVmx.parsed, catIdx, name, pendingVmx.fileName);
+  const old = pkById(pk.id);
+  if (old) {
+    /* reimportação: mantém nome, opção de corte e ajustes manuais de bleed/crop */
+    pk.name = name; pk.afterCut = old.afterCut || pk.afterCut;
+    pk.mts.forEach(m => { const o = old.mts.find(x => x.id === m.id); if (o) { m.bleed = o.bleed; m.cropMode = o.cropMode; if (o.thumb) m.thumb = o.thumb; } });
+    packs[packs.indexOf(old)] = pk;
+  } else packs.push(pk);
+  devPk = pk.id;
+  pendingVmx = null;
+  $('vmx-modal').classList.remove('open');
+  savePacks(); renderDev();
+  toast(`${pk.mts.length} multitelas importadas → ${pk.name}`);
+}
+
 /* ═══════════════════ DEV RENDER ═══════════════════ */
 function renderDev() {
   /* config vmix */
@@ -1231,15 +1678,17 @@ function renderDev() {
   $('sec-inps').style.display = pk ? 'block' : 'none';
   if (!pk) return;
   $('pk-name').value = pk.name;
+  $('pk-after').value = pk.afterCut || 'none';
 
   /* multitelas */
   $('mt-count').textContent = pk.mts.length + ' carregadas';
   $('mt-tbody').innerHTML = pk.mts.map((m, i) => `
     <tr>
-      <td>${m.thumb ? `<img class="mt-thumb" src="${m.thumb}">` : ''}</td>
+      <td>${mtThumb(m) ? `<img class="mt-thumb" src="${mtThumb(m)}">` : ''}</td>
       <td><input type="text" data-mtf="name" data-i="${i}" value="${(m.name || '').replace(/"/g, '&quot;')}"></td>
+      <td><input type="text" data-mtf="target" data-i="${i}" value="${(m.targetTitle || m.target || '').replace(/"/g, '&quot;')}" placeholder="(modo GT)" title="${m.target ? 'vMix: ' + m.target : 'vazio = usa GT + Colour'}"></td>
       <td><input type="text" data-mtf="path" data-i="${i}" value="${(m.path || '').replace(/"/g, '&quot;')}"></td>
-      <td><span class="pip-count ${m.pips.length ? '' : 'zero'}">${m.pips.length}</span></td>
+      <td><span class="pip-count ${m.pips.length ? '' : 'zero'}">${m.pips.length}</span>${m.target ? `<div class="dev-hint" style="font-size:9px">${m.pips.map(p => 'L' + (p.layer || '?')).join(' ')}</div>` : ''}</td>
       <td><input type="text" data-mtf="bleed" data-i="${i}" value="${m.bleed}" style="width:56px"></td>
       <td><select data-mtf="cropMode" data-i="${i}">
         <option value="cover" ${m.cropMode === 'cover' ? 'selected' : ''}>COVER</option>
@@ -1254,6 +1703,13 @@ function renderDev() {
         const v = parseFloat(inp.value.replace(',', '.'));
         pk.mts[i].bleed = (!isNaN(v) && v >= 1) ? v : 1.04;
         inp.value = pk.mts[i].bleed;
+      } else if (f === 'target') {
+        /* digitou um nome novo → passa a usar o nome (o vMix aceita nome ou Key) */
+        const v = inp.value;
+        if (v !== (pk.mts[i].targetTitle || pk.mts[i].target || '')) {
+          pk.mts[i].target = v.trim() ? v : '';
+          pk.mts[i].targetTitle = v;
+        }
       } else pk.mts[i][f] = inp.value;
       savePacks();
     });
@@ -1265,11 +1721,25 @@ function renderDev() {
       <td><input type="text" data-inf="label" data-i="${i}" value="${(m.label || '').replace(/"/g, '&quot;')}"></td>
       <td><input type="text" data-inf="title" data-i="${i}" value="${(m.title || '').replace(/"/g, '&quot;')}"></td>
       <td><input type="text" data-inf="ar" data-i="${i}" value="${m.ar || '16:9'}" style="width:64px"></td>
+      <td><input type="text" data-inf="region" data-i="${i}" value="${m.region ? m.region.join(', ') : ''}" placeholder="quadro inteiro" spellcheck="false"></td>
       <td><button class="tdel" data-indel="${i}">✕</button></td>
     </tr>`).join('');
   $('in-tbody').querySelectorAll('input[data-inf]').forEach(inp => {
     inp.addEventListener('change', () => {
-      pk.inputs[+inp.dataset.i][inp.dataset.inf] = inp.value;
+      const it = pk.inputs[+inp.dataset.i], f = inp.dataset.inf;
+      if (f === 'region') {
+        const r = normRegion(inp.value);
+        const full = r.join() === '0,0,1,1';
+        if (full) delete it.region; else it.region = r;
+        /* várias regiões do mesmo input precisam de uma chave própria */
+        if (!full && !it.key) it.key = it.title + ' · ' + it.label;
+        inp.value = full ? '' : r.join(', ');
+      } else {
+        /* mudar o título muda a chave: atualiza os pips que usavam a antiga */
+        const oldK = inKey(it);
+        it[f] = inp.value;
+        if (f === 'title' && !it.key) Object.values(assign).forEach(a => Object.keys(a).forEach(n => { if (a[n] === oldK) a[n] = it.title; }));
+      }
       savePacks();
     });
   });
@@ -1296,6 +1766,38 @@ document.addEventListener('change', e => {
     localStorage.setItem('mc_cfg', JSON.stringify(cfg));   /* salva sem disparar push */
     if (cfg.cloudId) cloudPull().then(ok => { if (ok) renderDev(); });
     else cloudState('off');
+  }
+});
+
+/* arquivo .vmix escolhido */
+$('vmx-file').addEventListener('change', e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (f) openVmixFile(f);
+});
+/* IMPORTAR JSON (pacotes.json exportado) */
+$('pk-file').addEventListener('change', async e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    const d = JSON.parse(await f.text());
+    const list = Array.isArray(d) ? d : (d.packs || (d.mts ? [d] : null));
+    if (!list) throw 0;
+    list.forEach(p => {
+      const i = packs.findIndex(x => x.id === p.id);
+      if (i >= 0) packs[i] = p; else packs.push(p);
+    });
+    devPk = list[0]?.id || devPk;
+    savePacks(); renderDev();
+    toast(`${list.length} pacote${list.length > 1 ? 's' : ''} importado${list.length > 1 ? 's' : ''}`);
+  } catch (err) { toast('JSON inválido', true); }
+});
+/* opção "depois de cortar" do pacote */
+document.addEventListener('change', e => {
+  if (e.target.id === 'pk-after') {
+    const pk = pkById(devPk);
+    if (pk) { pk.afterCut = e.target.value; savePacks(); toast('Depois de cortar: ' + e.target.selectedOptions[0].text); }
   }
 });
 
@@ -1438,6 +1940,9 @@ document.addEventListener('click', e => {
     toast('pacotes.json exportado — suba no repositório ou leve pro trabalho');
   }
   else if (b.id === 'pk-import') $('pk-file').click();
+  else if (b.id === 'vmx-import') $('vmx-file').click();
+  else if (b.id === 'vmx-cancel') { pendingVmx = null; $('vmx-modal').classList.remove('open'); }
+  else if (b.id === 'vmx-go') confirmVmixImport();
   else if (b.dataset.ipreset !== undefined) {
     delete ipOver[b.dataset.ipreset];
     localStorage.setItem('mc_ips', JSON.stringify(ipOver));
@@ -1503,8 +2008,11 @@ function toast(msg, err) {
 renderHome();
 setStatus(true);
 /* carrega da nuvem ao abrir (se configurada) e atualiza a tela */
+ensurePresets();
+renderHome();
 cloudPull(true).then(ok => {
   if (ok) {
+    ensurePresets();
     renderHome();
     if (activePk) { activePk = pkById(activePk.id) || null; if (activePk) renderMesa(); }
   }
