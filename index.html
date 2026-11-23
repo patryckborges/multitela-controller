@@ -489,6 +489,7 @@ table.cfg select {
           <button class="sm-btn" id="pk-export">EXPORTAR JSON</button>
           <button class="sm-btn" id="pk-import">IMPORTAR JSON</button>
           <button class="sm-btn" id="vmx-import">IMPORTAR PROJETO .vmix</button>
+          <button class="sm-btn" id="pk-presets" title="Coloca de volta os pacotes que vêm prontos no sistema (OLIMPICOS 2027)">REINSTALAR PRONTOS</button>
           <input type="file" id="vmx-file" accept=".vmix,.xml" style="display:none">
           <button class="sm-btn acc" id="pk-add">+ NOVO PACOTE</button>
           <input type="file" id="pk-file" accept=".json,application/json" style="display:none">
@@ -664,7 +665,7 @@ const DEFAULT_CFG = {
 const PRESET_PACKS = [{
   "id":"pk_olimpicos_2027",
   "name":"OLIMPICOS 2027",
-  "ver":2,
+  "ver":3,
   "afterCut":"none",
   "source":{"file":"PROJETO_OLIMPICOS_2027","aba":"OLIMPICOS"},
   "inputs":[
@@ -717,27 +718,28 @@ if (!packs) {
   savePacks();
 }
 
-/* adiciona os pacotes prontos uma única vez (se o operador excluir, não volta)
-   e atualiza a cópia salva quando o pacote pronto ganha versão nova */
-function ensurePresets() {
-  const seen = cfg.presetsAdded || [];
+/* instala os pacotes prontos: entra de novo sempre que o pacote pronto ganha
+   versão nova (mesmo se tiver sido excluído antes) e atualiza a cópia salva.
+   force = botão REINSTALAR do DEV. */
+function ensurePresets(force) {
+  const seenVer = cfg.presetsVer || {};
   let changed = false;
   PRESET_PACKS.forEach(p => {
+    const v = p.ver || 1;
     const cur = pkById(p.id);
-    if (!seen.includes(p.id)) {
-      if (!cur) packs.push(JSON.parse(JSON.stringify(p)));
-      seen.push(p.id);
-      changed = true;
-    } else if (cur && (cur.ver || 1) < (p.ver || 1)) {
-      const fresh = JSON.parse(JSON.stringify(p));
+    if (!force && (seenVer[p.id] || 0) >= v && (!cur || (cur.ver || 1) >= v)) return;
+    const fresh = JSON.parse(JSON.stringify(p));
+    if (cur) {
       fresh.afterCut = cur.afterCut || fresh.afterCut;   /* mantém a escolha do operador */
       packs[packs.indexOf(cur)] = fresh;
-      if (activePk && activePk.id === p.id) { activePk = fresh; selMT = null; }
-      changed = true;
-    }
+    } else packs.push(fresh);
+    if (activePk && activePk.id === p.id) { activePk = fresh; selMT = null; }
+    seenVer[p.id] = v;
+    changed = true;
   });
   if (!changed) return false;
-  cfg.presetsAdded = seen;
+  cfg.presetsVer = seenVer;
+  delete cfg.presetsAdded;
   localStorage.setItem('mc_cfg', JSON.stringify(cfg));
   savePacks();
   return true;
@@ -1956,6 +1958,12 @@ document.addEventListener('click', e => {
   }
   else if (b.id === 'pk-import') $('pk-file').click();
   else if (b.id === 'vmx-import') $('vmx-file').click();
+  else if (b.id === 'pk-presets') {
+    ensurePresets(true);
+    devPk = PRESET_PACKS[0].id;
+    renderDev(); renderHome();
+    toast('Pacotes prontos reinstalados: ' + PRESET_PACKS.map(p => p.name).join(', '));
+  }
   else if (b.id === 'vmx-cancel') { pendingVmx = null; $('vmx-modal').classList.remove('open'); }
   else if (b.id === 'vmx-go') confirmVmixImport();
   else if (b.dataset.ipreset !== undefined) {
