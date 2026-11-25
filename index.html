@@ -111,6 +111,11 @@ header {
 .h-del { position: absolute; top: 6px; right: 8px; font-family: var(--mono); font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; display: none; }
 .h-item:hover .h-del { display: block; }
 .h-del:hover { color: var(--pgm); }
+/* item da playlist com a miniatura da multitela */
+.h-item.with-pv { display: flex; gap: 8px; align-items: center; }
+.h-pv { flex: 0 0 auto; width: 64px; height: 36px; object-fit: cover; border-radius: 3px; border: 1px solid var(--border2); pointer-events: none; }
+.h-body { flex: 1; min-width: 0; padding-right: 12px; }
+.h-item.with-pv .h-mt { white-space: normal; line-height: 1.3; }
 
 /* ── PVW ────────────────────────────────── */
 .pvw-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
@@ -1188,13 +1193,17 @@ function renderHistory() {
       .sort((a, b) => a[0] - b[0])
       .map(([n, t]) => `${n}·${inLabel(activePk, t)}`)
       .join('  ') || 'sem pips';
-    return `<div class="h-item" data-h="${i}">
+    const mt = activePk?.mts.find(m => m.id === h.mtId);
+    const pv = mt ? mtThumb(mt) : null;
+    return `<div class="h-item ${pv ? 'with-pv' : ''}" data-h="${i}">
+      ${pv ? `<img class="h-pv" src="${pv}" alt="" draggable="false">` : ''}
+      <div class="h-body">
       <div class="h-top">
         <span class="h-badge pl">${String(n + 1).padStart(2, '0')}</span>
         <span class="h-mt">${h.mtName}</span>
-        <span class="h-time">${h.time}</span>
       </div>
       <div class="h-pips">${pipsTxt}</div>
+      </div>
       <button class="h-del" data-hdel="${i}" title="Remover">✕</button>
     </div>`;
   }).join('');
