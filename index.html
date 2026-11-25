@@ -667,7 +667,7 @@ const DEFAULT_CFG = {
 /* Pacotes que já vêm prontos no sistema (gerados pelo IMPORTAR PROJETO .vmix).
    OLIMPICOS 2027 = aba OLIMPICOS do PROJETO_OLIMPICOS_2027.vmix:
    cada multitela aponta pro input MONTADO dela (Key do vMix) e pras layers dos pips.
-   Todas as 12 telas da aba. 50:50, 60:40, 80:20, 30:70 e X1 calibradas pela arte
+   Telas da aba (sem PIP e sem L FININHO). 50:50, 60:40, 80:20, 30:70 e X1 calibradas pela arte
    real (pips com "png"); as outras usam a área das layers do projeto até alguém
    arrastar o PNG de base no DEV.
    Modo GT: o PNG de cada multitela vai pro GT (input 34, que está na layer 10
@@ -679,7 +679,7 @@ const DEFAULT_CFG = {
 const PRESET_PACKS = [{
   "id":"pk_olimpicos_2027",
   "name":"OLIMPICOS 2027",
-  "ver":7,
+  "ver":8,
   "vmix":{"gt":"34","field":"Image1.Source","colour":"35"},
   "source":{"file":"PROJETO_OLIMPICOS_2027","aba":"OLIMPICOS"},
   "inputs":[
@@ -707,9 +707,6 @@ const PRESET_PACKS = [{
     {"id":"mt_f1426bbb-22ca-4368-83e8-0d7f7a7ad13d","name":"SINAL +1 V2","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\multitela-pips-transparentes.png","bleed":1,"cropMode":"cover","pips":[{"x":0.0066,"y":0.0171,"w":0.6817,"h":0.6817,"layer":1,"win":{"x":0.0066,"y":0.0171,"w":0.6817,"h":0.6817}},{"x":0.6883,"y":0.0134,"w":0.3117,"h":0.9713,"layer":2,"win":{"x":0.3614,"y":0.0134,"w":0.6386,"h":0.9713}}],"defaults":{"1":"1","2":"2"},"vmixName":"SINAL +1 V2 OLIMPICOS"},
     {"id":"mt_4dd24bbc-f0f8-4c34-9bf7-3a3048a6ea9e","name":"SINAL +2","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.6 - MULTITELA SINAL +2\\[BASE] SINAL +2 VERTICAL.png","bleed":1,"cropMode":"cover","pips":[{"x":0.006,"y":0.1595,"w":0.681,"h":0.681,"layer":1,"win":{"x":0.006,"y":0.1595,"w":0.681,"h":0.681}},{"x":0.6844,"y":0.0143,"w":0.3156,"h":0.4805,"layer":2,"win":{"x":0.6844,"y":0.0143,"w":0.3156,"h":0.4805}},{"x":0.6897,"y":0.495,"w":0.3103,"h":0.497,"layer":3,"win":{"x":0.6897,"y":0.495,"w":0.3103,"h":0.497}}],"defaults":{"1":"1","2":"2","3":"3"},"vmixName":"SINAL +2 OLIMPICO MONTADO"},
     {"id":"mt_00ac048d-1d78-4464-92b1-7a317feb2469","name":"SINAL +3 VERTICAL","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\MULTITELA OLIMPICOS COPA\\3.2.7 - MULTITELA SINAL +3\\[MÁSCARA] SINAL +3 VERTICAL.png","bleed":1,"cropMode":"cover","pips":[{"x":0.012,"y":0.1635,"w":0.673,"h":0.673,"layer":1,"win":{"x":0.012,"y":0.1635,"w":0.673,"h":0.673}},{"x":0.683,"y":0,"w":0.317,"h":0.3478,"layer":2,"win":{"x":0.683,"y":0,"w":0.317,"h":0.5088}},{"x":0.6852,"y":0.3478,"w":0.3148,"h":0.3084,"layer":3,"win":{"x":0.6852,"y":0.3478,"w":0.3148,"h":0.4968}},{"x":0.6948,"y":0.6562,"w":0.3052,"h":0.3438,"layer":4,"win":{"x":0.6948,"y":0.6562,"w":0.3052,"h":0.3438}}],"defaults":{"1":"1","2":"2","3":"3","4":"4"},"vmixName":"SINAL +3 VERTICAL OLIMPICOS"},
-    {"id":"mt_da4aee3e-77d5-4caf-b691-edfff815dc0c","name":"L FININHO PIP +3","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\L FININHO + 3 [BASE].png","bleed":1,"cropMode":"cover","pips":[{"x":0.006,"y":0.014,"w":0.828,"h":0.828,"layer":1,"win":{"x":0.006,"y":0.014,"w":0.828,"h":0.828}},{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.2685,"layer":2,"win":{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.2685}},{"x":0.8382,"y":0.286,"w":0.1574,"h":0.2824,"layer":3,"win":{"x":0.8382,"y":0.286,"w":0.1574,"h":0.2824}},{"x":0.8346,"y":0.5685,"w":0.1654,"h":0.2812,"layer":4,"win":{"x":0.8346,"y":0.5685,"w":0.1654,"h":0.2812}}],"defaults":{"1":"1","2":"2","3":"3","4":"4"},"vmixName":"L FININHO PIP +3 OLIMPICOS MONTADO"},
-    {"id":"mt_8a85e51a-9acc-458c-a849-345fd11839af","name":"L FININHO +4","path":"Z:\\JUDÔ\\2026\\MUNDIAL DE BAKU\\L FININHO +4 [BASE].png","bleed":1,"cropMode":"cover","pips":[{"x":0.0081,"y":0.0137,"w":0.8248,"h":0.8247,"layer":1,"win":{"x":0.0081,"y":0.0137,"w":0.8248,"h":0.8247}},{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.236,"layer":2,"win":{"x":0.8373,"y":0.0156,"w":0.1571,"h":0.2685}},{"x":0.8373,"y":0.2516,"w":0.1571,"h":0.242,"layer":3,"win":{"x":0.8373,"y":0.2516,"w":0.1571,"h":0.2685}},{"x":0.8373,"y":0.4936,"w":0.1571,"h":0.2685,"layer":4,"win":{"x":0.8373,"y":0.4936,"w":0.1571,"h":0.2685}},{"x":0.8373,"y":0.7621,"w":0.1571,"h":0.2379,"layer":5,"win":{"x":0.8373,"y":0.7446,"w":0.1571,"h":0.2554}}],"defaults":{"1":"1","2":"2","3":"3","4":"4","5":"5"},"vmixName":"L FININHO +4 OLIMPICOS MONTADO"},
-    {"id":"mt_02138e0a-db85-4ca7-8d01-e327f7e61468","name":"PIP","path":"D:\\PROJETOS VMIX PDS\\NEW OLIMPICOS\\3.3 - PIPS\\PIP 3\\BASE PIP 3.png","bleed":1,"cropMode":"cover","pips":[{"x":0.7166,"y":0.0287,"w":0.0796,"h":0.1655,"layer":1,"win":{"x":0.7166,"y":0.0287,"w":0.0796,"h":0.1655}},{"x":0.8108,"y":0.0295,"w":0.0793,"h":0.1638,"layer":2,"win":{"x":0.8108,"y":0.0295,"w":0.0793,"h":0.1638}},{"x":0.9041,"y":0.0287,"w":0.0798,"h":0.1654,"layer":3,"win":{"x":0.9041,"y":0.0287,"w":0.0798,"h":0.1654}}],"defaults":{"1":"1","2":"2","3":"3"},"vmixName":"PIP"},
   ],
 }];
 
