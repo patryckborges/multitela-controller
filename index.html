@@ -79,7 +79,7 @@ header {
 .pack-card .pk-meta { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 1px; }
 .pack-empty { text-align: center; color: var(--text3); font-family: var(--mono); font-size: 12px; padding: 60px 0; line-height: 2; }
 
-/* ── PVW + HISTÓRICO ────────────────────── */
+/* ── PVW + PLAYLIST ─────────────────────── */
 .stage { display: flex; gap: 14px; margin-bottom: 16px; align-items: stretch; }
 .hist {
   flex: 0 0 220px; display: flex; flex-direction: column;
@@ -380,11 +380,11 @@ table.cfg select {
   <div class="stage">
     <aside class="hist">
       <div class="hist-head">
-        <span>HISTÓRICO</span>
-        <button class="hist-clear" id="hist-clear" title="Limpar tudo">limpar</button>
+        <span>PLAYLIST</span>
+        <button class="hist-clear" id="hist-clear" title="Apagar a playlist deste pacote">limpar</button>
       </div>
       <div class="hist-list" id="hist-list"></div>
-      <div class="hist-empty" id="hist-empty">Cortes e playlists<br>aparecem aqui</div>
+      <div class="hist-empty" id="hist-empty">Monte a multitela e clique<br>em + PLAYLIST pra salvar aqui</div>
     </aside>
 
     <div class="pvw-wrap">
@@ -731,7 +731,8 @@ let ipOver  = loadJ('mc_ips', {});
 let devPw   = localStorage.getItem('mc_pw') || '1234';
 let cfg     = Object.assign({}, DEFAULT_CFG, loadJ('mc_cfg', {}));
 let packs   = loadJ('mc_packs2', null);
-let history = loadJ('mc_hist2', []);
+/* playlist: só o que o operador salva no "+ PLAYLIST" (cortes não entram mais) */
+let history = loadJ('mc_hist2', []).filter(h => h.kind !== 'ar');
 let assign  = loadJ('mc_assign2', {});   // { mtId: { pipNum: inputTitle } }
 
 if (!packs) {
@@ -1067,7 +1068,6 @@ async function doCut() {
   if (ok && mt.target && activePk.afterCut === 'preview') ok = await vMulti([vCmd('PreviewInput', { Input: mt.target })]);
   if (ok && mt.target && activePk.afterCut === 'cut')     ok = await vMulti([vCmd('CutDirect',    { Input: mt.target })]);
   if (ok) {
-    saveEntry('ar');
     toast('CORTADO → ' + mt.name);
   }
 }
@@ -1097,12 +1097,12 @@ function selectMT(i) {
 function saveEntry(kind) {
   if (selMT === null) return;
   const mt = activePk.mts[selMT];
-  history.unshift({
-    kind, mtId: mt.id, mtName: mt.name,
+  history.push({
+    kind, pkId: activePk.id, mtId: mt.id, mtName: mt.name,
     pips: { ...(assign[mt.id] || {}) },
     time: new Date().toTimeString().slice(0, 8),
   });
-  if (history.length > 60) history.pop();
+  if (history.length > 200) history.shift();
   saveHist();
   renderHistory();
 }
@@ -1177,16 +1177,20 @@ function renderInputStrip(stripId, pipNum) {
     `<button class="btn ${inKey(inp) === cur ? 'sel-in' : ''}" data-pip="${pipNum}" data-in="${encodeURIComponent(inKey(inp))}">${inp.label}</button>`).join('');
 }
 
+/* itens da playlist do pacote aberto (na ordem em que foram salvos) */
+const plOfPack = () => history.map((h, i) => [h, i]).filter(([h]) => !h.pkId || h.pkId === activePk?.id);
+
 function renderHistory() {
-  $('hist-empty').style.display = history.length ? 'none' : 'flex';
-  $('hist-list').innerHTML = history.map((h, i) => {
+  const items = plOfPack();
+  $('hist-empty').style.display = items.length ? 'none' : 'flex';
+  $('hist-list').innerHTML = items.map(([h, i], n) => {
     const pipsTxt = Object.entries(h.pips)
       .sort((a, b) => a[0] - b[0])
       .map(([n, t]) => `${n}·${inLabel(activePk, t)}`)
       .join('  ') || 'sem pips';
     return `<div class="h-item" data-h="${i}">
       <div class="h-top">
-        <span class="h-badge ${h.kind}">${h.kind === 'ar' ? 'NO AR' : 'PLAYLIST'}</span>
+        <span class="h-badge pl">${String(n + 1).padStart(2, '0')}</span>
         <span class="h-mt">${h.mtName}</span>
         <span class="h-time">${h.time}</span>
       </div>
@@ -1955,7 +1959,11 @@ document.addEventListener('click', e => {
     saveEntry('pl');
     toast('Salvo na playlist: ' + activePk.mts[selMT].name);
   }
-  else if (b.id === 'hist-clear') { history = []; saveHist(); renderHistory(); }
+  else if (b.id === 'hist-clear') {
+    if (!plOfPack().length || !confirm('Apagar a playlist deste pacote?')) return;
+    history = history.filter(h => h.pkId && h.pkId !== activePk?.id);
+    saveHist(); renderHistory();
+  }
   else if (b.dataset.hdel !== undefined) {
     history.splice(+b.dataset.hdel, 1);
     saveHist(); renderHistory();
