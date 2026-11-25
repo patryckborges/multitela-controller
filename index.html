@@ -204,6 +204,14 @@ header {
 .btn.sel-in { background: var(--pgm-dim); color: #ff6b6b; border-color: var(--pgm); box-shadow: 0 0 10px rgba(214,48,49,.25); }
 .btn .sub { display: block; font-size: 9px; color: var(--text3); margin-top: 3px; letter-spacing: .5px; }
 .btn.sel-mt .sub { color: rgba(0,184,148,.7); }
+/* botão de multitela com o pvw (miniatura) pra identificar a tela */
+.btn.mt-btn { padding: 6px 6px 8px; min-width: 124px; }
+.btn.mt-btn .mt-pv {
+  display: block; width: 112px; height: 63px; margin: 0 auto 6px;
+  object-fit: cover; border-radius: 3px; border: 1px solid var(--border2);
+  pointer-events: none;
+}
+.btn.mt-btn.sel-mt .mt-pv { border-color: var(--pvw); }
 
 /* ── DEV ────────────────────────────────── */
 .gate {
@@ -1116,7 +1124,7 @@ function renderMesa() {
   }
 
   $('strip-mt').innerHTML = activePk.mts.map((m, i) =>
-    `<button class="btn ${i === selMT ? 'sel-mt' : ''}" data-mt="${i}">${m.name}<span class="sub">${m.pips.length} pips</span></button>`).join('')
+    `<button class="btn mt-btn ${i === selMT ? 'sel-mt' : ''}" data-mt="${i}">${mtThumb(m) ? `<img class="mt-pv" src="${mtThumb(m)}" alt="" draggable="false">` : ''}<span class="mt-nm">${m.name}</span><span class="sub">${m.pips.length} pips</span></button>`).join('')
     || '<span class="dev-hint" style="padding:10px">Nenhuma multitela — carregue a pasta do pacote no DEV</span>';
 
   renderInputStrip('strip-p1', 1);
