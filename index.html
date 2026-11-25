@@ -680,13 +680,13 @@ const DEFAULT_CFG = {
    Modo GT: o PNG de cada multitela vai pro GT (input 34, que está na layer 10
    do Colour) e os sinais pras layers 1, 2... do Colour (input 35).
    Sinais: inputs 1 a 16 do vMix pelo número, sem o 6 (PGM), 8 (ADBREAK MONTADO)
-   e 9 (CONT. VERTICAL MONTADO). CONT VER (10) usa só a faixa 9:16 do centro.
+   e 9 (CONT. VERTICAL MONTADO). CONT VER (10) é 9:16 nativo no vMix.
    "vmix" do pacote vale só pra ele (DEV → pacote).
    "ver" sobe a cada atualização → substitui a cópia antiga salva no navegador. */
 const PRESET_PACKS = [{
   "id":"pk_olimpicos_2027",
   "name":"OLIMPICOS 2027",
-  "ver":10,
+  "ver":11,
   "vmix":{"gt":"34","field":"Image1.Source","colour":"35"},
   "source":{"file":"PROJETO_OLIMPICOS_2027","aba":"OLIMPICOS"},
   "inputs":[
@@ -696,7 +696,7 @@ const PRESET_PACKS = [{
     {"title":"4","label":"IN 4","ar":"16:9"},
     {"title":"5","label":"IN 5","ar":"16:9"},
     {"title":"7","label":"CONT HOR","ar":"16:9"},
-    {"title":"10","label":"CONT VER","ar":"16:9","region":[0.3418,0,0.6582,1]},
+    {"title":"10","label":"CONT VER","ar":"9:16"},
     {"title":"11","label":"CALL 1","ar":"16:9"},
     {"title":"12","label":"CALL 2","ar":"16:9"},
     {"title":"13","label":"REPLAY A","ar":"16:9"},
@@ -972,7 +972,33 @@ function pipParams(mt, pipCoord, inp, vTitle) {
   const o = pipCoord.orig;
   /* pip calibrado pelo PNG: sempre recorte exato no buraco real */
   if (o && !pipCoord.png && o.input === vTitle && !(inp && inp.region)) return o;
-  return pipToVmix(pipCoord, mt.bleed, mt.cropMode, parseAR(inp?.ar), inp?.region);
+  const ar = parseAR(inp?.ar);
+  const p = pipToVmix(pipCoord, mt.bleed, mt.cropMode, ar, inp?.region);
+  /* input com região (pedaço do sinal) precisa do crop pra isolar o pedaço */
+  if (inp?.region) return p;
+  return releaseCrop(mt, pipCoord, p, ar);
+}
+
+/* Sem crop desnecessário: o sinal é posicionado só com zoom + pan X/Y e a sobra
+   fica escondida embaixo da moldura (GT). Um lado só continua cortado quando a
+   sobra invadiria OUTRO pip da mesma multitela (ia aparecer pelo buraco dele). */
+function releaseCrop(mt, pip, p, ar) {
+  const sW = ar >= 16 / 9 ? 1 : ar / (16 / 9), sH = ar >= 16 / 9 ? (16 / 9) / ar : 1;
+  const fw = p.zoom * sW, fh = p.zoom * sH;
+  const left = 0.5 + p.panX / 2 - fw / 2, top = 0.5 - p.panY / 2 - fh / 2;
+  const others = mt.pips.filter(q => q !== pip);
+  const hits = r => r.w > 0.001 && r.h > 0.001 && others.some(q =>
+    Math.min(r.x + r.w, q.x + q.w) - Math.max(r.x, q.x) > 0.002 &&
+    Math.min(r.y + r.h, q.y + q.h) - Math.max(r.y, q.y) > 0.002);
+  const out = { ...p };
+  /* faixa que apareceria em cada lado se o crop daquele lado fosse liberado */
+  const vy1 = top + p.cropY1 * fh, vy2 = top + p.cropY2 * fh;
+  if (!hits({ x: left, y: vy1, w: p.cropX1 * fw, h: vy2 - vy1 }))                    out.cropX1 = 0;
+  if (!hits({ x: left + p.cropX2 * fw, y: vy1, w: (1 - p.cropX2) * fw, h: vy2 - vy1 })) out.cropX2 = 1;
+  const vx1 = left + out.cropX1 * fw, vx2 = left + out.cropX2 * fw;
+  if (!hits({ x: vx1, y: top, w: vx2 - vx1, h: p.cropY1 * fh }))                      out.cropY1 = 0;
+  if (!hits({ x: vx1, y: top + p.cropY2 * fh, w: vx2 - vx1, h: (1 - p.cropY2) * fh })) out.cropY2 = 1;
+  return out;
 }
 
 /* GT / campo / Colour efetivos de um pacote */
