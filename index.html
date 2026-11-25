@@ -516,6 +516,11 @@ table.cfg select {
           <input type="text" id="pk-name" style="width:240px" placeholder="Nome da competição">
           <button class="sm-btn" id="pk-rename">RENOMEAR</button>
           <button class="sm-btn red" id="pk-del">EXCLUIR PACOTE</button>
+          <label style="margin-left:14px">CROP</label>
+          <select id="pk-crop" title="Como o sinal é encaixado no pip">
+            <option value="never">nunca — só zoom e pan</option>
+            <option value="auto">só se invadir outro pip</option>
+          </select>
           <label style="margin-left:14px">DEPOIS DE CORTAR</label>
           <select id="pk-after" title="Só vale pra multitelas MONTADAS (importadas do .vmix)">
             <option value="none">só muda as layers</option>
@@ -686,7 +691,8 @@ const DEFAULT_CFG = {
 const PRESET_PACKS = [{
   "id":"pk_olimpicos_2027",
   "name":"OLIMPICOS 2027",
-  "ver":11,
+  "ver":12,
+  "crop":"never",
   "vmix":{"gt":"34","field":"Image1.Source","colour":"35"},
   "source":{"file":"PROJETO_OLIMPICOS_2027","aba":"OLIMPICOS"},
   "inputs":[
@@ -976,6 +982,8 @@ function pipParams(mt, pipCoord, inp, vTitle) {
   const p = pipToVmix(pipCoord, mt.bleed, mt.cropMode, ar, inp?.region);
   /* input com região (pedaço do sinal) precisa do crop pra isolar o pedaço */
   if (inp?.region) return p;
+  /* pacote com "crop: nunca": só zoom + pan, o sinal inteiro e a moldura esconde */
+  if ((activePk?.crop || 'auto') === 'never') return { ...p, cropX1: 0, cropX2: 1, cropY1: 0, cropY2: 1 };
   return releaseCrop(mt, pipCoord, p, ar);
 }
 
@@ -1754,6 +1762,7 @@ function renderDev() {
   if (!pk) return;
   $('pk-name').value = pk.name;
   $('pk-after').value = pk.afterCut || 'none';
+  $('pk-crop').value = pk.crop || 'auto';
   $('pk-vmix').style.display = 'flex';
   ['gt', 'field', 'colour'].forEach(f => {
     $('pkv-' + f).value = pk.vmix?.[f] || '';
@@ -1885,6 +1894,10 @@ document.addEventListener('change', e => {
     savePacks();
     toast(`${pk.name}: ${m[1].toUpperCase()} → ${v || cfg[m[1]] + ' (geral)'}`);
     return;
+  }
+  if (e.target.id === 'pk-crop') {
+    const pk = pkById(devPk);
+    if (pk) { pk.crop = e.target.value; savePacks(); toast('Crop: ' + e.target.selectedOptions[0].text); }
   }
   if (e.target.id === 'pk-after') {
     const pk = pkById(devPk);
